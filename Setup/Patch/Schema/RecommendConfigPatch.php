@@ -62,7 +62,7 @@ class RecommendConfigPatch implements SchemaPatchInterface
 
         $this->moduleDataSetup->getConnection()->startSetup();
         $connection = $this->moduleDataSetup->getConnection();
-        $table = $connection->getTableName('core_config_data');
+        $table = $this->moduleDataSetup->getTable('core_config_data');
         foreach ($movedConfigDirectives as $from => $to) {
             try {
                 $connection->query('UPDATE ' . $table . ' SET path = "' . $to . '" WHERE path = "' . $from . '"');

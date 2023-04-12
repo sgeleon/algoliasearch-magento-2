@@ -167,23 +167,24 @@ class ProductHelper
      * @param ImageHelper $imageHelper
      */
     public function __construct(
-        Config $eavConfig,
-        ConfigHelper $configHelper,
-        AlgoliaHelper $algoliaHelper,
-        Logger $logger,
-        StoreManagerInterface $storeManager,
-        ManagerInterface $eventManager,
-        Visibility $visibility,
-        Stock $stockHelper,
+        Config                 $eavConfig,
+        ConfigHelper           $configHelper,
+        AlgoliaHelper          $algoliaHelper,
+        Logger                 $logger,
+        StoreManagerInterface  $storeManager,
+        ManagerInterface       $eventManager,
+        Visibility             $visibility,
+        Stock                  $stockHelper,
         StockRegistryInterface $stockRegistry,
-        CurrencyHelper $currencyManager,
-        CategoryHelper $categoryHelper,
-        PriceManager $priceManager,
-        Type $productType,
-        CollectionFactory $productCollectionFactory,
-        GroupCollection $groupCollection,
-        ImageHelper $imageHelper
-    ) {
+        CurrencyHelper         $currencyManager,
+        CategoryHelper         $categoryHelper,
+        PriceManager           $priceManager,
+        Type                   $productType,
+        CollectionFactory      $productCollectionFactory,
+        GroupCollection        $groupCollection,
+        ImageHelper            $imageHelper
+    )
+    {
         $this->eavConfig = $eavConfig;
         $this->configHelper = $configHelper;
         $this->algoliaHelper = $algoliaHelper;
@@ -295,7 +296,8 @@ class ProductHelper
         $productIds = null,
         $onlyVisible = true,
         $includeNotVisibleIndividually = false
-    ) {
+    )
+    {
         $productCollection = $this->productCollectionFactory->create();
         $products = $productCollection
             ->setStoreId($storeId)
@@ -401,12 +403,12 @@ class ProductHelper
         $attributesForFaceting = $this->getAttributesForFaceting($storeId);
 
         $indexSettings = [
-            'searchableAttributes'    => $searchableAttributes,
-            'customRanking'           => $customRanking,
+            'searchableAttributes' => $searchableAttributes,
+            'customRanking' => $customRanking,
             'unretrievableAttributes' => $unretrievableAttributes,
-            'attributesForFaceting'   => $attributesForFaceting,
-            'maxValuesPerFacet'       => (int) $this->configHelper->getMaxValuesPerFacet($storeId),
-            'removeWordsIfNoResults'  => $this->configHelper->getRemoveWordsIfNoResult($storeId),
+            'attributesForFaceting' => $attributesForFaceting,
+            'maxValuesPerFacet' => (int)$this->configHelper->getMaxValuesPerFacet($storeId),
+            'removeWordsIfNoResults' => $this->configHelper->getRemoveWordsIfNoResult($storeId),
         ];
 
         // Additional index settings from event observer
@@ -419,7 +421,7 @@ class ProductHelper
         $this->eventManager->dispatch(
             'algolia_products_index_before_set_settings',
             [
-                'store_id'       => $storeId,
+                'store_id' => $storeId,
                 'index_settings' => $transport,
             ]
         );
@@ -485,7 +487,7 @@ class ProductHelper
             } else {
                 foreach ($sortingIndices as $values) {
                     $replicaName = $values['name'];
-                    array_unshift($customRanking,$values['ranking'][0]);
+                    array_unshift($customRanking, $values['ranking'][0]);
                     $replicaSetting['customRanking'] = $customRanking;
                     $this->algoliaHelper->setSettings($replicaName, $replicaSetting, false, false);
                     $this->logger->log('Setting settings to "' . $replicaName . '" replica.');
@@ -578,12 +580,12 @@ class ProductHelper
         ];
 
         $customData = [
-            'objectID'           => $product->getId(),
-            'name'               => $product->getName(),
-            'url'                => $product->getUrlModel()->getUrl($product, $urlParams),
-            'visibility_search'  => (int) (in_array($visibility, $visibleInSearch)),
-            'visibility_catalog' => (int) (in_array($visibility, $visibleInCatalog)),
-            'type_id'            => $product->getTypeId(),
+            'objectID' => $product->getId(),
+            'name' => $product->getName(),
+            'url' => $product->getUrlModel()->getUrl($product, $urlParams),
+            'visibility_search' => (int)(in_array($visibility, $visibleInSearch)),
+            'visibility_catalog' => (int)(in_array($visibility, $visibleInCatalog)),
+            'type_id' => $product->getTypeId(),
         ];
 
         $additionalAttributes = $this->getAdditionalAttributes($product->getStoreId());
@@ -886,7 +888,7 @@ class ProductHelper
 
             $stockItem = $this->stockRegistry->getStockItem($product->getId());
             if ($stockItem) {
-                $customData['stock_qty'] = (int) $stockItem->getQty();
+                $customData['stock_qty'] = (int)$stockItem->getQty();
             }
         }
 
@@ -980,7 +982,7 @@ class ProductHelper
         }
 
         if (is_array($values) && count($values) > 0) {
-            $customData[$attributeName] = array_values(array_unique($values));
+            $customData[$attributeName] = $this->getSanitizedArrayValues($values, $attributeName);
         }
 
         if (count($subProductImages) > 0) {
@@ -991,12 +993,27 @@ class ProductHelper
     }
 
     /**
-     * @param $valueText
-     * @param Product $subProduct
-     * @param AttributeResource $attributeResource
+     * By default Algolia will remove all redundant attribute values that are fetched from the child simple products.
+     *
+     * Overridable via Preference to allow implementer to enforce their own uniqueness rules while leveraging existing indexing code.
+     * e.g. $values = (in_array($attributeName, self::NON_UNIQUE_ATTRIBUTES)) ? $values : array_unique($values);
+     *
+     * @param array $values
+     * @param string $attributeName
      * @return array
      */
-    protected function getValues($valueText, Product $subProduct, AttributeResource $attributeResource)
+    protected function getSanitizedArrayValues(array $values, string $attributeName): array
+    {
+        return array_values(array_unique($values));
+    }
+
+    /**
+     * @param string|array $valueText - bit of a misnomer - essentially the retrieved values to be indexed for a given product's attribute
+     * @param Product $subProduct - the simple product to index
+     * @param AttributeResource $attributeResource - the attribute being indexed
+     * @return array
+     */
+    protected function getValues($valueText, Product $subProduct, AttributeResource $attributeResource): array
     {
         $values = [];
 
@@ -1065,7 +1082,8 @@ class ProductHelper
         Product $product,
         $attribute,
         AttributeResource $attributeResource
-    ) {
+    )
+    {
         $valueText = null;
 
         if (!is_array($value) && $attributeResource->usesSource()) {
@@ -1165,7 +1183,7 @@ class ProductHelper
 
                     if ($this->configHelper->isCustomerGroupsEnabled($storeId)) {
                         foreach ($this->groupCollection as $group) {
-                            $group_id = (int) $group->getData('customer_group_id');
+                            $group_id = (int)$group->getData('customer_group_id');
 
                             $attributesForFaceting[] = 'price.' . $currency_code . '.group_' . $group_id;
                         }
@@ -1338,10 +1356,10 @@ class ProductHelper
         }
 
         if ($isChildProduct === false && !in_array($product->getVisibility(), [
-            Visibility::VISIBILITY_BOTH,
-            Visibility::VISIBILITY_IN_SEARCH,
-            Visibility::VISIBILITY_IN_CATALOG,
-        ])) {
+                Visibility::VISIBILITY_BOTH,
+                Visibility::VISIBILITY_IN_SEARCH,
+                Visibility::VISIBILITY_IN_CATALOG,
+            ])) {
             throw (new ProductNotVisibleException())
                 ->withProduct($product)
                 ->withStoreId($storeId);
@@ -1381,10 +1399,11 @@ class ProductHelper
      * @param $replica
      * @return array
      */
-    protected function handleVirtualReplica($replicas, $indexName) {
+    protected function handleVirtualReplica($replicas, $indexName)
+    {
         $virtualReplicaArray = [];
         foreach ($replicas as $replica) {
-            $virtualReplicaArray[] = 'virtual('.$replica.')';
+            $virtualReplicaArray[] = 'virtual(' . $replica . ')';
         }
         return $virtualReplicaArray;
     }

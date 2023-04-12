@@ -19,13 +19,14 @@ class Bundle extends ProductWithChildren
      */
     protected function addAdditionalData($product, $withTax, $subProducts, $currencyCode, $field) {
         $data = $this->getMinMaxPrices($product, $withTax, $subProducts, $currencyCode);
-        $dashedFormat = $this->getDashedPriceFormat($data['min_price'], $data['max'], $currencyCode);
-        if ($data['min_price'] !== $data['max']) {
-            $this->handleBundleNonEqualMinMaxPrices($field, $currencyCode, $data['min_price'], $data['max'], $dashedFormat);
+        $dashedFormat = $this->getDashedPriceFormat($data['min_price'], $data['max_price'], $currencyCode);
+        if ($data['min_price'] !== $data['max_price']) {
+            $this->handleBundleNonEqualMinMaxPrices($field, $currencyCode, $data['min_price'], $data['max_price'], $dashedFormat);
         }
-        $this->handleOriginalPrice($field, $currencyCode, $data['min_price'], $data['max'], $data['min_original'], $data['max_original']);
+
+        $this->handleOriginalPrice($field, $currencyCode, $data['min_price'], $data['max_price'], $data['min_original'], $data['max_original']);
         if (!$this->customData[$field][$currencyCode]['default']) {
-            $this->handleZeroDefaultPrice($field, $currencyCode, $data['min_price'], $data['max']);
+            $this->handleZeroDefaultPrice($field, $currencyCode, $data['min_price'], $data['max_price']);
         }
         if ($this->areCustomersGroupsEnabled) {
             $groupedDashedFormat = $this->getBundleDashedPriceFormat($data['min'], $data['max'], $currencyCode);
@@ -42,25 +43,29 @@ class Bundle extends ProductWithChildren
      */
     protected function getMinMaxPrices(Product $product, $withTax, $subProducts, $currencyCode)
     {
-        $regularPrice = $product->getPriceInfo()->getPrice('regular_price')->getMinimalPrice()->getValue();
+        $product->setData('website_id', $product->getStore()->getWebsiteId());
         $minPrice = $product->getPriceInfo()->getPrice('final_price')->getMinimalPrice()->getValue();
         $minOriginalPrice = $product->getPriceInfo()->getPrice('regular_price')->getMinimalPrice()->getValue();
         $maxOriginalPrice = $product->getPriceInfo()->getPrice('regular_price')->getMaximalPrice()->getValue();
         $max = $product->getPriceInfo()->getPrice('final_price')->getMaximalPrice()->getValue();
         $minArray = [];
+        $maxArray = [];
         foreach ($this->groups as $group) {
             $groupId = (int) $group->getData('customer_group_id');
-            foreach ($subProducts as $subProduct) {
-                $subProduct->setData('customer_group_id', $groupId);
-                $subProductFinalPrice = $this->getTaxPrice($product, $subProduct->getPriceModel()->getFinalPrice(1, $subProduct), $withTax);
-                $priceDiff = $subProduct->getPrice() - $subProductFinalPrice;
-                $minArray[$groupId][] = $regularPrice - $priceDiff;
-            }
+            $product->setData('customer_group_id', $groupId);
+            $minPrice = $product->getPriceInfo()->getPrice('final_price')->getMinimalPrice()->getValue();
+            $minArray[$groupId] = $product->getPriceInfo()->getPrice('final_price')->getMinimalPrice()->getValue();
+            $maxArray[$groupId] = $product->getPriceInfo()->getPrice('final_price')->getMaximalPrice()->getValue();
+            $product->setData('customer_group_id', null);
         }
 
         $minPriceArray = [];
         foreach ($minArray as $groupId => $min) {
-            $minPriceArray[$groupId] = min($min);
+            $minPriceArray[$groupId] = $min;
+        }
+        $maxPriceArray = [];
+        foreach ($maxArray as $groupId => $max) {
+            $maxPriceArray[$groupId] = $max;
         }
 
         if ($currencyCode !== $this->baseCurrencyCode) {
@@ -70,15 +75,15 @@ class Bundle extends ProductWithChildren
             foreach ($minPriceArray as $groupId => $price) {
                 $minPriceArray[$groupId] = $this->convertPrice($price, $currencyCode);
             }
-            if ($min !== $max) {
+            if ($minPrice !== $max) {
                 $max = $this->convertPrice($max, $currencyCode);
             }
         }
-
         return [
             'min' => $minPriceArray,
-            'max' => $max,
+            'max' => $maxPriceArray,
             'min_price' => $minPrice,
+            'max_price' => $max,
             'min_original' => $minOriginalPrice,
             'max_original' => $maxOriginalPrice
         ];
@@ -117,10 +122,10 @@ class Bundle extends ProductWithChildren
     protected function getBundleDashedPriceFormat($minPrices, $max, $currencyCode) {
         $dashedFormatPrice = [];
         foreach ($minPrices as $groupId => $min) {
-            if ($min === $max) {
+            if ($min === $max[$groupId]) {
                 $dashedFormatPrice [$groupId] =  '';
             }
-            $dashedFormatPrice[$groupId] = $this->formatPrice($min, $currencyCode) . ' - ' . $this->formatPrice($max, $currencyCode);
+            $dashedFormatPrice[$groupId] = $this->formatPrice($min, $currencyCode) . ' - ' . $this->formatPrice($max[$groupId], $currencyCode);
         }
         return $dashedFormatPrice;
     }
@@ -139,7 +144,7 @@ class Bundle extends ProductWithChildren
         foreach ($this->groups as $group) {
             $groupId = (int) $group->getData('customer_group_id');
             $this->customData[$field][$currencyCode]['group_' . $groupId] = $min[$groupId];
-            if ($min === $max) {
+            if ($min[$groupId] === $max[$groupId]) {
                 $this->customData[$field][$currencyCode]['group_' . $groupId . '_formated'] =
                     $this->customData[$field][$currencyCode]['default_formated'];
             } else {

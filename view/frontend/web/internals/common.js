@@ -338,8 +338,10 @@ requirejs(['algoliaBundle'], function(algoliaBundle) {
                     var routeParameters = {};
                     if (algoliaConfig.isCategoryPage) {
                         routeParameters['q'] = uiState[productIndexName].query;
-                    } else {
-                        routeParameters['q'] = uiState[productIndexName].query || '__empty__';
+                    } else if (algoliaConfig.isLandingPage){
+                        routeParameters['q'] = uiState[productIndexName].query || algoliaConfig.landingPage.query || '__empty__';
+                    } else{
+                        routeParameters['q'] = uiState[productIndexName].query || algoliaConfig.request.query || '__empty__';
                     }
                     if (algoliaConfig.facets) {
                         for(var i=0; i<algoliaConfig.facets.length; i++) {

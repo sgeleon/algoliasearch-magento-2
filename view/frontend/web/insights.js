@@ -67,6 +67,17 @@ requirejs([
 
                 return allWidgetConfiguration;
             });
+            
+            algolia.registerHook('beforeAutocompleteProductSourceOptions', function(options) {
+                if (algoliaConfig.ccAnalytics.enabled) {
+                    options.clickAnalytics = true;
+                }
+                if (algoliaConfig.personalization.enabled) {
+                    options.enablePersonalization = true;
+                    options.userToken = algoliaAnalytics.getUserToken();
+                }
+                return options;
+            });
 
             this.hasAddedParameters = true;
 

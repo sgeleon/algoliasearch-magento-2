@@ -1130,7 +1130,7 @@
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>
                         <![CDATA[
-                            Choose here the textfield attributes that you don't want to be turned into numeric values (i.e. : if you don't want "00123" turned into "123")
+                            Choose here the textfield/non-castable attributes that you don't want to be turned into numeric values (i.e. : if you don't want "00123" turned into "123" or "34567834545672" turned into "345678E+2")
                         ]]>
                     </comment>
                 </field>

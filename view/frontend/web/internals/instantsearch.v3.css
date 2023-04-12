@@ -70,8 +70,6 @@ input.ais-SearchBox-input {
 .ais-InfiniteHits,
 .ais-Hits {
     text-align: center;
-    padding-top: 30px;
-    padding-bottom: 30px;
 }
 
 .ais-InfiniteHits--empty,
@@ -244,12 +242,13 @@ input.ais-SearchBox-input {
 
 /* Pagination */
 .ais-Pagination-list {
-    margin: 2em 0;
+    margin: 1em 0;
     justify-content: center;
 }
 
 .ais-Pagination-item {
     padding: 1em;
+    margin-bottom: 0rem;
 }
 
 .ais-Pagination-item--selected {

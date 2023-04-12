@@ -4,8 +4,8 @@ define([], function () {
             return html`<p>${algoliaConfig.translations.noResults}</p>`;
         },
 
-        getHeaderHtml: function ({section}) {
-            return section.label;
+        getHeaderHtml: function ({html}) {
+            return html`<p>${algoliaConfig.translations.suggestions}</p>`;
         },
 
         getItemHtml: function ({item, html}) {
