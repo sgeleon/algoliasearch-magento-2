@@ -26,4 +26,7 @@
     <event name="customer_logout">
         <observer name="algoliasearch_personalization_unset_user_token" instance="Algolia\AlgoliaSearch\Observer\Insights\CustomerLogout" />
     </event>
+    <event name="persistent_session_expired">
+        <observer name="refresh_customer_data" instance="Algolia\AlgoliaSearch\Observer\Insights\CustomerLogout" />
+    </event>
 </config>
