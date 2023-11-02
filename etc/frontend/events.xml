@@ -23,4 +23,7 @@
     <event name="checkout_onepage_controller_success_action">
         <observer name="algoliasearch_insights_place_order_event" instance="Algolia\AlgoliaSearch\Observer\Insights\CheckoutOnepageControllerSuccessAction" />
     </event>
+    <event name="customer_logout">
+        <observer name="algoliasearch_personalization_unset_user_token" instance="Algolia\AlgoliaSearch\Observer\Insights\CustomerLogout" />
+    </event>
 </config>
