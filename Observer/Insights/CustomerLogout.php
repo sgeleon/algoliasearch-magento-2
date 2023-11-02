@@ -3,37 +3,48 @@
 namespace Algolia\AlgoliaSearch\Observer\Insights;
 
 use Algolia\AlgoliaSearch\Helper\InsightsHelper;
-use Magento\Customer\Model\Customer;
-use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
+use Magento\Framework\Stdlib\Cookie\PhpCookieManager;
 
 class CustomerLogout implements ObserverInterface
 {
-
-    /** @var InsightsHelper */
-    protected $insightsHelper;
+    /**
+     * @var PhpCookieManager
+     */
+    private $cookieManager;
 
     /**
-     * @param InsightsHelper $insightsHelper
+     * @var CookieMetadataFactory
+     */
+    private $cookieMetadataFactory;
+
+    /**
+     * RefreshCustomerData constructor.
+     * @param PhpCookieManager $cookieManager
+     * @param CookieMetadataFactory $cookieMetadataFactory
      */
     public function __construct(
-        InsightsHelper $insightsHelper
-    )
-    {
-        $this->insightsHelper = $insightsHelper;
+        PhpCookieManager $cookieManager,
+        CookieMetadataFactory $cookieMetadataFactory
+    ) {
+        $this->cookieManager = $cookieManager;
+        $this->cookieMetadataFactory = $cookieMetadataFactory;
     }
 
     /**
-     * @param Observer $observer
-     * ['customer' => $customer]
+     * Check and clear session data if persistent session expired
+     *
+     * @param \Magento\Framework\Event\Observer $observer
+     * @return void
+     * @SuppressWarnings(PHPMD.UnusedFormalParameter)
      */
-    public function execute(Observer $observer)
+    public function execute(\Magento\Framework\Event\Observer $observer)
     {
-        /** @var Customer $customer */
-        $customer = $observer->getEvent()->getCustomer();
-
-        if ($this->insightsHelper->getConfigHelper()->isClickConversionAnalyticsEnabled($customer->getStoreId()) || $this->insightsHelper->getPersonalizationHelper()->isPersoEnabled($customer->getStoreId())) {
-            $this->insightsHelper->unsetUserToken($customer);
+        if ($this->cookieManager->getCookie(InsightsHelper::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME)) {
+            $metadata = $this->cookieMetadataFactory->createCookieMetadata();
+            $metadata->setPath('/');
+            $this->cookieManager->deleteCookie(InsightsHelper::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME, $metadata);
         }
     }
 }

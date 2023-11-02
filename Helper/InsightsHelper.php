@@ -177,18 +177,4 @@ class InsightsHelper
     public function getUserAllowedSavedCookie() {
         return $this->configHelper->isCookieRestrictionModeEnabled() ? !!$this->cookieManager->getCookie($this->configHelper->getDefaultConsentCookieName()) : true;
     }
-
-    /**
-     * @param Customer $customer
-     * @return void
-     */
-    public function unsetUserToken(Customer $customer)
-    {
-        if ($this->cookieManager->getCookie(self::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME)) {
-            $metadata = $this->cookieMetadataFactory->createCookieMetadata()
-                ->setPath($this->sessionManager->getCookiePath());
-            return $this->cookieManager->deleteCookie(
-                self::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME,$metadata);
-        }
-    }
 }
