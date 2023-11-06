@@ -37,7 +37,8 @@ define(
             initializeAnalytics: function () {
                 algoliaAnalytics.init({
                     appId:  this.config.applicationId,
-                    apiKey: this.config.apiKey
+                    apiKey: this.config.apiKey,
+                    useCookie: true,
                 });
 
                 var userAgent = 'insights-js-in-magento (' + this.config.extensionVersion + ')';
