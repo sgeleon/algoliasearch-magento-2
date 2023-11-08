@@ -448,40 +448,25 @@ define(
                      * Custom widgets can be added to this object like [attribute]: function(facet, templates)
                      * Function must return an array [<widget name>: string, <widget options>: object]
                      **/
-                    var customAttributeFacet = {
+                    const customAttributeFacet = {
                             categories: function (facet, templates) {
-                                    var hierarchical_levels = [];
-                                    for (var l = 0; l < 10; l++) {
+                                    const hierarchical_levels = [];
+                                    for (let l = 0; l < 10; l++) {
                                             hierarchical_levels.push('categories.level' + l.toString());
                                     }
 
-
-                                    //return array of items starting from root based on category
-                                    const findRoot = (items) => {
-                                        const root = items.find(element => algoliaConfig.request.path.startsWith(element.value));
-
-                                        if (!root) {
-                                            return items;
-                                        }
-                                        if (!root.data) {
-                                            return [];
-                                        }
-
-                                        return findRoot(root.data);
-
-                                    };
-
-                                    var hierarchicalMenuParams = {
+                                    const hierarchicalMenuParams = {
                                         container         : facet.wrapper.appendChild(createISWidgetContainer(facet.attribute)),
                                         attributes        : hierarchical_levels,
                                         separator         : algoliaConfig.instant.categorySeparator,
                                         templates         : templates,
                                         showParentLevel   : true,
                                         limit             : algoliaConfig.maxValuesPerFacet,
+                                        rootPath          : algoliaConfig.request.path,
                                         sortBy            : ['name:asc'],
                                         transformItems(items) {
                                             return (algoliaConfig.isCategoryPage)
-                                                ? findRoot(items).map(
+                                                ? items.map(
                                                     item => {
                                                         return {
                                                             ...item,
