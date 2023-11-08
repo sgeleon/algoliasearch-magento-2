@@ -374,6 +374,7 @@
                 <field id="use_virtual_replica" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Use Virtual Replica</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Replica</backend_model>
                     <comment>
                         <![CDATA[
                             Virtual Replica is only available on Premium plans <a target="_blank" href="https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/?client=php#switching-to-virtual-replica">documentation</a>
@@ -386,7 +387,7 @@
                 <field id="sorts" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Sorts</label>
                     <frontend_model>Algolia\AlgoliaSearch\Model\Source\Sorts</frontend_model>
-                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Sorts</backend_model>
                     <comment>
                         <![CDATA[
                             Specify different sorting options you want to offer on a search results page.<br>
@@ -1136,6 +1137,7 @@
                 <field id="customer_groups_enable" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Customer Groups</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Replica</backend_model>    
                     <comment>
                         <![CDATA[
                             Do you want to take into account customer groups and display the price of the logged-in group instead of the default price?

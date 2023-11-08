@@ -3,6 +3,12 @@
 ## 3.11.0
 
 ### Updates
+- Fixes related to NeuralSearch compatibility
+- Removed the redundant jquery library from AlgoliaBundle.
+  
+## 3.11.0
+
+### Updates
 - Added support for Merchandising Studio and Visual Merchandiser by indexing flattened categoryID attribute to product index.
 - Upgraded the Algolia PHP client to version 3.3.2
 - Upgraded the Algolia insights to version 2.6.0

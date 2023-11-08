@@ -109,7 +109,7 @@ define(
 
                 var self = this;
 
-                algoliaBundle.$(function ($) {
+                $(function ($) {
                     $(self.config.autocomplete.selector).on('autocomplete:selected', function (e, suggestion) {
                         var eventData = self.buildEventData(
                             'Clicked', suggestion.objectID, suggestion.__indexName, suggestion.__position, suggestion.__queryID
@@ -278,7 +278,7 @@ define(
 
         algoliaInsights.addSearchParameters();
 
-        algoliaBundle.$(function ($) {
+        $(function ($) {
             if (window.algoliaConfig) {
                 algoliaInsights.track(algoliaConfig);
             }

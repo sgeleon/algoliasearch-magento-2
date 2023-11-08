@@ -1,115 +1,116 @@
 define(
     [
+            'jquery',
             'algoliaBundle',
             'Magento_Catalog/js/price-utils',
             'algoliaCommon',
             'algoliaInsights',
             'algoliaHooks'
     ],
-    function (algoliaBundle, priceUtils) {
-            algoliaBundle.$(function ($) {
-                    /** We have nothing to do here if instantsearch is not enabled **/
-                    if (typeof algoliaConfig === 'undefined' || !algoliaConfig.instant.enabled || !(algoliaConfig.isSearchPage || !algoliaConfig.autocomplete.enabled)) {
-                            return;
-                    }
+    function ($, algoliaBundle, priceUtils) {
+            $(function ($) {
+					/** We have nothing to do here if instantsearch is not enabled **/
+					if (typeof algoliaConfig === 'undefined' || !algoliaConfig.instant.enabled || !(algoliaConfig.isSearchPage || !algoliaConfig.autocomplete.enabled)) {
+							return;
+					}
 
-                    if ($(algoliaConfig.instant.selector).length <= 0) {
-                            throw '[Algolia] Invalid instant-search selector: ' + algoliaConfig.instant.selector;
-                    }
+					if ($(algoliaConfig.instant.selector).length <= 0) {
+							throw '[Algolia] Invalid instant-search selector: ' + algoliaConfig.instant.selector;
+					}
 
-                    if (algoliaConfig.autocomplete.enabled && $(algoliaConfig.instant.selector).find(algoliaConfig.autocomplete.selector).length > 0) {
-                            throw '[Algolia] You can\'t have a search input matching "' + algoliaConfig.autocomplete.selector +
-                            '" inside you instant selector "' + algoliaConfig.instant.selector + '"';
-                    }
+					if (algoliaConfig.autocomplete.enabled && $(algoliaConfig.instant.selector).find(algoliaConfig.autocomplete.selector).length > 0) {
+							throw '[Algolia] You can\'t have a search input matching "' + algoliaConfig.autocomplete.selector +
+							'" inside you instant selector "' + algoliaConfig.instant.selector + '"';
+					}
 
-                    var findAutocomplete = algoliaConfig.autocomplete.enabled && $(algoliaConfig.instant.selector).find('#algolia-autocomplete-container').length > 0;
-                    if (findAutocomplete) {
-                            $(algoliaConfig.instant.selector).find('#algolia-autocomplete-container').remove();
-                    }
+					var findAutocomplete = algoliaConfig.autocomplete.enabled && $(algoliaConfig.instant.selector).find('#algolia-autocomplete-container').length > 0;
+					if (findAutocomplete) {
+							$(algoliaConfig.instant.selector).find('#algolia-autocomplete-container').remove();
+					}
 
-                    /** BC of old hooks **/
-                    if (typeof algoliaHookBeforeInstantsearchInit === 'function') {
-                            algolia.registerHook('beforeInstantsearchInit', algoliaHookBeforeInstantsearchInit);
-                    }
+					/** BC of old hooks **/
+					if (typeof algoliaHookBeforeInstantsearchInit === 'function') {
+							algolia.registerHook('beforeInstantsearchInit', algoliaHookBeforeInstantsearchInit);
+					}
 
-                    if (typeof algoliaHookBeforeWidgetInitialization === 'function') {
-                            algolia.registerHook('beforeWidgetInitialization', algoliaHookBeforeWidgetInitialization);
-                    }
+					if (typeof algoliaHookBeforeWidgetInitialization === 'function') {
+							algolia.registerHook('beforeWidgetInitialization', algoliaHookBeforeWidgetInitialization);
+					}
 
-                    if (typeof algoliaHookBeforeInstantsearchStart === 'function') {
-                            algolia.registerHook('beforeInstantsearchStart', algoliaHookBeforeInstantsearchStart);
-                    }
+					if (typeof algoliaHookBeforeInstantsearchStart === 'function') {
+							algolia.registerHook('beforeInstantsearchStart', algoliaHookBeforeInstantsearchStart);
+					}
 
-                    if (typeof algoliaHookAfterInstantsearchStart === 'function') {
-                            algolia.registerHook('afterInstantsearchStart', algoliaHookAfterInstantsearchStart);
-                    }
+					if (typeof algoliaHookAfterInstantsearchStart === 'function') {
+							algolia.registerHook('afterInstantsearchStart', algoliaHookAfterInstantsearchStart);
+					}
 
-                    /**
-                     * Setup wrapper
-                     *
-                     * For templating is used Hogan library
-                     * Docs: http://twitter.github.io/hogan.js/
-                     **/
-                    var wrapperTemplate = algoliaBundle.Hogan.compile($('#instant_wrapper_template').html());
-                    var instant_selector = "#instant-search-bar";
+					/**
+					 * Setup wrapper
+					 *
+					 * For templating is used Hogan library
+					 * Docs: http://twitter.github.io/hogan.js/
+					 **/
+					var wrapperTemplate = algoliaBundle.Hogan.compile($('#instant_wrapper_template').html());
+					var instant_selector = "#instant-search-bar";
 
-                    var div = document.createElement('div');
-                    $(div).addClass('algolia-instant-results-wrapper');
+					var div = document.createElement('div');
+					$(div).addClass('algolia-instant-results-wrapper');
 
-                    $(algoliaConfig.instant.selector).addClass('algolia-instant-replaced-content');
-                    $(algoliaConfig.instant.selector).wrap(div);
+					$(algoliaConfig.instant.selector).addClass('algolia-instant-replaced-content');
+					$(algoliaConfig.instant.selector).wrap(div);
 
-                    $('.algolia-instant-results-wrapper').append('<div class="algolia-instant-selector-results"></div>');
-                    $('.algolia-instant-selector-results').html(wrapperTemplate.render({
-                            second_bar:       algoliaConfig.instant.enabled,
-                            findAutocomplete: findAutocomplete,
-                            config:           algoliaConfig.instant,
-                            translations:     algoliaConfig.translations
-                    })).show();
+					$('.algolia-instant-results-wrapper').append('<div class="algolia-instant-selector-results"></div>');
+					$('.algolia-instant-selector-results').html(wrapperTemplate.render({
+							second_bar:       algoliaConfig.instant.enabled,
+							findAutocomplete: findAutocomplete,
+							config:           algoliaConfig.instant,
+							translations:     algoliaConfig.translations
+					})).show();
 
-                    /**
-                     * Initialise instant search
-                     * For rendering instant search page is used Algolia's instantsearch.js library
-                     * Docs: https://www.algolia.com/doc/api-reference/widgets/instantsearch/js/
-                     **/
+					/**
+					 * Initialise instant search
+					 * For rendering instant search page is used Algolia's instantsearch.js library
+					 * Docs: https://www.algolia.com/doc/api-reference/widgets/instantsearch/js/
+					 **/
 
-                    var ruleContexts = ['magento_filters', '']; // Empty context to keep BC for already create rules in dashboard
-                    if (algoliaConfig.request.categoryId.length > 0) {
-                            ruleContexts.push('magento-category-' + algoliaConfig.request.categoryId);
-                    }
+					var ruleContexts = ['magento_filters', '']; // Empty context to keep BC for already create rules in dashboard
+					if (algoliaConfig.request.categoryId.length > 0) {
+							ruleContexts.push('magento-category-' + algoliaConfig.request.categoryId);
+					}
 
-                    if (algoliaConfig.request.landingPageId.length > 0) {
-                            ruleContexts.push('magento-landingpage-' + algoliaConfig.request.landingPageId);
-                    }
+					if (algoliaConfig.request.landingPageId.length > 0) {
+							ruleContexts.push('magento-landingpage-' + algoliaConfig.request.landingPageId);
+					}
 
-                    var searchClient = algoliaBundle.algoliasearch(algoliaConfig.applicationId, algoliaConfig.apiKey);
-                    var indexName = algoliaConfig.indexName + '_products';
-                    var searchParameters = {
-                            hitsPerPage:  algoliaConfig.hitsPerPage,
-                            ruleContexts: ruleContexts
-                    };
-                    var instantsearchOptions = {
-                            searchClient:   searchClient,
-                            indexName:      indexName,
-                            searchFunction: function (helper) {
-                                    if (helper.state.query === '' && !algoliaConfig.isSearchPage) {
-                                            $('.algolia-instant-replaced-content').show();
-                                            $('.algolia-instant-selector-results').hide();
-                                    } else {
-                                            helper.search();
-                                            $('.algolia-instant-replaced-content').hide();
-                                            $('.algolia-instant-selector-results').show();
-                                    }
-                            },
-                            routing:        window.routing,
-                    };
+					var searchClient = algoliaBundle.algoliasearch(algoliaConfig.applicationId, algoliaConfig.apiKey);
+					var indexName = algoliaConfig.indexName + '_products';
+					var searchParameters = {
+							hitsPerPage:  algoliaConfig.hitsPerPage,
+							ruleContexts: ruleContexts
+					};
+					var instantsearchOptions = {
+							searchClient:   searchClient,
+							indexName:      indexName,
+							searchFunction: function (helper) {
+									if (helper.state.query === '' && !algoliaConfig.isSearchPage) {
+											$('.algolia-instant-replaced-content').show();
+											$('.algolia-instant-selector-results').hide();
+									} else {
+											helper.search();
+											$('.algolia-instant-replaced-content').hide();
+											$('.algolia-instant-selector-results').show();
+									}
+							},
+							routing:        window.routing,
+					};
 
-                    if (algoliaConfig.request.path.length > 0 && window.location.hash.indexOf('categories.level0') === -1) {
-                            if (algoliaConfig.areCategoriesInFacets === false) {
-                                    searchParameters['facetsRefinements'] = {};
-                                    searchParameters['facetsRefinements']['categories.level' + algoliaConfig.request.level] = [algoliaConfig.request.path];
-                            }
-                    }
+					if (algoliaConfig.request.path.length > 0 && window.location.hash.indexOf('categories.level0') === -1) {
+							if (algoliaConfig.areCategoriesInFacets === false) {
+									searchParameters['facetsRefinements'] = {};
+									searchParameters['facetsRefinements']['categories.level' + algoliaConfig.request.level] = [algoliaConfig.request.path];
+							}
+					}
 
                     if (algoliaConfig.instant.isVisualMerchEnabled && algoliaConfig.isCategoryPage ) {
                         searchParameters.filters = `${algoliaConfig.instant.categoryPageIdAttribute}:'${algoliaConfig.request.path}'`;
