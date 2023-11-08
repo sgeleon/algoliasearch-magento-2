@@ -773,9 +773,11 @@ class ProductHelper
      */
     protected function dedupePaths($paths): array
     {
-        return array_intersect_key(
-            $paths,
-            array_unique(array_map('serialize', $paths))
+        return array_values(
+            array_intersect_key(
+                $paths,
+                array_unique(array_map('serialize', $paths))
+            )
         );
     }
 
