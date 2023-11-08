@@ -300,18 +300,6 @@ define(
                                         return item;
                                     });
                             },
-
-                            /*
-                             * queryRuleCustomData
-                             * The queryRuleCustomData widget displays custom data from Query Rules.
-                             * Docs: https://www.algolia.com/doc/api-reference/widgets/query-rule-custom-data/js/
-                             **/
-                            queryRuleCustomData: {
-                                container: '#algolia-banner',
-                                templates: {
-                                    default: '{{#items}} {{#banner}} {{{banner}}} {{/banner}} {{/items}}',
-                                }
-                            }
                         },
 
                         /*
@@ -341,6 +329,18 @@ define(
                                     item.label = attribute.label;
                                     return item;
                                 })
+                            }
+                        },
+
+                        /*
+                        * queryRuleCustomData
+                        * The queryRuleCustomData widget displays custom data from Query Rules.
+                        * Docs: https://www.algolia.com/doc/api-reference/widgets/query-rule-custom-data/js/
+                        **/
+                        queryRuleCustomData: {
+                            container: '#algolia-banner',
+                            templates: {
+                                    default: '{{#items}} {{#banner}} {{{banner}}} {{/banner}} {{/items}}',
                             }
                         }
                     };
