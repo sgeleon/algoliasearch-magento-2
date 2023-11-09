@@ -463,7 +463,7 @@ class ProductHelper
 
         // Managing Virtual Replica
         if ($this->configHelper->useVirtualReplica($storeId)) {
-            $replicas = $this->handleVirtualReplica($replicas, $indexName);
+            $replicas = $this->handleVirtualReplica($replicas);
         }
 
         // Merge current replicas with sorting replicas to not delete A/B testing replica indices
@@ -1534,7 +1534,7 @@ class ProductHelper
      * @param $replica
      * @return array
      */
-    public function handleVirtualReplica($replicas, $indexName)
+    public function handleVirtualReplica($replicas)
     {
         $virtualReplicaArray = [];
         foreach ($replicas as $replica) {
