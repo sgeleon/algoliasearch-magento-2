@@ -13,9 +13,11 @@ define(
             defaultIndexName:   null,
             isTracking:         false,
             hasAddedParameters: false,
+            useCookie:          false,
 
             track: function (algoliaConfig) {
-                if (this.isTracking) {
+                this.useCookie = algoliaConfig.cookieRestrictionModeEnabled ? !!getCookie('user_allowed_save_cookie') : true;
+                if (this.isTracking || this.useCookie === false) {
                     return;
                 }
 
@@ -37,7 +39,8 @@ define(
             initializeAnalytics: function () {
                 algoliaAnalytics.init({
                     appId:  this.config.applicationId,
-                    apiKey: this.config.apiKey
+                    apiKey: this.config.apiKey,
+                    useCookie: this.useCookie
                 });
 
                 var userAgent = 'insights-js-in-magento (' + this.config.extensionVersion + ')';

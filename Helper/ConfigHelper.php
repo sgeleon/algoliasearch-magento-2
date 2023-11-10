@@ -1699,4 +1699,12 @@ class ConfigHelper
             $storeId
         );
     }
+
+    /**
+     * @return bool
+     */
+    public function isCookieRestrictionModeEnabled()
+    {
+        return (bool)$this->cookieHelper->isCookieRestrictionModeEnabled();
+    }
 }

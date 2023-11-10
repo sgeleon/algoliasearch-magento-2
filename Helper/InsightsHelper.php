@@ -166,4 +166,11 @@ class InsightsHelper
 
         return $userToken;
     }
+
+    /**
+     * @return string|null
+     */
+    public function getUserAllowedSavedCookie() {
+        return $this->configHelper->isCookieRestrictionModeEnabled() ? !!$this->cookieManager->getCookie('user_allowed_save_cookie') : true;
+    }
 }
