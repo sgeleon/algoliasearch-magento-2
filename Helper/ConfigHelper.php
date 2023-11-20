@@ -11,6 +11,7 @@ use Magento\Framework\Locale\Currency;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Cookie\Helper\Cookie as CookieHelper;
 
 class ConfigHelper
 {
@@ -186,6 +187,11 @@ class ConfigHelper
     protected $groupCollection;
 
     /**
+     * @var CookieHelper
+     */
+    protected $cookieHelper;
+
+    /**
      * @param Magento\Framework\App\Config\ScopeConfigInterface $configInterface
      * @param StoreManagerInterface $storeManager
      * @param Currency $currency
@@ -196,6 +202,7 @@ class ConfigHelper
      * @param Magento\Framework\Event\ManagerInterface $eventManager
      * @param SerializerInterface $serializer
      * @param GroupCollection $groupCollection
+     * @param CookieHelper $cookieHelper
      */
     public function __construct(
         Magento\Framework\App\Config\ScopeConfigInterface $configInterface,
@@ -207,7 +214,8 @@ class ConfigHelper
         Magento\Framework\App\ProductMetadataInterface    $productMetadata,
         Magento\Framework\Event\ManagerInterface          $eventManager,
         SerializerInterface                               $serializer,
-        GroupCollection                                   $groupCollection
+        GroupCollection                                   $groupCollection,
+        CookieHelper                                      $cookieHelper
     ) {
         $this->configInterface = $configInterface;
         $this->currency = $currency;
@@ -219,6 +227,7 @@ class ConfigHelper
         $this->eventManager = $eventManager;
         $this->serializer = $serializer;
         $this->groupCollection = $groupCollection;
+        $this->cookieHelper = $cookieHelper;
     }
 
 
@@ -989,7 +998,7 @@ class ConfigHelper
         if (!$attrs){
             $attrs = $this->getSorting($storeId);
         }
-        
+
         $currency = $this->getCurrencyCode($storeId);
         $attributesToAdd = [];
         foreach ($attrs as $key => $attr) {
