@@ -16,13 +16,12 @@ define(
             useCookie:          false,
 
             track: function (algoliaConfig) {
+                this.config = algoliaConfig;
+                this.defaultIndexName = algoliaConfig.indexName + '_products';
                 this.useCookie = algoliaConfig.cookieRestrictionModeEnabled ? !!getCookie('user_allowed_save_cookie') : true;
                 if (this.isTracking || this.useCookie === false) {
                     return;
                 }
-
-                this.config = algoliaConfig;
-                this.defaultIndexName = algoliaConfig.indexName + '_products';
 
                 if (algoliaConfig.ccAnalytics.enabled
                     || algoliaConfig.personalization.enabled) {
@@ -37,6 +36,7 @@ define(
             },
 
             initializeAnalytics: function () {
+                let useCookie = this.config.cookieRestrictionModeEnabled ? !!getCookie('user_allowed_save_cookie') : true;
                 algoliaAnalytics.init({
                     appId:  this.config.applicationId,
                     apiKey: this.config.apiKey,
