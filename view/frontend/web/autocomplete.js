@@ -543,11 +543,15 @@ define(
                 const queryId = $this.attr('data-queryId');
                 const position = $this.attr('data-position');
 
-                const eventData = algoliaInsights.buildEventData(
-                    'Clicked', objectId, indexName, position, queryId
-                );
-                algoliaInsights.trackClick(eventData);
-                $this.attr('data-clicked', true);
+                let useCookie = algoliaConfig.cookieRestrictionModeEnabled ? !!getCookie('user_allowed_save_cookie') : true;
+                if (useCookie !== false) {
+                    algoliaInsights.initializeAnalytics();
+                    const eventData = algoliaInsights.buildEventData(
+                        'Clicked', objectId, indexName, position, queryId
+                    );
+                    algoliaInsights.trackClick(eventData);
+                    $this.attr('data-clicked', true);
+                }
             });
         }
 
