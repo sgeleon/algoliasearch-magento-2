@@ -35,6 +35,9 @@ var config = {
             'Magento_Catalog/js/catalog-add-to-cart': {
                 'Algolia_AlgoliaSearch/insights/add-to-cart-mixin': true
             },
+            'Magento_Cookie/js/notices': {
+                'Algolia_AlgoliaSearch/insights/notices-mixin': true
+            }
         }
     }
 };
