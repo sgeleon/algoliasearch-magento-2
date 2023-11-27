@@ -35,13 +35,22 @@ define(
                 }
             },
 
-            initializeAnalytics: function () {
+            initializeAnalytics: function (partial = false) {
                 let useCookie = this.config.cookieRestrictionModeEnabled ? !!getCookie('user_allowed_save_cookie') : true;
-                algoliaAnalytics.init({
-                    appId:  this.config.applicationId,
-                    apiKey: this.config.apiKey,
-                    useCookie: this.useCookie
-                });
+                if (partial) {
+                    algoliaAnalytics.init({
+                        appId:  this.config.applicationId,
+                        apiKey: this.config.apiKey,
+                        partial: true,
+                        useCookie: useCookie
+                    });
+                } else {
+                    algoliaAnalytics.init({
+                        appId:  this.config.applicationId,
+                        apiKey: this.config.apiKey,
+                        useCookie: useCookie
+                    });
+                }
 
                 var userAgent = 'insights-js-in-magento (' + this.config.extensionVersion + ')';
                 algoliaAnalytics.addAlgoliaAgent(userAgent);
