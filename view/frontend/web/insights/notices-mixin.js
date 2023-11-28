@@ -10,7 +10,7 @@ define(
             this._super();
             $(document).on('click', this.options.cookieAllowButtonSelector, function (event) {
                 event.preventDefault();
-                algoliaInsights.initializeAnalytics(true);
+                algoliaInsights.track(algoliaConfig, true);
             });
         }
     };

@@ -15,7 +15,7 @@ define(
             hasAddedParameters: false,
             useCookie:          false,
 
-            track: function (algoliaConfig) {
+            track: function (algoliaConfig, partial = false) {
                 this.config = algoliaConfig;
                 this.defaultIndexName = algoliaConfig.indexName + '_products';
                 this.useCookie = this.config.cookieRestrictionModeEnabled ? !!getCookie(this.config.ccAnalytics.consentCookieName) : true;
@@ -26,7 +26,7 @@ define(
                 if (algoliaConfig.ccAnalytics.enabled
                     || algoliaConfig.personalization.enabled) {
 
-                    this.initializeAnalytics();
+                    this.initializeAnalytics(partial);
                     this.addSearchParameters();
                     this.bindData();
                     this.bindEvents();
