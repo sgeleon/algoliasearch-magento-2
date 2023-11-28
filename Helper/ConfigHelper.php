@@ -75,6 +75,7 @@ class ConfigHelper
     public const CC_ANALYTICS_IS_SELECTOR = 'algoliasearch_cc_analytics/cc_analytics_group/is_selector';
     public const CC_CONVERSION_ANALYTICS_MODE = 'algoliasearch_cc_analytics/cc_analytics_group/conversion_analytics_mode';
     public const CC_ADD_TO_CART_SELECTOR = 'algoliasearch_cc_analytics/cc_analytics_group/add_to_cart_selector';
+    public const CC_CONVERSION_DEFAULT_CONSENT_COOKIE_NAME = 'algoliasearch_cc_analytics/cc_analytics_group/default_consent_cookie_name';
 
     public const GA_ENABLE = 'algoliasearch_analytics/analytics_group/enable';
     public const GA_DELAY = 'algoliasearch_analytics/analytics_group/delay';
@@ -1574,6 +1575,19 @@ class ConfigHelper
     public function getConversionAnalyticsAddToCartSelector($storeId = null)
     {
         return $this->configInterface->getValue(self::CC_ADD_TO_CART_SELECTOR, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * @param $storeId
+     * @return mixed
+     */
+    public function getDefaultConsentCookieName($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::CC_CONVERSION_DEFAULT_CONSENT_COOKIE_NAME,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
     }
 
     /**

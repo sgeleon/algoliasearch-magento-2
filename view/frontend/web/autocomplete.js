@@ -543,7 +543,7 @@ define(
                 const queryId = $this.attr('data-queryId');
                 const position = $this.attr('data-position');
 
-                let useCookie = algoliaConfig.cookieRestrictionModeEnabled ? !!getCookie('user_allowed_save_cookie') : true;
+                let useCookie = algoliaConfig.cookieRestrictionModeEnabled ? !!getCookie(algoliaConfig.ccAnalytics.consentCookieName) : true;
                 if (useCookie !== false) {
                     algoliaInsights.initializeAnalytics();
                     const eventData = algoliaInsights.buildEventData(

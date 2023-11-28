@@ -294,6 +294,7 @@ class Configuration extends Algolia implements CollectionDataSourceInterface
                 'ISSelector' => $config->getClickConversionAnalyticsISSelector(),
                 'conversionAnalyticsMode' => $config->getConversionAnalyticsMode(),
                 'addToCartSelector' => $config->getConversionAnalyticsAddToCartSelector(),
+                'consentCookieName' => $config->getDefaultConsentCookieName(),
                 'orderedProductIds' => $this->getOrderedProductIds($config, $request),
             ],
             'isPersonalizationEnabled' => $persoHelper->isPersoEnabled(),

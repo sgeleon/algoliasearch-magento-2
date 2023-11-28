@@ -933,6 +933,17 @@
                         <field id="enable">1</field>
                     </depends>
                 </field>
+                <field id="default_consent_cookie_name" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Default Consent Cookie Name</label>
+                    <comment>
+                        <![CDATA[
+                            Enter default consent cookie name.
+                        ]]>
+                    </comment>
+                    <depends>
+                        <field id="enable">1</field>
+                    </depends>
+                </field>
             </group>
         </section>
 

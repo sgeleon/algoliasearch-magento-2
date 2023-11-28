@@ -46,6 +46,11 @@
                 <category_separator> /// </category_separator>
             </categories>
         </algoliasearch_categories>
+        <algoliasearch_cc_analytics>
+            <cc_analytics_group>
+                <default_consent_cookie_name>user_allowed_save_cookie</default_consent_cookie_name>
+            </cc_analytics_group>
+        </algoliasearch_cc_analytics>
         <algoliasearch_personalization>
             <personalization_group>
                 <personalization_click_events_group>

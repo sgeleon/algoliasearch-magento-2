@@ -18,7 +18,7 @@ define(
             track: function (algoliaConfig) {
                 this.config = algoliaConfig;
                 this.defaultIndexName = algoliaConfig.indexName + '_products';
-                this.useCookie = algoliaConfig.cookieRestrictionModeEnabled ? !!getCookie('user_allowed_save_cookie') : true;
+                this.useCookie = this.config.cookieRestrictionModeEnabled ? !!getCookie(this.config.ccAnalytics.consentCookieName) : true;
                 if (this.isTracking || this.useCookie === false) {
                     return;
                 }
@@ -36,7 +36,7 @@ define(
             },
 
             initializeAnalytics: function (partial = false) {
-                let useCookie = this.config.cookieRestrictionModeEnabled ? !!getCookie('user_allowed_save_cookie') : true;
+                let useCookie = this.config.cookieRestrictionModeEnabled ? !!getCookie(this.config.ccAnalytics.consentCookieName) : true;
                 if (partial) {
                     algoliaAnalytics.init({
                         appId:  this.config.applicationId,
