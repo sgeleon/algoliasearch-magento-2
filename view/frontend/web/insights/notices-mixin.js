@@ -8,7 +8,7 @@ define(
     var algoliaCookieMixin = {
         _create: function () {
             this._super();
-            $(document).on('click', this.options.cookieAllowButtonSelector, function (event) {
+            $(document).on('click', algoliaConfig.cookieConfiguration.cookieAllowButtonSelector, function (event) {
                 event.preventDefault();
                 algoliaInsights.track(algoliaConfig, true);
             });

@@ -24,6 +24,10 @@ class ConfigHelper
     public const API_KEY = 'algoliasearch_credentials/credentials/api_key';
     public const SEARCH_ONLY_API_KEY = 'algoliasearch_credentials/credentials/search_only_api_key';
     public const INDEX_PREFIX = 'algoliasearch_credentials/credentials/index_prefix';
+    public const COOKIE_DEFAULT_CONSENT_COOKIE_NAME = 'algoliasearch_credentials/algolia_cookie_configuration/default_consent_cookie_name';
+    public const ALLOW_COOKIE_BUTTON_SELECTOR = 'algoliasearch_credentials/algolia_cookie_configuration/allow_cookie_button_selector';
+    public const ALGOLIA_COOKIE_DURATION = 'algoliasearch_credentials/algolia_cookie_configuration/cookie_duration';
+
 
     public const IS_INSTANT_ENABLED = 'algoliasearch_instant/instant/is_instant_enabled';
     public const REPLACE_CATEGORIES = 'algoliasearch_instant/instant/replace_categories';
@@ -75,7 +79,6 @@ class ConfigHelper
     public const CC_ANALYTICS_IS_SELECTOR = 'algoliasearch_cc_analytics/cc_analytics_group/is_selector';
     public const CC_CONVERSION_ANALYTICS_MODE = 'algoliasearch_cc_analytics/cc_analytics_group/conversion_analytics_mode';
     public const CC_ADD_TO_CART_SELECTOR = 'algoliasearch_cc_analytics/cc_analytics_group/add_to_cart_selector';
-    public const CC_CONVERSION_DEFAULT_CONSENT_COOKIE_NAME = 'algoliasearch_cc_analytics/cc_analytics_group/default_consent_cookie_name';
 
     public const GA_ENABLE = 'algoliasearch_analytics/analytics_group/enable';
     public const GA_DELAY = 'algoliasearch_analytics/analytics_group/delay';
@@ -1584,7 +1587,33 @@ class ConfigHelper
     public function getDefaultConsentCookieName($storeId = null)
     {
         return $this->configInterface->getValue(
-            self::CC_CONVERSION_DEFAULT_CONSENT_COOKIE_NAME,
+            self::COOKIE_DEFAULT_CONSENT_COOKIE_NAME,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @param $storeId
+     * @return mixed
+     */
+    public function getAllowCookieButtonSelector($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::ALLOW_COOKIE_BUTTON_SELECTOR,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @param $storeId
+     * @return mixed
+     */
+    public function getAlgoliaCookieDuration($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::ALGOLIA_COOKIE_DURATION,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );

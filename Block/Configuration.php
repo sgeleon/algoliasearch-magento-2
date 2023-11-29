@@ -288,13 +288,17 @@ class Configuration extends Algolia implements CollectionDataSourceInterface
             'urls' => [
                 'logo' => $this->getViewFileUrl('Algolia_AlgoliaSearch::images/algolia-logo-blue.svg'),
             ],
-            'cookieRestrictionModeEnabled' => $config->isCookieRestrictionModeEnabled(),
+            'cookieConfiguration' => [
+                'consentCookieName' => $config->getDefaultConsentCookieName(),
+                'cookieAllowButtonSelector' => $config->getAllowCookieButtonSelector(),
+                'cookieRestrictionModeEnabled' => $config->isCookieRestrictionModeEnabled(),
+                'cookieDuration' =>$config->getAlgoliaCookieDuration()
+            ],
             'ccAnalytics' => [
                 'enabled' => $config->isClickConversionAnalyticsEnabled(),
                 'ISSelector' => $config->getClickConversionAnalyticsISSelector(),
                 'conversionAnalyticsMode' => $config->getConversionAnalyticsMode(),
                 'addToCartSelector' => $config->getConversionAnalyticsAddToCartSelector(),
-                'consentCookieName' => $config->getDefaultConsentCookieName(),
                 'orderedProductIds' => $this->getOrderedProductIds($config, $request),
             ],
             'isPersonalizationEnabled' => $persoHelper->isPersoEnabled(),

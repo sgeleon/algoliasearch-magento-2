@@ -18,7 +18,7 @@ define(
             track: function (algoliaConfig, partial = false) {
                 this.config = algoliaConfig;
                 this.defaultIndexName = algoliaConfig.indexName + '_products';
-                this.useCookie = this.config.cookieRestrictionModeEnabled ? !!getCookie(this.config.ccAnalytics.consentCookieName) : true;
+                let useCookie = this.config.cookieConfiguration.cookieRestrictionModeEnabled ? !!getCookie(this.config.cookieConfiguration.consentCookieName) : true;
                 if (this.isTracking || this.useCookie === false) {
                     return;
                 }
@@ -36,19 +36,21 @@ define(
             },
 
             initializeAnalytics: function (partial = false) {
-                let useCookie = this.config.cookieRestrictionModeEnabled ? !!getCookie(this.config.ccAnalytics.consentCookieName) : true;
+                let useCookie = this.config.cookieConfiguration.cookieRestrictionModeEnabled ? !!getCookie(this.config.cookieConfiguration.consentCookieName) : true;
                 if (partial) {
                     algoliaAnalytics.init({
                         appId:  this.config.applicationId,
                         apiKey: this.config.apiKey,
                         partial: true,
-                        useCookie: useCookie
+                        useCookie: useCookie,
+                        cookieDuration: Number(this.config.cookieConfiguration.cookieDuration)
                     });
                 } else {
                     algoliaAnalytics.init({
                         appId:  this.config.applicationId,
                         apiKey: this.config.apiKey,
-                        useCookie: useCookie
+                        useCookie: useCookie,
+                        cookieDuration: Number(this.config.cookieConfiguration.cookieDuration)
                     });
                 }
 
