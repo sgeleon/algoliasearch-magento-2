@@ -294,6 +294,10 @@ define(
 
         $(function ($) {
             if (window.algoliaConfig) {
+                $(document).on('click', algoliaConfig.cookieConfiguration.cookieAllowButtonSelector, function (event) {
+                    event.preventDefault();
+                    algoliaInsights.track(algoliaConfig, true);
+                });
                 algoliaInsights.track(algoliaConfig);
             }
         });
