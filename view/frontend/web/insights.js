@@ -18,7 +18,7 @@ define(
             track: function (algoliaConfig, partial = false) {
                 this.config = algoliaConfig;
                 this.defaultIndexName = algoliaConfig.indexName + '_products';
-                let useCookie = this.config.cookieConfiguration.cookieRestrictionModeEnabled ? !!getCookie(this.config.cookieConfiguration.consentCookieName) : true;
+                this.useCookie = this.config.cookieConfiguration.cookieRestrictionModeEnabled ? !!getCookie(this.config.cookieConfiguration.consentCookieName) : true;
                 if (this.isTracking || this.useCookie === false) {
                     return;
                 }
