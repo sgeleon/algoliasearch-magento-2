@@ -115,7 +115,7 @@
                 <attribute type="expanded">1</attribute>
                 <comment>
                     <![CDATA[
-                         If your Magento cookie settings, specifically General > Web > Default Cookie Settings > Cookie Restriction Mode is set to "No," we will consider it as Implicit Cookie Consent. In this case, the useCookie will be set to True by default for all insight events.
+                         If your Magento cookie settings, specifically <b>General > Web > Default Cookie Settings > Cookie Restriction Mode</b> is set to "No," we will consider it as Implicit Cookie Consent. In this case, the useCookie will be set to True by default for all insight events. Conversely, if <b>Cookie Restriction Mode is set to 'Yes,'</b> Insight events will not be allowed without explicit cookie consent.
                         ]]>
                 </comment>    
                 <field id="default_consent_cookie_name" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -138,7 +138,7 @@
                     <label>Algolia Cookie Duration</label>
                     <comment>
                         <![CDATA[
-                            Add Cookie Duration in milliseconds by default is 15552000000 (6 Months).
+                            Add Cookie Duration in milliseconds. Default is 15552000000 (6 Months).
                         ]]>
                     </comment>
                 </field>
