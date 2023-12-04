@@ -463,7 +463,7 @@ class ProductHelper
 
         // Managing Virtual Replica
         if ($this->configHelper->useVirtualReplica($storeId)) {
-            $replicas = $this->handleVirtualReplica($replicas, $indexName);
+            $replicas = $this->handleVirtualReplica($replicas);
         }
 
         // Merge current replicas with sorting replicas to not delete A/B testing replica indices
@@ -773,9 +773,11 @@ class ProductHelper
      */
     protected function dedupePaths($paths): array
     {
-        return array_intersect_key(
-            $paths,
-            array_unique(array_map('serialize', $paths))
+        return array_values(
+            array_intersect_key(
+                $paths,
+                array_unique(array_map('serialize', $paths))
+            )
         );
     }
 
@@ -1229,7 +1231,7 @@ class ProductHelper
             $value = $attributeResource->getFrontend()->getValue($product);
         }
 
-        if ($value) {
+        if ($value !== null) {
             $customData[$attribute['attribute']] = $value;
         }
 
@@ -1532,7 +1534,7 @@ class ProductHelper
      * @param $replica
      * @return array
      */
-    public function handleVirtualReplica($replicas, $indexName)
+    public function handleVirtualReplica($replicas)
     {
         $virtualReplicaArray = [];
         foreach ($replicas as $replica) {
@@ -1556,12 +1558,14 @@ class ProductHelper
                 return $sortingIndex['name'];
             }, $sortingIndices));
             try {
+                $replicasFormated = $this->handleVirtualReplica($replicas);
+                $availableReplicaMatch = array_merge($replicasFormated, $replicas);
                 if ($this->configHelper->useVirtualReplica($storeId)) {
-                    $replicas = $this->handleVirtualReplica($replicas, $indexName);
+                   $replicas = $replicasFormated;
                 }
                 $currentSettings = $this->algoliaHelper->getSettings($indexName);
                 if (is_array($currentSettings) && array_key_exists('replicas', $currentSettings)) {
-                    $replicasRequired = array_values(array_diff_assoc($currentSettings['replicas'], $replicas));
+                    $replicasRequired = array_values(array_diff($currentSettings['replicas'], $availableReplicaMatch));
                     $this->algoliaHelper->setSettings($indexName, ['replicas' => $replicasRequired]);
                     $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
                     $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
