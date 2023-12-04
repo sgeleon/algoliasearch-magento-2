@@ -111,13 +111,18 @@
                 </field>
             </group>
             <group id="algolia_cookie_configuration" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Algolia Cookie Configuration</label>
+                <label>Algolia Cookie Configuration</label>    
                 <attribute type="expanded">1</attribute>
+                <comment>
+                    <![CDATA[
+                         If your Magento cookie settings, specifically General > Web > Default Cookie Settings > Cookie Restriction Mode is set to "No," we will consider it as Implicit Cookie Consent. In this case, the useCookie will be set to True by default for all insight events.
+                        ]]>
+                </comment>    
                 <field id="default_consent_cookie_name" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Default Consent Cookie Name</label>
+                    <label>Consent Cookie Name</label>
                     <comment>
                         <![CDATA[
-                            Enter default consent cookie name.
+                            Enter the name for your website's consent cookie.
                         ]]>
                     </comment>
                 </field>
