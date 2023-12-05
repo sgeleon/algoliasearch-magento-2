@@ -452,7 +452,7 @@ class ProductHelper
          * Handle replicas
          */
         $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
-
+        
         $replicas = [];
 
         if ($this->configHelper->isInstantEnabled($storeId)) {
@@ -483,7 +483,7 @@ class ProductHelper
             $this->logger->log('Setting replicas to "' . $indexName . '" index.');
             $this->logger->log('Replicas: ' . json_encode($replicas));
             $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
-
+            
             if (!$this->configHelper->useVirtualReplica($storeId)) {
                 foreach ($sortingIndices as $values) {
                     $replicaName = $values['name'];
@@ -574,7 +574,7 @@ class ProductHelper
         );
 
         $defaultData = $transport->getData();
-
+        
         $visibility = $product->getVisibility();
 
         $visibleInCatalog = $this->visibility->getVisibleInCatalogIds();
@@ -1056,7 +1056,7 @@ class ProductHelper
             }
 
             $attributeResource = $attributeResource->setData('store_id', $product->getStoreId());
-
+            
             $value = $product->getData($attributeName);
 
             if ($value !== null) {

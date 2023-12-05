@@ -171,4 +171,10 @@ class InsightsHelper
         return $userToken;
     }
 
+    /**
+     * @return string|null
+     */
+    public function getUserAllowedSavedCookie() {
+        return $this->configHelper->isCookieRestrictionModeEnabled() ? !!$this->cookieManager->getCookie($this->configHelper->getDefaultConsentCookieName()) : true;
+    }
 }
