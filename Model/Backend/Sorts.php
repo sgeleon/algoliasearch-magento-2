@@ -74,12 +74,10 @@ class Sorts extends ArraySerialized
         if ($this->isValueChanged()) {
             try{
                 $oldValue = $this->serializer->unserialize($this->getOldValue());
-                $updatedValue = $this->serializer->unserialize($this->getValue());
-                $sortingAttributes = array_merge($oldValue, $updatedValue);
                 $storeIds = array_keys($this->storeManager->getStores());
                 foreach ($storeIds as $storeId) {
                     $indexName = $this->helper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
-                    $this->productHelper->handlingReplica($indexName, $storeId, $sortingAttributes);
+                    $this->productHelper->handlingReplica($indexName, $storeId, $oldValue);
                 }
             } catch (AlgoliaException $e) {
                 if ($e->getCode() !== 404) {
