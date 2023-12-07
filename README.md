@@ -61,7 +61,7 @@ With the release of a new major version, we have decided to create minor and maj
 
 If you would like to stay on a minor version, please upgrade your composer to only accept versions less than version 2 like the example:
 
-`"algolia/algoliasearch-magento-2": "3.10.2"`
+`"algolia/algoliasearch-magento-2": "3.12.0"`
 
 ### Customisation
 
