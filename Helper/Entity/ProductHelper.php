@@ -1569,8 +1569,8 @@ class ProductHelper
                     $this->algoliaHelper->setSettings($indexName, ['replicas' => $replicasRequired]);
                     $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
                     $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
-                    if (count($replicas) > 0) {
-                        foreach ($replicas as $replicaIndex) {
+                    if (count($availableReplicaMatch) > 0) {
+                        foreach ($availableReplicaMatch as $replicaIndex) {
                             $this->algoliaHelper->deleteIndex($replicaIndex);
                         }
                     }
