@@ -58,7 +58,9 @@ define(
                 algoliaAnalytics.addAlgoliaAgent(userAgent);
 
                 var userToken = getCookie('aa-search');
-                if (userToken && userToken !== '') algoliaAnalytics.setAuthenticatedUserToken(userToken);
+                if (userToken && userToken !== '') {
+                    algoliaAnalytics.setAuthenticatedUserToken(userToken);
+                }
             },
 
             addSearchParameters: function () {
@@ -75,7 +77,6 @@ define(
                     if (algoliaConfig.personalization.enabled) {
                         allWidgetConfiguration.configure.enablePersonalization = true;
                         allWidgetConfiguration.configure.userToken = algoliaAnalytics.getUserToken();
-                        allWidgetConfiguration.configure.authenticatedUserToken = algoliaAnalytics.getUserToken();
                     }
 
                     return allWidgetConfiguration;
@@ -88,7 +89,6 @@ define(
                     if (algoliaConfig.personalization.enabled) {
                         options.enablePersonalization = true;
                         options.userToken = algoliaAnalytics.getUserToken();
-                        options.authenticatedUserToken = algoliaAnalytics.getUserToken();
                     }
                     return options;
                 });
