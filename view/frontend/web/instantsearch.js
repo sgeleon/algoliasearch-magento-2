@@ -300,46 +300,47 @@ define(
                                         return item;
                                     });
                             },
+                        },
 
-                            /*
-                             * clearRefinements
-                             * Widget displays a button that lets the user clean every refinement applied to the search. You can control which attributes are impacted by the button with the options.
-                             * Docs: https://www.algolia.com/doc/api-reference/widgets/clear-refinements/js/
-                             **/
-                            clearRefinements: {
-                                container         : '#clear-refinements',
-                                templates         : {
-                                    resetLabel: algoliaConfig.translations.clearAll,
-                                },
-                                includedAttributes: attributes.map(function (attribute) {
-                                    if (!(algoliaConfig.isCategoryPage && attribute.name.indexOf('categories') > -1)) {
-                                        return attribute.name;
-                                    }
-                                }),
-                                cssClasses        : {
-                                    button: ['action', 'primary']
-                                },
-                                transformItems    : function (items) {
-                                    return items.map(function (item) {
-                                        var attribute = attributes.filter(function (_attribute) {
-                                            return item.attribute === _attribute.name
-                                        })[0];
-                                        if (!attribute) return item;
-                                        item.label = attribute.label;
-                                        return item;
-                                    })
-                                }
+                        /*
+                        * clearRefinements
+                        * Widget displays a button that lets the user clean every refinement applied to the search. You can control which attributes are impacted by the button with the options.
+                        * Docs: https://www.algolia.com/doc/api-reference/widgets/clear-refinements/js/
+                        **/
+                        clearRefinements: {
+                            container         : '#clear-refinements',
+                            templates         : {
+                                resetLabel: algoliaConfig.translations.clearAll,
                             },
-                            /*
-                             * queryRuleCustomData
-                             * The queryRuleCustomData widget displays custom data from Query Rules.
-                             * Docs: https://www.algolia.com/doc/api-reference/widgets/query-rule-custom-data/js/
-                             **/
-                            queryRuleCustomData: {
-                                container: '#algolia-banner',
-                                templates: {
-                                    default: '{{#items}} {{#banner}} {{{banner}}} {{/banner}} {{/items}}',
+                            includedAttributes: attributes.map(function (attribute) {
+                                if (!(algoliaConfig.isCategoryPage && attribute.name.indexOf('categories') > -1)) {
+                                    return attribute.name;
                                 }
+                            }),
+                            cssClasses        : {
+                                button: ['action', 'primary']
+                            },
+                            transformItems    : function (items) {
+                                return items.map(function (item) {
+                                    var attribute = attributes.filter(function (_attribute) {
+                                        return item.attribute === _attribute.name
+                                    })[0];
+                                    if (!attribute) return item;
+                                    item.label = attribute.label;
+                                    return item;
+                                })
+                            }
+                        },
+
+                        /*
+                        * queryRuleCustomData
+                        * The queryRuleCustomData widget displays custom data from Query Rules.
+                        * Docs: https://www.algolia.com/doc/api-reference/widgets/query-rule-custom-data/js/
+                        **/
+                        queryRuleCustomData: {
+                            container: '#algolia-banner',
+                            templates: {
+                                    default: '{{#items}} {{#banner}} {{{banner}}} {{/banner}} {{/items}}',
                             }
                         }
                     };
@@ -447,40 +448,25 @@ define(
                      * Custom widgets can be added to this object like [attribute]: function(facet, templates)
                      * Function must return an array [<widget name>: string, <widget options>: object]
                      **/
-                    var customAttributeFacet = {
+                    const customAttributeFacet = {
                             categories: function (facet, templates) {
-                                    var hierarchical_levels = [];
-                                    for (var l = 0; l < 10; l++) {
+                                    const hierarchical_levels = [];
+                                    for (let l = 0; l < 10; l++) {
                                             hierarchical_levels.push('categories.level' + l.toString());
                                     }
 
-
-                                    //return array of items starting from root based on category
-                                    const findRoot = (items) => {
-                                        const root = items.find(element => algoliaConfig.request.path.startsWith(element.value));
-
-                                        if (!root) {
-                                            return items;
-                                        }
-                                        if (!root.data) {
-                                            return [];
-                                        }
-
-                                        return findRoot(root.data);
-
-                                    };
-
-                                    var hierarchicalMenuParams = {
+                                    const hierarchicalMenuParams = {
                                         container         : facet.wrapper.appendChild(createISWidgetContainer(facet.attribute)),
                                         attributes        : hierarchical_levels,
                                         separator         : algoliaConfig.instant.categorySeparator,
                                         templates         : templates,
                                         showParentLevel   : true,
                                         limit             : algoliaConfig.maxValuesPerFacet,
+                                        rootPath          : algoliaConfig.request.path,
                                         sortBy            : ['name:asc'],
                                         transformItems(items) {
                                             return (algoliaConfig.isCategoryPage)
-                                                ? findRoot(items).map(
+                                                ? items.map(
                                                     item => {
                                                         return {
                                                             ...item,

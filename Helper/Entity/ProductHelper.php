@@ -569,6 +569,7 @@ class ProductHelper
         );
 
         $defaultData = $transport->getData();
+
         $visibility = $product->getVisibility();
 
         $visibleInCatalog = $this->visibility->getVisibleInCatalogIds();
@@ -767,9 +768,11 @@ class ProductHelper
      */
     protected function dedupePaths($paths): array
     {
-        return array_intersect_key(
-            $paths,
-            array_unique(array_map('serialize', $paths))
+        return array_values(
+            array_intersect_key(
+                $paths,
+                array_unique(array_map('serialize', $paths))
+            )
         );
     }
 
@@ -1048,6 +1051,7 @@ class ProductHelper
             }
 
             $attributeResource = $attributeResource->setData('store_id', $product->getStoreId());
+          
             $value = $product->getData($attributeName);
 
             if ($value !== null) {
@@ -1222,7 +1226,7 @@ class ProductHelper
             $value = $attributeResource->getFrontend()->getValue($product);
         }
 
-        if ($value) {
+        if ($value !== null) {
             $customData[$attribute['attribute']] = $value;
         }
 
