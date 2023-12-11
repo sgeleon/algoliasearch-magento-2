@@ -38,7 +38,6 @@ class InsightsHelper
     /** @var CustomerSession */
     private $customerSession;
 
-
     /**
      * InsightsHelper constructor.
      *
