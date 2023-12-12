@@ -23,6 +23,9 @@ class InsightsHelper
     /** @var PersonalizationHelper */
     private $personalizationHelper;
 
+    /** @var SessionManagerInterface */
+    private $sessionManager;
+    
     /** @var CookieManagerInterface */
     private $cookieManager;
 
