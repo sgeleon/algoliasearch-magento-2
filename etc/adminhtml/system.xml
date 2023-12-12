@@ -1259,6 +1259,12 @@
                             If your Algolia plan allows a higher record size limit, you can customize the record size limit.]]>
                     </comment>
                 </field>
+                <field id="analytics_region" translate="label comment" type="text" sortOrder="96" showInDefault="1">
+                    <label>Analytics Region</label>
+                    <comment>
+                        <![CDATA[Default value is 'us']]>
+                    </comment>
+                </field>
             </group>
             <group id="queue" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Indexing Queue</label>

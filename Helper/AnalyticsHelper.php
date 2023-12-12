@@ -85,7 +85,8 @@ class AnalyticsHelper
         if ($this->analyticsClient) {
             return;
         }
-
+        
+        $this->region = $this->configHelper->getAnalyticsRegion();
         $this->analyticsClient = AnalyticsClient::create(
             $this->configHelper->getApplicationID(),
             $this->configHelper->getAPIKey(),

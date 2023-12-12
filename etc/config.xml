@@ -81,6 +81,7 @@
         <algoliasearch_advanced>
             <advanced>
                 <max_record_size_limit>10000</max_record_size_limit>
+                <analytics_region>us</analytics_region>
             </advanced>
             <queue>
                 <number_of_element_by_page>300</number_of_element_by_page>

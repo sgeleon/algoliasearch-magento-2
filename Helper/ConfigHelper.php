@@ -1687,6 +1687,19 @@ class ConfigHelper
 
     /**
      * @param $storeId
+     * @return string
+     */
+    public function getAnalyticsRegion($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::ANALYTICS_REGION,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @param $storeId
      * @return bool
      */
     public function isQuerySuggestionsIndexEnabled($storeId = null)
