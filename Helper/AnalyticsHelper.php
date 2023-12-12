@@ -51,25 +51,16 @@ class AnalyticsHelper
     private $analyticsConfig;
 
     /**
-     * Can be changed through DI
-     *
-     * @var string
-     */
-    private $region;
-
-    /**
      * @param AlgoliaHelper $algoliaHelper
      * @param ConfigHelper $configHelper
      * @param IndexEntityDataProvider $entityHelper
      * @param Logger $logger
-     * @param string $region
      */
     public function __construct(
         AlgoliaHelper $algoliaHelper,
         ConfigHelper $configHelper,
         IndexEntityDataProvider $entityHelper,
-        Logger $logger,
-        string $region = 'us'
+        Logger $logger
     ) {
         $this->algoliaHelper = $algoliaHelper;
         $this->configHelper = $configHelper;
@@ -77,7 +68,6 @@ class AnalyticsHelper
         $this->entityHelper = $entityHelper;
 
         $this->logger = $logger;
-        $this->region = $region;
     }
 
     private function setupAnalyticsClient()
@@ -85,18 +75,19 @@ class AnalyticsHelper
         if ($this->analyticsClient) {
             return;
         }
-        
-        $this->region = $this->configHelper->getAnalyticsRegion();
+
+        $region = $this->configHelper->getAnalyticsRegion();
+
         $this->analyticsClient = AnalyticsClient::create(
             $this->configHelper->getApplicationID(),
             $this->configHelper->getAPIKey(),
-            $this->region
+            $region
         );
 
         $this->analyticsConfig = AnalyticsConfig::create(
             $this->configHelper->getApplicationID(),
             $this->configHelper->getAPIKey(),
-            $this->region
+            $region
         );
     }
 
