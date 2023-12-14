@@ -58,8 +58,11 @@ define(
                 algoliaAnalytics.addAlgoliaAgent(userAgent);
 
                 var userToken = getCookie('aa-search');
+                var unsetAuthenticationToken = getCookie('unset_authentication_token');
                 if (userToken && userToken !== '') {
                     algoliaAnalytics.setAuthenticatedUserToken(userToken);
+                } else if (unsetAuthenticationToken && unsetAuthenticationToken !== '') {
+                    algoliaAnalytics.setAuthenticatedUserToken('undefined');
                 }
             },
 
