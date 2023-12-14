@@ -9,6 +9,7 @@ use Magento\Framework\Stdlib\Cookie\PhpCookieManager;
 
 class CustomerLogout implements ObserverInterface
 {
+    public const UNSET_AUTHENTICATION_USER_TOKEN_COOKIE_NAME = "unset_authentication_token";
     /**
      * @var PhpCookieManager
      */
@@ -42,6 +43,12 @@ class CustomerLogout implements ObserverInterface
     public function execute(\Magento\Framework\Event\Observer $observer)
     {
         if ($this->cookieManager->getCookie(InsightsHelper::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME)) {
+            $metaDataUnset = $this->cookieMetadataFactory->createPublicCookieMetadata()
+            ->setDurationOneYear()
+            ->setPath('/')
+            ->setHttpOnly(false)
+            ->setSecure(false);
+            $this->cookieManager->setPublicCookie(self::UNSET_AUTHENTICATION_USER_TOKEN_COOKIE_NAME, 1, $metaDataUnset);
             $metadata = $this->cookieMetadataFactory->createCookieMetadata();
             $metadata->setPath('/');
             $this->cookieManager->deleteCookie(InsightsHelper::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME, $metadata);
