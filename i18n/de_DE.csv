@@ -87,7 +87,7 @@ Go,Los
                             Ihre Application ID, die Sie in Ihrem Algolia-Konto unter ""Credentials"" finden.
                         
                     "
-"Search-only (public) API key","API-Schlüssel nur für die Suche (öffentlich)"
+"Search-only (public) API key","(öffentlicher) API-Schlüssel nur für die Suche"
 "
                         
                             A search-only API key (will be included in the public JavaScript code)
@@ -163,7 +163,7 @@ Autocomplete,Autocomplete
                             Die Anzahl der Kategorien (>=1), die im Autocomplete-Dropdown angezeigt werden. Der Standardwert ist 2
                         
                     "
-"Number of queries","Anzahl der Suchvorschlägen"
+"Number of queries","Anzahl der Suchanfragen"
 "
                         
                             The number of queries suggestions (0 to disabled it) suggested in the autocomplete dropdown. Default value is 0
@@ -180,7 +180,7 @@ Autocomplete,Autocomplete
                         
                     ","
                         
-                            Die Mindestanzahl von Abfragen, die durchgeführt wurden, um vorgeschlagen zu werden. Der Standardwert ist 1000.
+                            Die Mindestanzahl von Suchanfragen, die durchgeführt wurden, um vorgeschlagen zu werden. Der Standardwert ist 1000.
                         
                     "
 "Min number of products per query","Minimale Anzahl an Produkten pro Suchanfrage"
