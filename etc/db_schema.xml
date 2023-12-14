@@ -9,16 +9,17 @@
     <table name="algoliasearch_queue" resource="default" engine="innodb" comment="Algoliasearch Queue Table">
         <column xsi:type="int" name="job_id" unsigned="false" nullable="false" identity="true" comment="Job Id"/>
         <column xsi:type="int" name="pid" unsigned="true" nullable="true" identity="false" comment="PID"/>
-        <column xsi:type="varchar" name="class" nullable="false" length="50" comment="class"/>
-        <column xsi:type="text" name="method" nullable="false" comment="Method"/>
+        <column xsi:type="varchar" name="class" nullable="false" length="255" comment="class"/>
+        <column xsi:type="varchar" name="method" nullable="false" length="255" comment="Method"/>
         <column xsi:type="text" name="data" nullable="false" comment="Data"/>
         <column xsi:type="int" name="max_retries" unsigned="true" nullable="false" default="3" identity="false" comment="Max Retries"/>
         <column xsi:type="int" name="retries" unsigned="true" nullable="false" default="0" identity="false" comment="Retries"/>
         <column xsi:type="text" name="error_log" nullable="false" comment="Error Log"/>
         <column xsi:type="int" name="data_size" unsigned="true" nullable="true" identity="false" comment="Data Size"/>
-        <column xsi:type="datetime" name="created" on_update="true" nullable="true" comment="Date and time of job creation"/>
+        <column xsi:type="datetime" name="created" on_update="false" default="CURRENT_TIMESTAMP" comment="Date and time of job creation"/>
         <column xsi:type="int" name="is_full_reindex" unsigned="true" nullable="false" default="0" identity="false" comment="Indicates if the job is part of a full reindex"/>
         <column xsi:type="datetime" name="locked_at" on_update="false" nullable="true" comment="Indicates time where PID was assigned to the job"/>
+        <column xsi:type="text" name="debug" nullable="true" comment="Debug info"/>
         <constraint xsi:type="primary" referenceId="PRIMARY">
             <column name="job_id"/>
         </constraint>
@@ -34,13 +35,22 @@
         </constraint>
     </table>
     <table name="algoliasearch_queue_archive" resource="default" engine="innodb" comment="Algoliasearch Queue Archive Table">
+        <column xsi:type="int" name="archive_id" unsigned="false" nullable="false" identity="true" comment="Archive Id"/>
         <column xsi:type="int" name="pid" unsigned="true" nullable="true" identity="false" comment="PID"/>
-        <column xsi:type="varchar" name="class" nullable="false" length="50" comment="class"/>
-        <column xsi:type="text" name="method" nullable="false" comment="Method"/>
+        <column xsi:type="varchar" name="class" nullable="false" length="255" comment="class"/>
+        <column xsi:type="varchar" name="method" nullable="false" length="255" comment="Method"/>
         <column xsi:type="text" name="data" nullable="false" comment="Data"/>
+        <column xsi:type="int" name="retries" unsigned="true" nullable="false" default="0" identity="false" comment="Retries"/>
         <column xsi:type="text" name="error_log" nullable="false" comment="Error Log"/>
         <column xsi:type="int" name="data_size" unsigned="true" nullable="true" identity="false" comment="Data Size"/>
-        <column xsi:type="datetime" name="created_at" on_update="true" nullable="true" comment="Date and time of job creation"/>
+        <column xsi:type="int" name="is_full_reindex" unsigned="true" nullable="false" default="0" identity="false" comment="Indicates if the job is part of a full reindex"/>
+        <column xsi:type="datetime" name="created_at" nullable="false" comment="Date and time of job creation"/>
+        <column xsi:type="datetime" name="processed_at" on_update="true" nullable="true" comment="Date and time of job processed"/>
+        <column xsi:type="boolean" name="success" default="false" comment="Indicates if job was successful - log only failures by default" />
+        <column xsi:type="text" name="debug" nullable="true" comment="Debug info"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="archive_id"/>
+        </constraint>
     </table>
     <table name="algoliasearch_landing_page" resource="default" engine="innodb" comment="Algoliasearch Landing Page Table">
         <column xsi:type="int" name="landing_page_id" unsigned="false" nullable="false" identity="true" comment="Landing Page Id"/>

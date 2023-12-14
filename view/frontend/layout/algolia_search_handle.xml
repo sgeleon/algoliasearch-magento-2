@@ -1,11 +1,6 @@
 <?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <head>
-        <script src="Algolia_AlgoliaSearch::internals/common.js"/>
-
-        <script src="Algolia_AlgoliaSearch::instantsearch.js"/>
-        <script src="Algolia_AlgoliaSearch::insights.js"/>
-
         <css src="Algolia_AlgoliaSearch::internals/autocomplete.css" />
         <css src="Algolia_AlgoliaSearch::internals/grid.css" />
         <css src="Algolia_AlgoliaSearch::internals/algolia-reset.css" />
@@ -17,11 +12,11 @@
             <block class="Algolia\AlgoliaSearch\Block\Configuration" name="algolia.internals.configuration" template="Algolia_AlgoliaSearch::internals/configuration.phtml"/>
         </referenceBlock>
 
-        <referenceBlock name="main.content">
+        <referenceContainer name="main.content">
             <block class="Magento\Framework\View\Element\Template" before="-" name="algolia.beforecontent" template="Algolia_AlgoliaSearch::internals/beforecontent.phtml"/>
-        </referenceBlock>
+        </referenceContainer>
 
-        <referenceBlock name="before.body.end">
+        <referenceContainer name="before.body.end">
             <!-- Instant search results page templates -->
             <block class="Algolia\AlgoliaSearch\Block\Instant\Wrapper" name="algolia.instant.wrapper" template="Algolia_AlgoliaSearch::instant/wrapper.phtml"/>
             <block class="Algolia\AlgoliaSearch\Block\Instant\Hit" name="algolia.instant.hit" template="Algolia_AlgoliaSearch::instant/hit.phtml"/>
@@ -29,7 +24,7 @@
             <block class="Magento\Framework\View\Element\Template" name="algolia.instant.facet" template="Algolia_AlgoliaSearch::instant/facet.phtml"/>
             <block class="Magento\Framework\View\Element\Template" name="algolia.instant.refinements" template="Algolia_AlgoliaSearch::instant/refinements.phtml"/>
 
-        </referenceBlock>
+        </referenceContainer>
         <referenceBlock name="top.search">
             <action method="setTemplate" ifconfig="algoliasearch_autocomplete/autocomplete/is_popup_enabled">
                 <argument name="setTemplate" xsi:type="string">Algolia_AlgoliaSearch::autocomplete.phtml</argument>

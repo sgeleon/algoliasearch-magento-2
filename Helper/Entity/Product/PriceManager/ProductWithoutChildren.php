@@ -9,6 +9,7 @@ use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\CatalogRule\Model\ResourceModel\Rule;
 use Magento\Customer\Model\Group;
+use Magento\Customer\Api\Data\GroupInterface;
 use Magento\Customer\Model\ResourceModel\Group\CollectionFactory;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Tax\Helper\Data as TaxHelper;
@@ -89,7 +90,7 @@ abstract class ProductWithoutChildren
         $this->customData = $customData;
         $this->store = $product->getStore();
         $this->areCustomersGroupsEnabled = $this->configHelper->isCustomerGroupsEnabled($product->getStoreId());
-        $currencies = $this->store->getAvailableCurrencyCodes();
+        $currencies = $this->store->getAvailableCurrencyCodes(true);
         $this->baseCurrencyCode = $this->store->getBaseCurrencyCode();
         $this->groups = $this->customerGroupCollectionFactory->create();
         $fields = $this->getFields();
@@ -110,6 +111,7 @@ abstract class ProductWithoutChildren
                 $this->customData[$field][$currencyCode]['default'] = $this->priceCurrency->round($price);
                 $this->customData[$field][$currencyCode]['default_formated'] = $this->formatPrice($price, $currencyCode);
                 $specialPrice = $this->getSpecialPrice($product, $currencyCode, $withTax);
+                $tierPrice = $this->getTierPrice($product, $currencyCode, $withTax);
                 if ($this->areCustomersGroupsEnabled) {
                     $this->addCustomerGroupsPrices($product, $currencyCode, $withTax, $field);
                 }
@@ -118,6 +120,7 @@ abstract class ProductWithoutChildren
                 $this->customData[$field][$currencyCode]['special_to_date'] =
                     (!empty($product->getSpecialToDate())) ? strtotime($product->getSpecialToDate()) : '';
                 $this->addSpecialPrices($specialPrice, $field, $currencyCode);
+                $this->addTierPrices($tierPrice, $field, $currencyCode);
                 $this->addAdditionalData($product, $withTax, $subProducts, $currencyCode, $field);
             }
         }
@@ -227,6 +230,96 @@ abstract class ProductWithoutChildren
             }
         }
         return $specialPrice;
+    }
+    
+    /**
+     * @param Product $product
+     * @param $currencyCode
+     * @param $withTax
+     * @return array
+     */
+    protected function getTierPrice(Product $product, $currencyCode, $withTax)
+    {
+        $tierPrice = [];
+        $tierPrices = [];
+
+        if (!is_null($product->getTierPrices())) {
+            $product->setData('website_id', $product->getStore()->getWebsiteId());
+            $productTierPrices = $product->getTierPrices();
+            foreach ($productTierPrices as $productTierPrice) {
+                if (!isset($tierPrices[$productTierPrice->getCustomerGroupId()])) {
+                    $tierPrices[$productTierPrice->getCustomerGroupId()] = $productTierPrice->getValue();
+
+                    continue;
+                }
+
+                $tierPrices[$productTierPrice->getCustomerGroupId()] = min(
+                    $tierPrices[$productTierPrice->getCustomerGroupId()],
+                    $productTierPrice->getValue()
+                );
+            }
+        }
+
+        /** @var Group $group */
+        foreach ($this->groups as $group) {
+            $groupId = (int) $group->getData('customer_group_id');
+            $tierPrice[$groupId] = false;
+
+            $currentTierPrice = null;
+            if (!isset($tierPrices[$groupId]) && !isset($tierPrices[GroupInterface::CUST_GROUP_ALL])) {
+                continue;
+            }
+
+            if (isset($tierPrices[GroupInterface::CUST_GROUP_ALL])
+                && $tierPrices[GroupInterface::CUST_GROUP_ALL] !== []) {
+                $currentTierPrice = $tierPrices[GroupInterface::CUST_GROUP_ALL];
+            }
+
+            if (isset($tierPrices[$groupId]) && $tierPrices[$groupId] !== []) {
+                $currentTierPrice = $currentTierPrice === null ?
+                    $tierPrices[$groupId] :
+                    min($currentTierPrice, $tierPrices[$groupId]);
+            }
+
+            if ($currencyCode !== $this->baseCurrencyCode) {
+                $currentTierPrice =
+                    $this->priceCurrency->round($this->convertPrice($currentTierPrice, $currencyCode));
+            }
+            $tierPrice[$groupId] = $this->getTaxPrice($product, $currentTierPrice, $withTax);
+        }
+
+        return $tierPrice;
+    }
+
+    /**
+     * @param $tierPrice
+     * @param $field
+     * @param $currencyCode
+     * @return void
+     */
+    protected function addTierPrices($tierPrice, $field, $currencyCode)
+    {
+        if ($this->areCustomersGroupsEnabled) {
+            /** @var Group $group */
+            foreach ($this->groups as $group) {
+                $groupId = (int) $group->getData('customer_group_id');
+
+                if ($tierPrice[$groupId]) {
+                    $this->customData[$field][$currencyCode]['group_' . $groupId . '_tier'] = $tierPrice[$groupId];
+
+                    $this->customData[$field][$currencyCode]['group_' . $groupId . '_tier_formated'] =
+                        $this->formatPrice($tierPrice[$groupId], $currencyCode);
+                }
+            }
+
+            return;
+        }
+
+        if ($tierPrice[0]) {
+            $this->customData[$field][$currencyCode]['default_tier'] = $this->priceCurrency->round($tierPrice[0]);
+            $this->customData[$field][$currencyCode]['default_tier_formated'] =
+                $this->formatPrice($tierPrice[0], $currencyCode);
+        }
     }
 
     /**

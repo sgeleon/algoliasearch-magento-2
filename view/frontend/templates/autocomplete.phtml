@@ -7,5 +7,12 @@ $catalogSearchHelper = $blockInstance->getCatalogSearchHelper();
 
 // Render form with autocomplete input
 if ($config->isAutoCompleteEnabled()) : ?>
+    <script type="text/x-magento-init">
+        {
+            "*": {
+                "algoliaAutocomplete": {}
+            }
+        }
+    </script>
     <div id="algoliaAutocomplete" class="block block-search algolia-search-block algolia-search-input"></div>
 <?php endif;?>

@@ -12,7 +12,8 @@
             "data_size": true,
             "created": true,
             "is_full_reindex": true,
-            "locked_at": true
+            "locked_at": true,
+            "debug": true
         },
         "constraint": {
             "PRIMARY": true
@@ -32,13 +33,22 @@
     },
     "algoliasearch_queue_archive": {
         "column": {
+            "archive_id": true,
             "pid": true,
             "class": true,
             "method": true,
             "data": true,
             "error_log": true,
             "data_size": true,
-            "created_at": true
+            "created_at": true,
+            "retries": true,
+            "is_full_reindex": true,
+            "success": true,
+            "debug": true,
+            "processed_at": true
+        },
+        "constraint": {
+            "PRIMARY": true
         }
     },
     "algoliasearch_landing_page": {
