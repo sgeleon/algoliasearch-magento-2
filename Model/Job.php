@@ -75,8 +75,6 @@ class Job extends \Magento\Framework\Model\AbstractModel implements JobInterface
 
         call_user_func_array([$model, $method], $data);
 
-        $this->getResource()->save($this);
-
         $this->save();
 
         return $this;

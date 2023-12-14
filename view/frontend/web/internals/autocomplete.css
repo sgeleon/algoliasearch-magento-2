@@ -168,7 +168,17 @@ html {
     padding-left: 30px;
 }
 
-#algolia-autocomplete-container .aa-suggestions svg.algolia-glass-suggestion.magnifying-glass {
+.aa-Panel .aa-ItemLink.algolia-suggestions:has(svg.algolia-glass-suggestion) {
+    position: relative;
+    padding: 5px 0 5px 25px !important;
+}
+
+.aa-Panel .aa-ItemLink.algolia-suggestions svg.algolia-glass-suggestion.magnifying-glass {
+    display: none;
+}
+
+.aa-Panel .aa-ItemLink.algolia-suggestions:has(svg.algolia-glass-suggestion) svg.algolia-glass-suggestion.magnifying-glass {
+    display: block;
     position: absolute;
     right: auto;
     left: 5px;
@@ -493,6 +503,13 @@ html {
     background: #fff;
     display: none;
 }
+
+#algoliaAutocomplete .aa-LoadingIndicator {
+    position: absolute;
+    top: 20%;
+    right: 10px;
+}
+
 .aa-Panel li.aa-Item{
     list-style-type: none;
 }

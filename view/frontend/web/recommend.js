@@ -1,14 +1,19 @@
 define([
+    'jquery',
     'algoliaBundle',
     'recommend',
     'recommendJs',
     'recommendProductsHtml',
     'domReady!'
-],function (algoliaBundle, recommend, recommendJs, recommendProductsHtml) {
+],function ($, algoliaBundle, recommend, recommendJs, recommendProductsHtml) {
     'use strict';
 
+    if (typeof algoliaConfig === 'undefined') {
+        return;
+    }
+
     return function (config, element) {
-        algoliaBundle.$(function ($) {
+        $(function ($) {
             this.defaultIndexName = algoliaConfig.indexName + '_products';
             const appId = algoliaConfig.applicationId;
             const apiKey = algoliaConfig.apiKey;
@@ -23,6 +28,12 @@ define([
                         indexName,
                         objectIDs: config.algoliObjectId,
                         maxRecommendations: algoliaConfig.recommend.limitFBTProducts,
+                        transformItems:function (items) {
+                            return items.map((item, index) => ({
+                                ...item,
+                                position: index + 1,
+                            }));
+                        },
                         headerComponent({html}) {
                             return recommendProductsHtml.getHeaderHtml(html,algoliaConfig.recommend.FBTTitle);
                         },
@@ -38,6 +49,12 @@ define([
                         indexName,
                         objectIDs: config.algoliObjectId,
                         maxRecommendations: algoliaConfig.recommend.limitRelatedProducts,
+                        transformItems:function (items) {
+                            return items.map((item, index) => ({
+                                ...item,
+                                position: index + 1,
+                            }));
+                        },
                         headerComponent({html}) {
                             return recommendProductsHtml.getHeaderHtml(html,algoliaConfig.recommend.relatedProductsTitle);
                         },
@@ -56,6 +73,12 @@ define([
                     recommendClient,
                     indexName,
                     maxRecommendations: algoliaConfig.recommend.limitTrendingItems,
+                    transformItems:function (items) {
+                        return items.map((item, index) => ({
+                            ...item,
+                            position: index + 1,
+                        }));
+                    },
                     headerComponent({html}) {
                         return recommendProductsHtml.getHeaderHtml(html,algoliaConfig.recommend.trendingItemsTitle);
                     },
@@ -72,6 +95,12 @@ define([
                     recommendClient,
                     indexName,
                     maxRecommendations: config.numOfTrendsItem ? parseInt(config.numOfTrendsItem) : algoliaConfig.recommend.limitTrendingItems,
+                    transformItems:function (items) {
+                        return items.map((item, index) => ({
+                            ...item,
+                            position: index + 1,
+                        }));
+                    },
                     headerComponent({html}) {
                         return recommendProductsHtml.getHeaderHtml(html,algoliaConfig.recommend.trendingItemsTitle);
                     },

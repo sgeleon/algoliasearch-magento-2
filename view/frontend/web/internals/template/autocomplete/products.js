@@ -6,7 +6,7 @@ define([], function () {
         ////////////////////
 
         getNoResultHtml: function ({html}) {
-            return html`<p>No Results</p>`;
+            return html`<p>${algoliaConfig.translations.noResults}</p>`;
         },
 
         getHeaderHtml: function () {
@@ -14,8 +14,12 @@ define([], function () {
         },
 
         getItemHtml: function ({item, components, html}) {
-            return html`<a class="algoliasearch-autocomplete-hit" href="${item.__autocomplete_queryID != null ? item.urlForInsights : item.url}"
-                data-objectId=${item.objectID} data-index=${item.__autocomplete_indexName} data-queryId=${item.__autocomplete_queryID}>
+            return html`<a class="algoliasearch-autocomplete-hit"
+                           href="${item.__autocomplete_queryID != null ? item.urlForInsights : item.url}"
+                           data-objectId="${item.objectID}"
+                           data-position="${item.position}"
+                           data-index="${item.__autocomplete_indexName}"
+                           data-queryId="${item.__autocomplete_queryID}">
                 <div class="thumb"><img src="${item.thumbnail_url || ''}" alt="${item.name || ''}"/></div>
                 <div class="info">
                     ${components.Highlight({hit: item, attribute: 'name'})}
@@ -69,7 +73,7 @@ define([], function () {
             const priceGroup =  algoliaConfig.priceGroup || 'default';
 
             return html `<div className="algoliasearch-autocomplete-price">
-                <span className="after_special ${algoliaConfig.origFormatedVar != null ? 'promotion' : ''}">
+                <span className="after_special ${item['price'][algoliaConfig.currencyCode][priceGroup + '_original_formated'] != null ? 'promotion' : ''}">
                     ${item['price'][algoliaConfig.currencyCode][priceGroup + '_formated']}
                 </span>
                 ${this.getOriginalPriceHtml(item, html, priceGroup)}

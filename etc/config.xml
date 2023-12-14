@@ -7,11 +7,24 @@
 -->
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
     <default>
+        <algoliasearch_credentials>
+            <credentials>
+                <enable_query_suggestions_index>1</enable_query_suggestions_index>
+                <enable_pages_index>1</enable_pages_index>
+            </credentials>
+            <algolia_cookie_configuration>
+                <default_consent_cookie_name>user_allowed_save_cookie</default_consent_cookie_name>
+                <allow_cookie_button_selector>#btn-cookie-allow</allow_cookie_button_selector>
+                <cookie_duration>15552000000</cookie_duration>
+            </algolia_cookie_configuration>
+        </algoliasearch_credentials>
         <algoliasearch_autocomplete>
             <autocomplete>
                 <sections><![CDATA[{"_1600351750374_374":{"name":"pages","label":"Pages","hitsPerPage":"2"}}]]></sections>
                 <excluded_pages><![CDATA[{"_1600351757831_831":{"attribute":"no-route"}}]]></excluded_pages>
                 <navigator>1</navigator>
+                <debounce_millisec>300</debounce_millisec>
+                <minimum_char_length>0</minimum_char_length>
             </autocomplete>
         </algoliasearch_autocomplete>
         <algoliasearch_instant>
@@ -20,18 +33,22 @@
                 <sorts><![CDATA[{"_4581608784535_789":{"attribute":"price","sort":"asc","sortLabel":"Lowest price"},"_2541555584535_585":{"attribute":"price","sort":"desc","sortLabel":"Highest price"},"_5581608784535_898":{"attribute":"created_at","sort":"desc","sortLabel":"Newest first"}}]]></sorts>
                 <instantsearch_searchbox>1</instantsearch_searchbox>
                 <use_virtual_replica>0</use_virtual_replica>
+                <hide_pagination>0</hide_pagination>
             </instant>
         </algoliasearch_instant>
         <algoliasearch_products>
             <products>
                 <product_additional_attributes><![CDATA[{"_1581608784535_535":{"attribute":"name","searchable":"1","order":"unordered","retrievable":"1"},"_1581608793630_630":{"attribute":"sku","searchable":"1","order":"unordered","retrievable":"1"},"_1582212731087_87":{"attribute":"manufacturer","searchable":"1","order":"unordered","retrievable":"1"},"_1582212739021_21":{"attribute":"categories","searchable":"1","order":"unordered","retrievable":"1"},"_1582212749587_587":{"attribute":"color","searchable":"1","order":"unordered","retrievable":"1"},"_1582212776086_86":{"attribute":"price","searchable":"2","order":"unordered","retrievable":"1"},"_1582212790407_407":{"attribute":"rating_summary","searchable":"2","order":"unordered","retrievable":"1"}}]]></product_additional_attributes>
                 <custom_ranking_product_attributes><![CDATA[{"_1600352070901_901":{"attribute":"in_stock","order":"desc"},"_1600352075148_148":{"attribute":"ordered_qty","order":"desc"},"_1600352080300_300":{"attribute":"created_at","order":"desc"}}]]></custom_ranking_product_attributes>
+                <enable_visual_merchandising>0</enable_visual_merchandising>
+                <category_page_id_attribute_name>categoryPageId</category_page_id_attribute_name>
             </products>
         </algoliasearch_products>
         <algoliasearch_categories>
             <categories>
                 <category_additional_attributes><![CDATA[{"_1582212881657_657":{"attribute":"name","searchable":"1","order":"unordered","retrievable":"1"},"_1582212904351_351":{"attribute":"path","searchable":"1","order":"unordered","retrievable":"1"},"_1582212910660_660":{"attribute":"meta_title","searchable":"1","order":"unordered","retrievable":"1"},"_1582212915890_890":{"attribute":"meta_keywords","searchable":"1","order":"unordered","retrievable":"1"},"_1582212922533_533":{"attribute":"meta_description","searchable":"1","order":"unordered","retrievable":"1"},"_1582212927307_307":{"attribute":"product_count","searchable":"2","order":"unordered","retrievable":"1"}}]]></category_additional_attributes>
                 <custom_ranking_category_attributes><![CDATA[{"_1600352142072_72":{"attribute":"product_count","order":"desc"}}]]></custom_ranking_category_attributes>
+                <category_separator> /// </category_separator>
             </categories>
         </algoliasearch_categories>
         <algoliasearch_personalization>
@@ -65,6 +82,11 @@
             <advanced>
                 <max_record_size_limit>10000</max_record_size_limit>
             </advanced>
+            <queue>
+                <number_of_element_by_page>300</number_of_element_by_page>
+                <archive_clear_limit>30</archive_clear_limit>
+                <enhanced_archive>0</enhanced_archive>
+            </queue>
         </algoliasearch_advanced>
     </default>
 </config>

@@ -25,7 +25,7 @@
                     <label>Application ID</label>
                     <comment>
                         <![CDATA[
-                            You can find your Application ID and API keys in the <a href="https://www.algolia.com/api-keys" target="_blank">Algolia dashboard</a>.
+                            You can find your Application ID and API keys in the <a href="https://www.algolia.com/account/api-keys" target="_blank">Algolia dashboard</a>.
                         ]]>
                     </comment>
                 </field>
@@ -33,7 +33,7 @@
                     <label>Search-only (public) API key</label>
                     <comment>
                         <![CDATA[
-                            You can find your Application ID and API keys in the <a href="https://www.algolia.com/api-keys" target="_blank">Algolia dashboard</a>.
+                            You can find your Application ID and API keys in the <a href="https://www.algolia.com/account/api-keys" target="_blank">Algolia dashboard</a>.
                         ]]>
                     </comment>
                 </field>
@@ -41,7 +41,7 @@
                     <label>Admin API key</label>
                     <comment>
                         <![CDATA[
-                            You can find your Application ID and API keys in the <a href="https://www.algolia.com/api-keys" target="_blank">Algolia dashboard</a>.
+                            You can find your Application ID and API keys in the <a href="https://www.algolia.com/account/api-keys" target="_blank">Algolia dashboard</a>.
                         ]]>
                     </comment>
                 </field>
@@ -64,6 +64,32 @@
                         ]]>
                     </comment>
                 </field>
+                <field id="enable_query_suggestions_index" translate="label comment" type="select" sortOrder="41" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Query Suggestions Index</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[
+                            Do you want the Algolia extension to push your search terms/suggestions to Algolia?<br>
+                            If you choose "No", _suggestion indexes will not be created.
+                        ]]>
+                    </comment>
+                    <depends>
+                        <field id="enable_backend">1</field>
+                    </depends>
+                </field>
+                <field id="enable_pages_index" translate="label comment" type="select" sortOrder="41" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Pages Index</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[
+                            Do you want the Algolia extension to push your CMS Pages to Algolia?<br>
+                            If you choose "No", _pages indexes will not be created.
+                        ]]>
+                    </comment>
+                    <depends>
+                        <field id="enable_backend">1</field>
+                    </depends>
+                </field>
                 <field id="enable_frontend" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Search</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
@@ -80,6 +106,39 @@
                     <comment>
                         <![CDATA[
                            Logging generates a significant amount of data and can affect performance of the extension. Use it only for debugging.
+                        ]]>
+                    </comment>
+                </field>
+            </group>
+            <group id="algolia_cookie_configuration" translate="label" type="text" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Algolia Cookie Configuration</label>    
+                <attribute type="expanded">1</attribute>
+                <comment>
+                    <![CDATA[
+                         If your Magento cookie settings, specifically <b>General > Web > Default Cookie Settings > Cookie Restriction Mode</b> is set to "No," we will consider it as Implicit Cookie Consent. In this case, the useCookie will be set to True by default for all insight events. Conversely, if <b>Cookie Restriction Mode is set to 'Yes,'</b> Insight events will not be allowed without explicit cookie consent.
+                        ]]>
+                </comment>    
+                <field id="default_consent_cookie_name" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Consent Cookie Name</label>
+                    <comment>
+                        <![CDATA[
+                            Enter the name for your website's consent cookie.
+                        ]]>
+                    </comment>
+                </field>
+                <field id="allow_cookie_button_selector" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Allow Cookie Button Selector</label>
+                    <comment>
+                        <![CDATA[
+                            Enter Allow Cookie Button Selector.
+                        ]]>
+                    </comment>
+                </field>
+                <field id="cookie_duration" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Algolia Cookie Duration</label>
+                    <comment>
+                        <![CDATA[
+                            Add Cookie Duration in milliseconds. Default is 15552000000 (6 Months).
                         ]]>
                     </comment>
                 </field>
@@ -243,6 +302,30 @@
                         <field id="is_popup_enabled">1</field>
                     </depends>
                 </field>
+                <field id="debounce_millisec" translate="label comment" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <validate>validate-digits</validate>
+                    <label>Debounce requests</label>
+                    <comment>
+                        <![CDATA[
+                            The minimal time (in milliseconds) that should elapse as users type their search query before a request is sent to the Algolia Search API. Default value is 300.
+                        ]]>
+                    </comment>
+                    <depends>
+                        <field id="is_popup_enabled">1</field>
+                    </depends>
+                </field>
+                <field id="minimum_char_length" translate="label comment" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <validate>validate-digits</validate>
+                    <label>Minimum query length</label>
+                    <comment>
+                        <![CDATA[
+                            The minimal number of characters required for a search term before a request is sent to the Algolia Search API. If set to 0 then results will be fetched on first keystroke. Default value is 0.
+                        ]]>
+                    </comment>
+                    <depends>
+                        <field id="is_popup_enabled">1</field>
+                    </depends>
+                </field>
             </group>
         </section>
         <section id="algoliasearch_instant" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -324,9 +407,10 @@
                 <field id="use_virtual_replica" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Use Virtual Replica</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Replica</backend_model>
                     <comment>
                         <![CDATA[
-                            Virtual Replica is only available on Premium plans <a target="_blank" href="https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/?client=php#switching-to-virtual-replica">documentation</a> 
+                            Virtual Replica is only available on Premium plans <a target="_blank" href="https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/?client=php#switching-to-virtual-replica">documentation</a>
                         ]]>
                     </comment>
                     <depends>
@@ -336,7 +420,7 @@
                 <field id="sorts" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Sorts</label>
                     <frontend_model>Algolia\AlgoliaSearch\Model\Source\Sorts</frontend_model>
-                    <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
+                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Sorts</backend_model>
                     <comment>
                         <![CDATA[
                             Specify different sorting options you want to offer on a search results page.<br>
@@ -399,6 +483,18 @@
                         <field id="is_instant_enabled">1</field>
                     </depends>
                 </field>
+                <field id="hide_pagination" translate="label comment" type="select" sortOrder="70" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Hide Pagination for Single Page Results</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[
+                            Hide Pagination if there is only one page in the results
+                        ]]>
+                    </comment>
+                    <depends>
+                        <field id="is_instant_enabled">1</field>
+                    </depends>
+                </field>
             </group>
         </section>
         <section id="algoliasearch_products" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -447,9 +543,30 @@
                         ]]>
                     </comment>
                 </field>
-                <field id="index_out_of_stock_options" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Index out of stock options for configurable products</label>
+                <field id="enable_visual_merchandising" translate="label comment" type="select" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable visual merchandising support</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[
+                            If enabled, products will be indexed into Algolia with a compatible category data format that supports advanced merchandising features
+                            such as visual rules and the new Merchandising Studio.
+                            <br><br>
+                            <strong>NOTE:</strong> After enabling, you must run a full product reindex to ensure that the attribute data is properly applied to your storefront catalog.
+                            Merchandising Studio is only available on Premium plans.
+                        ]]>
+                    </comment>
+                </field>
+                <field id="category_page_id_attribute_name" translate="label comment" type="text" sortOrder="60" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Category page ID attribute</label>
+                    <comment>
+                        <![CDATA[
+                            Specify the name of the attribute that will contain your <a href="https://www.algolia.com/doc/guides/managing-results/rules/merchandising-and-promoting/how-to/merchandising-category-pages/#configure-the-visual-editor-for-category-merchandising" target="_blank">category page ID</a>. Default is <code>categoryPageId</code>.
+                        ]]>
+                    </comment>
+                    <validate>required-entry validate-data</validate>
+                    <depends>
+                        <field id="enable_visual_merchandising">1</field>
+                    </depends>
                 </field>
             </group>
         </section>
@@ -503,6 +620,19 @@
                     <comment>
                         <![CDATA[
                             Do you want to display all categories in both the autocomplete menu and instant search results page ignoring if they contain products or not?
+                        ]]>
+                    </comment>
+                </field>
+                <field id="category_separator" translate="label comment" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Category separator</label>
+                    <validate>required-entry</validate>
+                    <comment>
+                        <![CDATA[
+                            The separator is used when serializing category data to your Algolia index and is used to build hierarchical facets and for visual merchandising rules.
+                            You should use a separator that is unlikely to occur within your category data. <strong>Spaces matter!</strong> Default is " /// ".
+
+                            <br><span class="algolia-config-warning">&#9888;</span> Do not forget to reindex the Algolia Search Products indexer after you've modified this value.
+
                         ]]>
                     </comment>
                 </field>
@@ -749,13 +879,7 @@
                     <label>Enable Indexing Queue</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>
-                        <![CDATA[
-                            If enabled, all indexing operations (add, remove & update operations) will be done asynchronously using the CRON mechanism.<br>
-                            <br>
-                            To schedule the run you need to add this in your crontab:<br>
-                            <code>*/5 * * * * php /absolute/path/to/magento/bin/magento indexer:reindex algolia_queue_runner</code>
-                            <br><span class="algolia-config-warning">&#9888;</span> Enabling this option is recommended in production or if your store has a lot of products.
-                        ]]>
+                        <model>Algolia\AlgoliaSearch\Model\Config\Link</model>
                     </comment>
                 </field>
                 <field id="number_of_job_to_run" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -1019,15 +1143,7 @@
             <resource>Algolia_AlgoliaSearch::algolia_algoliasearch</resource>
             <group id="advanced" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Advanced</label>
-                <field id="number_of_element_by_page" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <validate>validate-digits</validate>
-                    <label>Maximal number of elements per indexing job</label>
-                    <comment>
-                        <![CDATA[
-                            Default value is 300.
-                        ]]>
-                    </comment>
-                </field>
+                <attribute type="expanded">1</attribute>
                 <field id="remove_words_if_no_result" translate="label comment" type="select" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Remove Words If No Result</label>
                     <source_model>Algolia\AlgoliaSearch\Model\Source\RemoveWords</source_model>
@@ -1054,6 +1170,7 @@
                 <field id="customer_groups_enable" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Customer Groups</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Replica</backend_model>    
                     <comment>
                         <![CDATA[
                             Do you want to take into account customer groups and display the price of the logged-in group instead of the default price?
@@ -1130,15 +1247,7 @@
                     <backend_model>Magento\Config\Model\Config\Backend\Serialized\ArraySerialized</backend_model>
                     <comment>
                         <![CDATA[
-                            Choose here the textfield attributes that you don't want to be turned into numeric values (i.e. : if you don't want "00123" turned into "123")
-                        ]]>
-                    </comment>
-                </field>
-                <field id="archive_clear_limit" translate="label comment" type="text" sortOrder="95" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Archive log clean limit</label>
-                    <comment>
-                        <![CDATA[
-                            (In days - default value is 30) Sets the limit when the oldest records should be cleared from the archive logs (algoliasearch_queue_archive).
+                            Choose here the textfield/non-castable attributes that you don't want to be turned into numeric values (i.e. : if you don't want "00123" turned into "123" or "34567834545672" turned into "345678E+2")
                         ]]>
                     </comment>
                 </field>
@@ -1149,6 +1258,46 @@
                             By default, the Algolia extension has a record size limit of 10 kB per record.
                             If your Algolia plan allows a higher record size limit, you can customize the record size limit.]]>
                     </comment>
+                </field>
+            </group>
+            <group id="queue" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>Indexing Queue</label>
+                <attribute type="expanded">1</attribute>
+                <comment>
+                    <![CDATA[
+                            These advanced settings will only apply if the Indexing Queue is enabled.
+                            Indexing Queue is enabled under the "Indexing Queue / Cron" tab.
+                      ]]>
+                </comment>
+                <field id="number_of_element_by_page" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <validate>validate-digits</validate>
+                    <label>Maximum number of records processed per indexing job</label>
+                    <comment>
+                        <![CDATA[
+                            Default value is 300.
+                        ]]>
+                    </comment>
+                </field>
+                <field id="archive_clear_limit" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Archive log clean limit</label>
+                    <comment>
+                        <![CDATA[
+                            (In days - default value is 30) Sets the limit when the oldest records should be cleared from the archive logs (algoliasearch_queue_archive).
+                        ]]>
+                    </comment>
+                </field>
+                <field id="enhanced_archive" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable enhanced archive</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>
+                        <![CDATA[
+                            Useful for debugging. Algolia archives failed jobs by default. Enable this setting to archive all jobs that are processed by the indexing queue and to obtain and preserve the stack trace for jobs created.
+                        ]]>
+                        <model>Algolia\AlgoliaSearch\Model\Config\Comment</model>
+                    </comment>
+                    <depends>
+                        <field id="active">1</field>
+                    </depends>
                 </field>
             </group>
         </section>

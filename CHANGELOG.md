@@ -1,5 +1,118 @@
 # CHANGE LOG
 
+## 3.12.0
+
+### Updates
+- Updated code to consider user’s cookie consent to send events to Algolia by using ‘useCookie’ parameter
+- Updated references to support@algolia.com to new ticket link
+- Updated code to refactor the deprecated registry for categories
+- Updated code to ensure compatibility with NeuralSearch
+- Updated AlgoliaBundle by eliminating the unnecessary jQuery library
+- Included the promotion class in autocomplete menu when a product has any promotions
+
+### Bug Fixes
+- Fixed formatting issue in product object related to CategoryPageId attribute
+- Fixed issue with Clear Refinements button in InstantSearch page
+- Fixed issue with custom banner functionality via merchandising dashboard in admin
+- Fixed issue with hierarchicalMenu widget when utilizing transformItems when the number of categories exceeded the limit
+- Fixed issue with indexing text field attributes with a value of 0
+- Fixed issue with user cookies not clearing upon customer logout
+- Fixed back button issue with pagination in instant search page and category pages
+  
+## 3.11.0
+
+### Updates
+- Added support for Merchandising Studio and Visual Merchandiser by indexing flattened categoryID attribute to product index.
+- Upgraded the Algolia PHP client to version 3.3.2
+- Upgraded the Algolia insights to version 2.6.0
+- Added ability to preserve facets selection after adding an item to the cart from the PLP
+- Added ability to hide Pagination when results have only one page in InstantSearch page
+- Increased the character limit of class field in algoliasearch_queue, algoliasearch_queue_archive table
+- Added ability to debounce and control the query length in autocomplete
+- Added ability to turn off suggestions and pages indexing
+
+### Bug Fixes
+- Fixed vulnerability in query (htmlspecialcharacters) while searching using special characters
+- Fixed issues related to overlooked special characters in autocomplete search queries.
+- Fixed error message 'cannot apply the deleteOndex operation on a replica index' in admin
+- Fixed Bundle Product Price indexing issue for Dynamic and Static Product Types
+
+
+## 3.10.6
+
+### Bug Fixes
+- Replaced referenceBlock by referenceContainer following Magento best practices.
+
+
+## 3.10.5
+
+### Bug Fixes
+- Added the code to hide Pagination when the results have only one page in InstantSearch page
+- Add the code to fix the php8.2 version compatibility issues
+- Replaced referenceBlock by referenceContainer following Magento best practices.
+- Revert removal of tier price field for product
+  
+## 3.10.4
+
+### Bug Fixes
+- Fixed the checkout console “tagName” error due to autocomplete not defined by ensuring proper loading of the js library
+- Fixed the undefined config variable issue in recommend
+- Fixed the issue with logged in user token for click and conversion when personification is turned off.
+- Fixed the issue with Items click position for Recommend Events
+- Fixed the issue with Hyphen converted to slash in facets.
+
+
+## 3.10.3
+
+### UPDATES
+- Ensured compatibility of the extension with Magento 2.4.6 with PHP 8.2
+- Addressed dependency when pushing data to Algolia to ensure that the pricing records are in place.
+- Enforce RequireJS for all JavaScript libraries to ensure proper dependency loading order
+- Added support for Algolia Query Suggestions.
+- Added new frontend events for Autocomplete v1 (afterAutocompleteSources and afterAutocompletePlugins)
+- Removed the indexing of out-of-stock options for configurable products from algolia config and instead utilize Magento's out-of-stock settings to determine how products are displayed and indexed. 
+- Introduced enhanced logging for indexing Queue
+
+### Bug Fixes
+- Updated code to fix the autocomplete position during click events.
+- Fixed issue with empty rangeSlider on instant search page
+- Fixed Bundle product add to cart issue for instant search page with default selected options.
+- Addressed missing category data for products when the "show_cats_not_included_in_navigation" option is enabled.
+- Fixed rating_summary issue with null values on the instant search page has been fixed.
+- Added condition to handle algoliaConfig variable if search disabled from admin
+
+
+## 3.10.2
+
+### UPDATES
+- Ensured compatibility of the extension with Magento 2.4.6
+- Updated the code to allow for convenient customization of object serialization
+- Enhanced comments for non-castable attributes in system configuration
+- Updated the code to ensure that accurate prices are indexed for bundle products when the dynamic price attribute is turned off
+- Updated autocomplete to include userToken and enablePersonalization tag in search requests
+
+
+
+### Bug Fixes
+- Fixed issue with section.label in autocomplete
+- Resolved issue with nbOfQuerySuggestions in autocomplete
+- Fixed routing error related to disabling searchBox for instant search page
+- Resolved deployment issue with prefixed Magento database tables
+- Fixed spacing issue with pagination on instant search page
+
+
+## 3.10.1
+
+### UPDATES
+- Added recommended js version in readme file.
+
+### Bug Fixes
+- Add caching on category name lookup (scoped by store) to fix slowness in indexing.
+- Prevent loss of synonyms while copying from tmp index during Indexing in Algolia Dashboard.
+- Fixed the translation issue of labels in Algolia autocomplete dropdown
+- Ensured compatibility of the extension with PHP 7.4
+- Resolved the deployment issue related to prefixing Magento database tables
+
 
 ## 3.10.0
 

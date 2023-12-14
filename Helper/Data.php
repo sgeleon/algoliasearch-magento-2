@@ -16,6 +16,7 @@ use Magento\Framework\App\Area;
 use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Search\Model\Query;
 use Magento\Store\Model\App\Emulation;
 use Magento\Store\Model\StoreManagerInterface;
@@ -77,6 +78,10 @@ class Data
 
     protected $emulationRuns = false;
 
+    /** @var \Magento\Framework\Indexer\IndexerInterface */
+    protected $priceIndexer;
+
+
     /**
      * @param AlgoliaHelper $algoliaHelper
      * @param ConfigHelper $configHelper
@@ -93,20 +98,23 @@ class Data
      * @param StoreManagerInterface $storeManager
      */
     public function __construct(
-        AlgoliaHelper $algoliaHelper,
-        ConfigHelper $configHelper,
-        ProductHelper $producthelper,
-        CategoryHelper $categoryHelper,
-        PageHelper $pageHelper,
-        SuggestionHelper $suggestionHelper,
+        AlgoliaHelper           $algoliaHelper,
+        ConfigHelper            $configHelper,
+        ProductHelper           $producthelper,
+        CategoryHelper          $categoryHelper,
+        PageHelper              $pageHelper,
+        SuggestionHelper        $suggestionHelper,
         AdditionalSectionHelper $additionalSectionHelper,
-        Emulation $emulation,
-        Logger $logger,
-        ResourceConnection $resource,
-        ManagerInterface $eventManager,
-        ScopeCodeResolver $scopeCodeResolver,
-        StoreManagerInterface $storeManager
-    ) {
+        Emulation               $emulation,
+        Logger                  $logger,
+        ResourceConnection      $resource,
+        ManagerInterface        $eventManager,
+        ScopeCodeResolver       $scopeCodeResolver,
+        StoreManagerInterface   $storeManager,
+        IndexerRegistry         $indexerRegistry
+
+    )
+    {
         $this->algoliaHelper = $algoliaHelper;
         $this->pageHelper = $pageHelper;
         $this->categoryHelper = $categoryHelper;
@@ -120,6 +128,8 @@ class Data
         $this->eventManager = $eventManager;
         $this->scopeCodeResolver = $scopeCodeResolver;
         $this->storeManager = $storeManager;
+
+        $this->priceIndexer = $indexerRegistry->get('catalog_product_price');
     }
 
     /**
@@ -194,7 +204,7 @@ class Data
             if ($productId) {
                 $data[$productId] = [
                     'entity_id' => $productId,
-                    'score'     => $numberOfResults - $i,
+                    'score' => $numberOfResults - $i,
                 ];
             }
         }
@@ -248,6 +258,11 @@ class Data
     public function rebuildStorePageIndex($storeId, array $pageIds = null)
     {
         if ($this->isIndexingEnabled($storeId) === false) {
+            return;
+        }
+        
+        if (!$this->configHelper->isPagesIndexEnabled($storeId)) {
+            $this->logger->log('Pages Indexing is not enabled for the store.');
             return;
         }
 
@@ -346,7 +361,12 @@ class Data
      */
     public function rebuildStoreSuggestionIndex($storeId)
     {
-        if ($this->isIndexingEnabled($storeId) === false) {
+        if ($this->isIndexingEnabled($storeId) === false || !$this->configHelper->isQuerySuggestionsIndexEnabled($storeId)) {
+            return;
+        }
+
+        if (!$this->configHelper->isQuerySuggestionsIndexEnabled($storeId)) {
+            $this->logger->log('Query Suggestions Indexing is not enabled for the store.');
             return;
         }
 
@@ -400,6 +420,8 @@ class Data
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
         }
+
+        $this->checkPriceIndex($productIds);
 
         $this->startEmulation($storeId);
         $this->logger->start('Indexing');
@@ -567,7 +589,11 @@ class Data
         $transport = new ProductDataArray();
         $this->eventManager->dispatch(
             'algolia_product_collection_add_additional_data',
-            ['collection' => $collection, 'store_id' => $storeId, 'additional_data' => $transport]
+            [
+                'collection'      => $collection,
+                'store_id'        => $storeId,
+                'additional_data' => $transport
+            ]
         );
 
         /** @var Product $product */
@@ -622,9 +648,9 @@ class Data
      * @param \Magento\Catalog\Model\ResourceModel\Category\Collection $collection
      * @param array|null $potentiallyDeletedCategoriesIds
      *
+     * @return array
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      *
-     * @return array
      */
     protected function getCategoryRecords($storeId, $collection, $potentiallyDeletedCategoriesIds = null)
     {
@@ -668,7 +694,7 @@ class Data
         }
 
         return [
-            'toIndex' => $categoriesToIndex,
+            'toIndex'  => $categoriesToIndex,
             'toRemove' => array_unique($categoriesToRemove),
         ];
     }
@@ -692,7 +718,8 @@ class Data
         $emulationInfo = null,
         $productIds = null,
         $useTmpIndex = false
-    ) {
+    )
+    {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
         }
@@ -716,12 +743,15 @@ class Data
             $reviewTableName = $this->resource->getTableName('review_entity_summary');
             $collection
                 ->getSelect()
-                ->columns('(SELECT MAX(rating_summary) FROM ' . $reviewTableName . ' AS o WHERE o.entity_pk_value = e.entity_id AND o.store_id = ' . $storeId . ') as rating_summary');
+                ->columns('(SELECT coalesce(MAX(rating_summary), 0) FROM ' . $reviewTableName . ' AS o WHERE o.entity_pk_value = e.entity_id AND o.store_id = ' . $storeId . ') as rating_summary');
         }
 
         $this->eventManager->dispatch(
             'algolia_before_products_collection_load',
-            ['collection' => $collection, 'store' => $storeId]
+            [
+                'collection' => $collection,
+                'store'      => $storeId
+            ]
         );
         $logMessage = 'LOADING: ' . $this->logger->getStoreName($storeId) . ',
             collection page: ' . $page . ',
@@ -854,7 +884,7 @@ class Data
                 ->columns(['total_ordered' => new \Zend_Db_Expr('SUM(row_total)')])
                 ->where('product_id IN (?)', $ids)
                 ->group('product_id');
-            $salesData = $salesConnection->fetchAll($select, [], \PDO::FETCH_GROUP|\PDO::FETCH_ASSOC|\PDO::FETCH_UNIQUE);
+            $salesData = $salesConnection->fetchAll($select, [], \PDO::FETCH_GROUP | \PDO::FETCH_ASSOC | \PDO::FETCH_UNIQUE);
         }
         return $salesData;
     }
@@ -871,7 +901,7 @@ class Data
         $objectIds = [];
         $counter = 0;
         $browseOptions = [
-            'query' => '',
+            'query'                => '',
             'attributesToRetrieve' => ['objectID'],
         ];
         foreach ($index->browseObjects($browseOptions) as $hit) {
@@ -918,7 +948,7 @@ class Data
         $indexNames = [];
         $indexNames[0] = [
             'indexName' => $this->getBaseIndexName(),
-            'priceKey' => '.' . $this->configHelper->getCurrencyCode() . '.default',
+            'priceKey'  => '.' . $this->configHelper->getCurrencyCode() . '.default',
         ];
         foreach ($this->storeManager->getStores() as $store) {
             $indexNames[$store->getId()] = [
@@ -943,4 +973,18 @@ class Data
         $idsToDeleteFromAlgolia = array_diff($objectIds, $dbIds);
         $this->algoliaHelper->deleteObjects($idsToDeleteFromAlgolia, $indexName);
     }
+
+    /**
+     * If the price index is stale
+     * @param array $productIds
+     * @return void
+     */
+    protected function checkPriceIndex(array $productIds): void
+    {
+        $state = $this->priceIndexer->getState()->getStatus();
+        if ($state === \Magento\Framework\Indexer\StateInterface::STATUS_INVALID) {
+            $this->priceIndexer->reindexList($productIds);
+        }
+    }
+
 }

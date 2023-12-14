@@ -12,16 +12,24 @@ use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
+use Magento\Cookie\Helper\Cookie as CookieHelper;
+
 
 class ConfigHelper
 {
     public const ENABLE_FRONTEND = 'algoliasearch_credentials/credentials/enable_frontend';
     public const ENABLE_BACKEND = 'algoliasearch_credentials/credentials/enable_backend';
+    public const ENABLE_QUERY_SUGGESTIONS_INDEX = 'algoliasearch_credentials/credentials/enable_query_suggestions_index';
+    public const ENABLE_PAGES_INDEX = 'algoliasearch_credentials/credentials/enable_pages_index';
     public const LOGGING_ENABLED = 'algoliasearch_credentials/credentials/debug';
     public const APPLICATION_ID = 'algoliasearch_credentials/credentials/application_id';
     public const API_KEY = 'algoliasearch_credentials/credentials/api_key';
     public const SEARCH_ONLY_API_KEY = 'algoliasearch_credentials/credentials/search_only_api_key';
     public const INDEX_PREFIX = 'algoliasearch_credentials/credentials/index_prefix';
+    public const COOKIE_DEFAULT_CONSENT_COOKIE_NAME = 'algoliasearch_credentials/algolia_cookie_configuration/default_consent_cookie_name';
+    public const ALLOW_COOKIE_BUTTON_SELECTOR = 'algoliasearch_credentials/algolia_cookie_configuration/allow_cookie_button_selector';
+    public const ALGOLIA_COOKIE_DURATION = 'algoliasearch_credentials/algolia_cookie_configuration/cookie_duration';
+
 
     public const IS_INSTANT_ENABLED = 'algoliasearch_instant/instant/is_instant_enabled';
     public const REPLACE_CATEGORIES = 'algoliasearch_instant/instant/replace_categories';
@@ -34,6 +42,7 @@ class ConfigHelper
     public const XML_ADD_TO_CART_ENABLE = 'algoliasearch_instant/instant/add_to_cart_enable';
     public const INFINITE_SCROLL_ENABLE = 'algoliasearch_instant/instant/infinite_scroll_enable';
     public const SEARCHBOX_ENABLE = 'algoliasearch_instant/instant/instantsearch_searchbox';
+    public const HIDE_PAGINATION = 'algoliasearch_instant/instant/hide_pagination';
 
     public const IS_POPUP_ENABLED = 'algoliasearch_autocomplete/autocomplete/is_popup_enabled';
     public const NB_OF_PRODUCTS_SUGGESTIONS = 'algoliasearch_autocomplete/autocomplete/nb_of_products_suggestions';
@@ -45,16 +54,20 @@ class ConfigHelper
     public const MIN_NUMBER_OF_RESULTS = 'algoliasearch_autocomplete/autocomplete/min_number_of_results';
     public const RENDER_TEMPLATE_DIRECTIVES = 'algoliasearch_autocomplete/autocomplete/render_template_directives';
     public const AUTOCOMPLETE_MENU_DEBUG = 'algoliasearch_autocomplete/autocomplete/debug';
+    public const AUTOCOMPLETE_DEBOUNCE_MILLISEC = 'algoliasearch_autocomplete/autocomplete/debounce_millisec';
+    public const AUTOCOMPLETE_MINIMUM_CHAR_LENGTH = 'algoliasearch_autocomplete/autocomplete/minimum_char_length';
 
     public const PRODUCT_ATTRIBUTES = 'algoliasearch_products/products/product_additional_attributes';
     public const PRODUCT_CUSTOM_RANKING = 'algoliasearch_products/products/custom_ranking_product_attributes';
     public const USE_ADAPTIVE_IMAGE = 'algoliasearch_products/products/use_adaptive_image';
-    public const INDEX_OUT_OF_STOCK_OPTIONS = 'algoliasearch_products/products/index_out_of_stock_options';
+    public const ENABLE_VISUAL_MERCHANDISING = 'algoliasearch_products/products/enable_visual_merchandising';
+    public const CATEGORY_PAGE_ID_ATTRIBUTE_NAME = 'algoliasearch_products/products/category_page_id_attribute_name';
 
     public const CATEGORY_ATTRIBUTES = 'algoliasearch_categories/categories/category_additional_attributes';
     public const CATEGORY_CUSTOM_RANKING = 'algoliasearch_categories/categories/custom_ranking_category_attributes';
     public const SHOW_CATS_NOT_INCLUDED_IN_NAV = 'algoliasearch_categories/categories/show_cats_not_included_in_navigation';
     public const INDEX_EMPTY_CATEGORIES = 'algoliasearch_categories/categories/index_empty_categories';
+    public const CATEGORY_SEPARATOR = 'algoliasearch_categories/categories/category_separator';
 
     public const IS_ACTIVE = 'algoliasearch_queue/queue/active';
     public const NUMBER_OF_JOB_TO_RUN = 'algoliasearch_queue/queue/number_of_job_to_run';
@@ -74,7 +87,6 @@ class ConfigHelper
     public const GA_TRIGGER_ON_UI_INTERACTION = 'algoliasearch_analytics/analytics_group/trigger_on_ui_interaction';
     public const GA_PUSH_INITIAL_SEARCH = 'algoliasearch_analytics/analytics_group/push_initial_search';
 
-    public const NUMBER_OF_ELEMENT_BY_PAGE = 'algoliasearch_advanced/advanced/number_of_element_by_page';
     public const REMOVE_IF_NO_RESULT = 'algoliasearch_advanced/advanced/remove_words_if_no_result';
     public const PARTIAL_UPDATES = 'algoliasearch_advanced/advanced/partial_update';
     public const CUSTOMER_GROUPS_ENABLE = 'algoliasearch_advanced/advanced/customer_groups_enable';
@@ -90,7 +102,6 @@ class ConfigHelper
         'algoliasearch_advanced/advanced/backend_rendering_allowed_user_agents';
     public const NON_CASTABLE_ATTRIBUTES = 'algoliasearch_advanced/advanced/non_castable_attributes';
     public const MAX_RECORD_SIZE_LIMIT = 'algoliasearch_advanced/advanced/max_record_size_limit';
-    public const ARCHIVE_LOG_CLEAR_LIMIT = 'algoliasearch_advanced/advanced/archive_clear_limit';
 
     public const SHOW_OUT_OF_STOCK = 'cataloginventory/options/show_out_of_stock';
 
@@ -125,6 +136,11 @@ class ConfigHelper
     protected const FREQUENTLY_BOUGHT_TOGETHER_TITLE = 'algoliasearch_recommend/recommend/frequently_bought_together/title';
     protected const RELATED_PRODUCTS_TITLE = 'algoliasearch_recommend/recommend/related_product/title';
     protected const TRENDING_ITEMS_TITLE = 'algoliasearch_recommend/recommend/trends_item/title';
+
+    // Indexing Queue Advanced settings
+    public const ENHANCED_QUEUE_ARCHIVE = 'algoliasearch_advanced/queue/enhanced_archive';
+    public const NUMBER_OF_ELEMENT_BY_PAGE = 'algoliasearch_advanced/queue/number_of_element_by_page';
+    public const ARCHIVE_LOG_CLEAR_LIMIT = 'algoliasearch_advanced/queue/archive_clear_limit';
 
     /**
      * @var Magento\Framework\App\Config\ScopeConfigInterface
@@ -180,6 +196,11 @@ class ConfigHelper
      * @var GroupExcludedWebsiteRepositoryInterface
      */
     protected $groupExcludedWebsiteRepository;
+  
+    /**
+     * @var CookieHelper
+     */
+    protected $cookieHelper;
 
     /**
      * @param Magento\Framework\App\Config\ScopeConfigInterface $configInterface
@@ -193,6 +214,8 @@ class ConfigHelper
      * @param SerializerInterface $serializer
      * @param GroupCollection $groupCollection
      * @param GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository
+     * @param CookieHelper $cookieHelper
+
      */
     public function __construct(
         Magento\Framework\App\Config\ScopeConfigInterface $configInterface,
@@ -205,7 +228,8 @@ class ConfigHelper
         Magento\Framework\Event\ManagerInterface          $eventManager,
         SerializerInterface                               $serializer,
         GroupCollection                                   $groupCollection,
-        GroupExcludedWebsiteRepositoryInterface           $groupExcludedWebsiteRepository
+        GroupExcludedWebsiteRepositoryInterface           $groupExcludedWebsiteRepository,
+        CookieHelper                                      $cookieHelper
     ) {
         $this->configInterface = $configInterface;
         $this->currency = $currency;
@@ -218,20 +242,9 @@ class ConfigHelper
         $this->serializer = $serializer;
         $this->groupCollection = $groupCollection;
         $this->groupExcludedWebsiteRepository = $groupExcludedWebsiteRepository;
+        $this->cookieHelper = $cookieHelper;
     }
 
-    /**
-     * @param $storeId
-     * @return bool
-     */
-    public function indexOutOfStockOptions($storeId = null)
-    {
-        return $this->configInterface->isSetFlag(
-            self::INDEX_OUT_OF_STOCK_OPTIONS,
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
-    }
 
     /**
      * @param $storeId
@@ -552,6 +565,16 @@ class ConfigHelper
      * @param $storeId
      * @return bool
      */
+    public function hidePaginationInInstantSearchPage($storeId = null)
+    {
+        return $this->isInstantEnabled($storeId)
+            && $this->configInterface->isSetFlag(self::HIDE_PAGINATION, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * @param $storeId
+     * @return bool
+     */
     public function isInstantSearchBoxEnabled($storeId = null)
     {
         return $this->isInstantEnabled($storeId)
@@ -621,6 +644,15 @@ class ConfigHelper
     public function isQueueActive($storeId = null)
     {
         return $this->configInterface->isSetFlag(self::IS_ACTIVE, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * @param $storeId
+     * @return bool
+     */
+    public function isEnhancedQueueArchiveEnabled($storeId = null)
+    {
+        return $this->configInterface->isSetFlag(self::ENHANCED_QUEUE_ARCHIVE, ScopeInterface::SCOPE_STORE, $storeId);
     }
 
     /**
@@ -886,6 +918,24 @@ class ConfigHelper
 
     /**
      * @param $storeId
+     * @return bool
+     */
+    public function isVisualMerchEnabled($storeId = null): bool
+    {
+        return $this->configInterface->isSetFlag(self::ENABLE_VISUAL_MERCHANDISING, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * @param $storeId
+     * @return string
+     */
+    public function getCategoryPageIdAttributeName($storeId = null): string
+    {
+        return (string) $this->configInterface->getValue(self::CATEGORY_PAGE_ID_ATTRIBUTE_NAME, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * @param $storeId
      * @return mixed
      */
     public function getInstantSelector($storeId = null)
@@ -932,16 +982,38 @@ class ConfigHelper
         return $this->configInterface->isSetFlag(self::AUTOCOMPLETE_MENU_DEBUG, ScopeInterface::SCOPE_STORE, $storeId);
     }
 
+    public function getAutocompleteDebounceMilliseconds($storeId = null): int
+    {
+        return (int) $this->configInterface->getValue(
+            self::AUTOCOMPLETE_DEBOUNCE_MILLISEC,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    public function getAutocompleteMinimumCharacterLength($storeId = null): int
+    {
+        return (int) $this->configInterface->getValue(
+            self::AUTOCOMPLETE_MINIMUM_CHAR_LENGTH,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
     /**
      * @param $originalIndexName
      * @param $storeId
      * @param $currentCustomerGroupId
+     * @param $attrs
      * @return array
      * @throws Magento\Framework\Exception\NoSuchEntityException
      */
-    public function getSortingIndices($originalIndexName, $storeId = null, $currentCustomerGroupId = null)
+    public function getSortingIndices($originalIndexName, $storeId = null, $currentCustomerGroupId = null, $attrs = null)
     {
-        $attrs = $this->getSorting($storeId);
+        if (!$attrs){
+            $attrs = $this->getSorting($storeId);
+        }
+
         $currency = $this->getCurrencyCode($storeId);
         $attributesToAdd = [];
         foreach ($attrs as $key => $attr) {
@@ -1331,6 +1403,7 @@ class ConfigHelper
             'value',
             'query', # suggestions
             'path', # categories
+            'default_bundle_options',
         ]);
         $currencies = $this->dirCurrency->getConfigAllowCurrencies();
         foreach ($currencies as $currency) {
@@ -1458,6 +1531,15 @@ class ConfigHelper
     }
 
     /**
+     * @param $storeId
+     * @return string
+     */
+    public function getCategorySeparator($storeId = null): string
+    {
+        return (string) $this->configInterface->getValue(self::CATEGORY_SEPARATOR, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
      * @param $groupId
      * @return array
      */
@@ -1512,6 +1594,45 @@ class ConfigHelper
     public function getConversionAnalyticsAddToCartSelector($storeId = null)
     {
         return $this->configInterface->getValue(self::CC_ADD_TO_CART_SELECTOR, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * @param $storeId
+     * @return mixed
+     */
+    public function getDefaultConsentCookieName($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::COOKIE_DEFAULT_CONSENT_COOKIE_NAME,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @param $storeId
+     * @return mixed
+     */
+    public function getAllowCookieButtonSelector($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::ALLOW_COOKIE_BUTTON_SELECTOR,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @param $storeId
+     * @return mixed
+     */
+    public function getAlgoliaCookieDuration($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::ALGOLIA_COOKIE_DURATION,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
     }
 
     /**
@@ -1582,6 +1703,24 @@ class ConfigHelper
 
     /**
      * @param $storeId
+     * @return bool
+     */
+    public function isQuerySuggestionsIndexEnabled($storeId = null)
+    {
+        return $this->configInterface->isSetFlag(self::ENABLE_QUERY_SUGGESTIONS_INDEX, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * @param $storeId
+     * @return bool
+     */
+    public function isPagesIndexEnabled($storeId = null)
+    {
+        return $this->configInterface->isSetFlag(self::ENABLE_PAGES_INDEX, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * @param $storeId
      * @return int
      */
     public function getArchiveLogClearLimit($storeId = null)
@@ -1627,5 +1766,13 @@ class ConfigHelper
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
+    }
+
+    /**
+     * @return bool
+     */
+    public function isCookieRestrictionModeEnabled()
+    {
+        return (bool)$this->cookieHelper->isCookieRestrictionModeEnabled();
     }
 }
