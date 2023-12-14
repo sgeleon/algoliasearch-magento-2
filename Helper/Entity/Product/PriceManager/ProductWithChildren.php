@@ -215,11 +215,13 @@ abstract class ProductWithChildren extends ProductWithoutChildren
                         $maxOriginal,
                         $currencyCode
                     );
+                    $this->handleGroupOrginalPriceformated($field, $currencyCode, $this->customData[$field][$currencyCode]['default_original_formated']);
                 } else {
                     $this->customData[$field][$currencyCode]['default_original_formated'] = $this->formatPrice(
                         $minOriginal,
                         $currencyCode
                     );
+                    $this->handleGroupOrginalPriceformated($field, $currencyCode, $this->customData[$field][$currencyCode]['default_original_formated']);
                 }
             }
         } else {
@@ -228,6 +230,25 @@ abstract class ProductWithChildren extends ProductWithoutChildren
                     $minOriginal,
                     $currencyCode
                 );
+                $this->handleGroupOrginalPriceformated($field, $currencyCode, $this->customData[$field][$currencyCode]['default_original_formated']);
+            }
+        }
+
+    }
+
+    /**
+     * @param $field
+     * @param $currencyCode
+     * @param $formatedPrice
+     * @return void
+     */
+    public function handleGroupOrginalPriceformated($field, $currencyCode, $formatedPrice) {
+        if ($this->areCustomersGroupsEnabled) {
+            /** @var Group $group */
+            foreach ($this->groups as $group) {
+                $groupId = (int)$group->getData('customer_group_id');
+                $this->customData[$field][$currencyCode]['group_' . $groupId . '_original_formated'] =
+                    $formatedPrice;
             }
         }
     }
