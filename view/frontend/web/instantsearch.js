@@ -660,7 +660,21 @@ define(
                             }
                     });
 
-                    var isStarted = false;
+                    // Capture active redirect URL with IS facet params for add to cart from PLP
+                    if (algoliaConfig.instant.isAddToCartEnabled) {
+                        search.on('render', () => {
+                            const cartForms = document.querySelectorAll('[data-role="tocart-form"]');
+                            cartForms.forEach((form, i) => {
+                                const ts = Date.now();
+                                form.addEventListener('submit', e => {
+                                    const url = `${algoliaConfig.request.url}${window.location.search}`;
+                                    e.target.elements[algoliaConfig.instant.addToCartParams.redirectUrlParam].value = AlgoliaBase64.mageEncode(url);
+                                })
+                            });
+                        });
+                    }
+		    
+		    var isStarted = false;
 
                     function startInstantSearch() {
                             if (isStarted === true) {
