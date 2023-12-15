@@ -49,7 +49,13 @@ abstract class ProductWithChildren extends ProductWithoutChildren
             /** @var Product $subProduct */
             foreach ($subProducts as $subProduct) {
                 $specialPrice = $this->getSpecialPrice($subProduct, $currencyCode, $withTax, $subProducts);
-                $price     = $specialPrice[0] ?? $this->getTaxPrice($product, $subProduct->getFinalPrice(), $withTax);
+                $tierPrice = $this->getTierPrice($subProduct, $currencyCode, $withTax);
+                if (!empty($tierPrice[0]) && $specialPrice[0] > $tierPrice[0]){
+                    $minPrice = $tierPrice[0];
+                } else {
+                    $minPrice = $specialPrice[0];
+                }
+                $price     = $minPrice ?? $this->getTaxPrice($product, $subProduct->getFinalPrice(), $withTax);
                 $basePrice = $this->getTaxPrice($product, $subProduct->getPrice(), $withTax);
                 $min = min($min, $price);
                 $original = min($original, $basePrice);
@@ -155,11 +161,17 @@ abstract class ProductWithChildren extends ProductWithoutChildren
             /** @var Group $group */
             foreach ($this->groups as $group) {
                 $groupId = (int) $group->getData('customer_group_id');
+                $minPrice = $min;
                 foreach ($subproducts as $subProduct) {
                     $subProduct->setData('customer_group_id', $groupId);
                     $subProduct->setData('website_id', $subProduct->getStore()->getWebsiteId());
+                    $specialPrice = $this->getSpecialPrice($subProduct, $currencyCode, $withTax, []);
+                    $tierPrice = $this->getTierPrice($subProduct, $currencyCode, $withTax);
                     $price     = $this->getTaxPrice($product, $subProduct->getPriceModel()->getFinalPrice(1, $subProduct), $withTax);
-                    $groupPriceList[$groupId]['min'] = min($min, $price);
+                    if (!empty($tierPrice[$groupId]) && $specialPrice[$groupId] > $tierPrice[$groupId]){
+                        $minPrice = $tierPrice[$groupId];
+                    }
+                    $groupPriceList[$groupId]['min'] = min($minPrice, $price);
                     $groupPriceList[$groupId]['max'] = max($max, $price);
                     $subProduct->setData('customer_group_id', null);
                 }
