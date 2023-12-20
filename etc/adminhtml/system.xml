@@ -1259,6 +1259,15 @@
                             If your Algolia plan allows a higher record size limit, you can customize the record size limit.]]>
                     </comment>
                 </field>
+                <field id="connection_timeout" translate="label comment" type="text" sortOrder="100" showInDefault="1">
+                    <label>Connection Timeout (In Seconds)</label>
+                </field>
+                <field id="read_timeout" translate="label comment" type="text" sortOrder="105" showInDefault="1">
+                    <label>Read Timeout (In Seconds)</label>
+                </field>
+                <field id="write_timeout" translate="label comment" type="text" sortOrder="110" showInDefault="1">
+                    <label>Write Timeout (In Seconds)</label>
+                </field>
             </group>
             <group id="queue" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                 <label>Indexing Queue</label>
