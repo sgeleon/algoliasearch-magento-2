@@ -180,9 +180,9 @@ abstract class ProductWithChildren extends ProductWithoutChildren
             $minArray = [];
             foreach ($groupPriceList as $key => $value) {
                 $minArray[$key]['price'] = $value['min'];
-                $minArray[$key]['formatted'] = $this->getDashedPriceFormat($value['min'], $value['max'], $currencyCode);
+                $minArray[$key]['formatted'] = $this->formattedConfigPrice($value['min'], $value['max'], $currencyCode);
                 if ($currencyCode !== $this->baseCurrencyCode) {
-                    $minArray[$key]['formatted'] = $this->getDashedPriceFormat($value['min'], $value['max'], $currencyCode);
+                    $minArray[$key]['formatted'] = $this->formattedConfigPrice($value['min'], $value['max'], $currencyCode);
                 }
             }
             /** @var Group $group */
@@ -205,6 +205,20 @@ abstract class ProductWithChildren extends ProductWithoutChildren
                     }
                 }
             }
+        }
+    }
+
+    /**
+     * @param $min
+     * @param $max
+     * @param $currencyCode
+     * @return mixed|string
+     */
+    public function formattedConfigPrice($min, $max, $currencyCode) {
+        if ($min != $max) {
+            return $this->getDashedPriceFormat($min, $max, $currencyCode);
+        } else {
+            return $this->formatPrice($min, $currencyCode);
         }
     }
 
