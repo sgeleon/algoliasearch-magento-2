@@ -14,6 +14,7 @@ use Magento\Customer\Model\ResourceModel\Group\CollectionFactory;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Tax\Helper\Data as TaxHelper;
 use Magento\Tax\Model\Config as TaxConfig;
+use Magento\Catalog\Api\ScopedProductTierPriceManagementInterface;
 
 abstract class ProductWithoutChildren
 {
@@ -46,6 +47,11 @@ abstract class ProductWithoutChildren
      */
     protected $productloader;
 
+    /**
+     * @var ScopedProductTierPriceManagementInterface
+     */
+    private $productTierPrice;
+
     protected $store;
     protected $baseCurrencyCode;
     protected $groups;
@@ -60,6 +66,7 @@ abstract class ProductWithoutChildren
      * @param TaxHelper $taxHelper
      * @param Rule $rule
      * @param ProductFactory $productloader
+     * @param ScopedProductTierPriceManagementInterface $productTierPrice
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -68,7 +75,8 @@ abstract class ProductWithoutChildren
         CatalogHelper $catalogHelper,
         TaxHelper $taxHelper,
         Rule $rule,
-        ProductFactory $productloader
+        ProductFactory $productloader,
+        ScopedProductTierPriceManagementInterface $productTierPrice
     ) {
         $this->configHelper = $configHelper;
         $this->customerGroupCollectionFactory = $customerGroupCollectionFactory;
@@ -77,6 +85,7 @@ abstract class ProductWithoutChildren
         $this->taxHelper = $taxHelper;
         $this->rule = $rule;
         $this->productloader = $productloader;
+        $this->productTierPrice = $productTierPrice;
     }
 
     /**
@@ -244,7 +253,7 @@ abstract class ProductWithoutChildren
         $tierPrice = [];
         $tierPrices = [];
 
-        if (!is_null($product->getTierPrices())) {
+        if (!empty($product->getTierPrices())) {
             $product->setData('website_id', $product->getStore()->getWebsiteId());
             $productTierPrices = $product->getTierPrices();
             foreach ($productTierPrices as $productTierPrice) {
@@ -258,6 +267,24 @@ abstract class ProductWithoutChildren
                     $tierPrices[$productTierPrice->getCustomerGroupId()],
                     $productTierPrice->getValue()
                 );
+            }
+        } else {
+            /** @var Group $group */
+            foreach ($this->groups as $group) {
+                $customerGroupId = (int) $group->getData('customer_group_id');
+                $productTierPrices = $this->productTierPrice->getList($product->getSku(), $customerGroupId);
+                if(!empty($productTierPrices)) {
+                    foreach ($productTierPrices as $productTierPrice) {
+                        if (!isset($tierPrices[$productTierPrice->getCustomerGroupId()])) {
+                            $tierPrices[$productTierPrice->getCustomerGroupId()] = $productTierPrice->getValue();
+                            continue;
+                        }
+                        $tierPrices[$productTierPrice->getCustomerGroupId()] = min(
+                            $tierPrices[$productTierPrice->getCustomerGroupId()],
+                            $productTierPrice->getValue()
+                        );
+                    }
+                }
             }
         }
 
