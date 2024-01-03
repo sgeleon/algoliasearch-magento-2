@@ -3,7 +3,8 @@ define(
         'jquery',
         'algoliaAnalytics',
         'algoliaBundle',
-        'algoliaCommon'
+        'algoliaCommon',
+        'mage/cookies'
     ],
     function ($, algoliaAnalyticsWrapper, algoliaBundle) {
         algoliaAnalytics = algoliaAnalyticsWrapper.default;
@@ -63,6 +64,7 @@ define(
                     algoliaAnalytics.setAuthenticatedUserToken(userToken);
                 } else if (unsetAuthenticationToken && unsetAuthenticationToken !== '') {
                     algoliaAnalytics.setAuthenticatedUserToken('undefined');
+                    $.mage.cookies.clear('unset_authentication_token');
                 }
             },
 
