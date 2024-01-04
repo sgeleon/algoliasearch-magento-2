@@ -82,6 +82,9 @@
             <advanced>
                 <max_record_size_limit>10000</max_record_size_limit>
                 <analytics_region>us</analytics_region>
+                <connection_timeout>2</connection_timeout>
+                <read_timeout>30</read_timeout>
+                <write_timeout>30</write_timeout>
             </advanced>
             <queue>
                 <number_of_element_by_page>300</number_of_element_by_page>

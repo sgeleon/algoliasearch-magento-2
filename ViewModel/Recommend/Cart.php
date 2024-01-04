@@ -3,9 +3,12 @@
 namespace Algolia\AlgoliaSearch\ViewModel\Recommend;
 
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Magento\Checkout\Model\Session;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
-use Magento\Framework\View\Element\Template\Context;
+use Magento\Store\Model\StoreManagerInterface;
 
 class Cart implements ArgumentInterface
 {
@@ -20,34 +23,49 @@ class Cart implements ArgumentInterface
     protected $configHelper;
 
     /**
-     * @param Context $context
+     * @var ProductHelper
+     */
+    protected $productHelper;
+
+    /**
+     * @param StoreManagerInterface $storeManager
      * @param Session $checkoutSession
      * @param ConfigHelper $configHelper
-     * @param array $data
+     * @param ProductHelper $productHelper
      */
     public function __construct(
-        Context $context,
+        StoreManagerInterface $storeManager,
         Session $checkoutSession,
         ConfigHelper $configHelper,
-        array $data = []
+        ProductHelper $productHelper
     ) {
+        $this->storeManager = $storeManager;
         $this->checkoutSession = $checkoutSession;
         $this->configHelper = $configHelper;
+        $this->productHelper = $productHelper;
     }
 
     /**
      * @return array
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     public function getAllCartItems()
     {
         $cartItems = [];
+        $visibleCartItem = [];
         $itemCollection = $this->checkoutSession->getQuote()->getAllVisibleItems();
         foreach ($itemCollection as $item) {
             $cartItems[] = $item->getProductId();
         }
-        return array_unique($cartItems);
+        $storeId = $this->storeManager->getStore()->getId();
+        $cartProductCollection = $this->productHelper->getProductCollectionQuery($storeId, array_unique($cartItems));
+        if ($cartProductCollection->getSize() > 0 ){
+            foreach ($cartProductCollection as $product) {
+                $visibleCartItem[] = $product->getId();
+            }
+        }
+        return $visibleCartItem;
     }
 
     /**

@@ -113,7 +113,7 @@ define(
 					}
 
                     if (algoliaConfig.instant.isVisualMerchEnabled && algoliaConfig.isCategoryPage ) {
-                        searchParameters.filters = `${algoliaConfig.instant.categoryPageIdAttribute}:'${algoliaConfig.request.path}'`;
+                        searchParameters.filters = `${algoliaConfig.instant.categoryPageIdAttribute}:"${algoliaConfig.request.path.replace(/"/g, '\\"')}"`;
                     }
 
                     instantsearchOptions = algolia.triggerHooks('beforeInstantsearchInit', instantsearchOptions, algoliaBundle);
