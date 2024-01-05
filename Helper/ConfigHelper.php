@@ -100,6 +100,7 @@ class ConfigHelper
         'algoliasearch_advanced/advanced/backend_rendering_allowed_user_agents';
     public const NON_CASTABLE_ATTRIBUTES = 'algoliasearch_advanced/advanced/non_castable_attributes';
     public const MAX_RECORD_SIZE_LIMIT = 'algoliasearch_advanced/advanced/max_record_size_limit';
+    public const ANALYTICS_REGION = 'algoliasearch_advanced/advanced/analytics_region';
     public const CONNECTION_TIMEOUT = 'algoliasearch_advanced/advanced/connection_timeout';
     public const READ_TIMEOUT = 'algoliasearch_advanced/advanced/read_timeout';
     public const WRITE_TIMEOUT = 'algoliasearch_advanced/advanced/write_timeout';
@@ -1710,6 +1711,19 @@ class ConfigHelper
     {
         return (int)$this->configInterface->getValue(
             self::MAX_RECORD_SIZE_LIMIT,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * @param $storeId
+     * @return string
+     */
+    public function getAnalyticsRegion($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::ANALYTICS_REGION,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
