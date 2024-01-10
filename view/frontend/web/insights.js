@@ -3,7 +3,8 @@ define(
         'jquery',
         'algoliaAnalytics',
         'algoliaBundle',
-        'algoliaCommon'
+        'algoliaCommon',
+        'mage/cookies'
     ],
     function ($, algoliaAnalyticsWrapper, algoliaBundle) {
         algoliaAnalytics = algoliaAnalyticsWrapper.default;
@@ -58,8 +59,13 @@ define(
                 algoliaAnalytics.addAlgoliaAgent(userAgent);
 
                 var userToken = getCookie('aa-search');
-                if (userToken && userToken !== '') algoliaAnalytics.setUserToken(userToken);
-
+                var unsetAuthenticationToken = getCookie('unset_authentication_token');
+                if (userToken && userToken !== '') {
+                    algoliaAnalytics.setAuthenticatedUserToken(userToken);
+                } else if (unsetAuthenticationToken && unsetAuthenticationToken !== '') {
+                    algoliaAnalytics.setAuthenticatedUserToken('undefined');
+                    $.mage.cookies.clear('unset_authentication_token');
+                }
             },
 
             addSearchParameters: function () {
