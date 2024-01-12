@@ -32,4 +32,7 @@
     <event name="persistent_session_expired">
         <observer name="refresh_customer_data" instance="Algolia\AlgoliaSearch\Observer\Insights\CustomerLogout" />
     </event>
+    <event name="catalog_controller_product_init_after">
+        <observer name="algoliasearch_current_product" instance="Algolia\AlgoliaSearch\Observer\RegisterCurrentProductObserver"/>
+    </event>
 </config>
