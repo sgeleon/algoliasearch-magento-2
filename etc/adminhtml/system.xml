@@ -1315,11 +1315,11 @@
             </group>
         </section>
         <section id="algoliasearch_extra_settings" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Advanced - Extra Algolia indices settings</label>
+            <label>Advanced Algolia indices settings</label>
             <tab>algolia</tab>
             <resource>Algolia_AlgoliaSearch::algolia_algoliasearch</resource>
             <group id="extra_settings" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Advanced - Extra Algolia indices settings</label>
+                <label>Advanced Algolia indices settings</label>
                 <comment>
                     <![CDATA[
                     <p>Here, you can specify additional Algolia indices settings which can be applied only programatically via one of Algolia API clients.</p>
@@ -1328,7 +1328,7 @@
                     To set settings, please fill the right textarea with JSON where you specify the settings.<br>
                     Example: <code>{"exactOnSingleWordQuery":"word"}</code>
                     </p>
-                    <p><span class="algolia-config-warning">&#9888;</span> These setting will overwrite existing parameters, not add to them. Proceed to edit these settings only when you're sure what you're doing. Bad settings can effect your search functionality and have a bad impact on your relevance.</p>
+                    <p><span class="algolia-config-warning">&#9888;</span> These settingsgit will overwrite existing parameters, not add to them. Proceed to edit these settings only when you're sure what you're doing. Bad settings can effect your search functionality and have a bad impact on your relevance.</p>
                     <br/>
                     <div class="algolia-admin-content"></div>
                 ]]>
