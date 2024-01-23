@@ -1328,7 +1328,7 @@
                     To set settings, please fill the right textarea with JSON where you specify the settings.<br>
                     Example: <code>{"exactOnSingleWordQuery":"word"}</code>
                     </p>
-                    <p><span class="algolia-config-warning">&#9888;</span> These settingsgit will overwrite existing parameters, not add to them. Proceed to edit these settings only when you're sure what you're doing. Bad settings can effect your search functionality and have a bad impact on your relevance.</p>
+                    <p><span class="algolia-config-warning">&#9888;</span> These settings will overwrite existing parameters, not add to them. Proceed to edit these settings only when you're sure what you're doing. Bad settings can effect your search functionality and have a bad impact on your relevance.</p>
                     <br/>
                     <div class="algolia-admin-content"></div>
                 ]]>
