@@ -51,11 +51,11 @@ class AnalyticsHelper
     private $analyticsConfig;
 
     /**
-     * Can be changed through DI
+     * Region can be modified via the Magento configuration
      *
      * @var string
      */
-    private $region;
+    protected $region;
 
     /**
      * @param AlgoliaHelper $algoliaHelper
@@ -77,7 +77,7 @@ class AnalyticsHelper
         $this->entityHelper = $entityHelper;
 
         $this->logger = $logger;
-        $this->region = $region;
+        $this->region = $this->configHelper->getAnalyticsRegion();
     }
 
     private function setupAnalyticsClient()
@@ -85,6 +85,7 @@ class AnalyticsHelper
         if ($this->analyticsClient) {
             return;
         }
+
 
         $this->analyticsClient = AnalyticsClient::create(
             $this->configHelper->getApplicationID(),
