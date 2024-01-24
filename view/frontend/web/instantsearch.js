@@ -92,16 +92,6 @@ define(
 					var instantsearchOptions = {
 							searchClient:   searchClient,
 							indexName:      indexName,
-							searchFunction: function (helper) {
-									if (helper.state.query === '' && !algoliaConfig.isSearchPage) {
-											$('.algolia-instant-replaced-content').show();
-											$('.algolia-instant-selector-results').hide();
-									} else {
-											helper.search();
-											$('.algolia-instant-replaced-content').hide();
-											$('.algolia-instant-selector-results').show();
-									}
-							},
 							routing:        window.routing,
 					};
 
@@ -242,7 +232,15 @@ define(
                                     data.last = Math.min(data.page * data.hitsPerPage + data.hitsPerPage, data.nbHits);
                                     data.seconds = data.processingTimeMS / 1000;
                                     data.translations = window.algoliaConfig.translations;
-
+                                    const searchParams = new URLSearchParams(window.location.search);
+                                    const searchQuery = searchParams.has("q") || '';
+                                    if (searchQuery === '' && !algoliaConfig.isSearchPage) {
+                                        $('.algolia-instant-replaced-content').show();
+                                        $('.algolia-instant-selector-results').hide();
+                                    } else {
+                                        $('.algolia-instant-replaced-content').hide();
+                                        $('.algolia-instant-selector-results').show();
+                                    }
                                     return hoganTemplate.render(data)
                                 }
                             }

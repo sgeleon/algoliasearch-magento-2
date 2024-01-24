@@ -1,5 +1,11 @@
 # CHANGE LOG
 
+## 3.13.0
+
+### Updates
+- Updated instantSearch library version from 4.41.0 to 4.63.0
+- Updated disclaimer for advanced algolia indices settings in the magento admin
+  
 ## 3.12.1
 
 ### Updates
