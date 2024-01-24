@@ -1262,7 +1262,7 @@
                 <field id="analytics_region" translate="label comment" type="select" sortOrder="96" showInDefault="1">
                     <label>Analytics Region</label>
                     <source_model>Algolia\AlgoliaSearch\Model\Source\AnalyticsRegion</source_model>
-                </field>  
+                </field>
                 <field id="connection_timeout" translate="label comment" type="text" sortOrder="100" showInDefault="1">
                     <label>Connection Timeout (In Seconds)</label>
                 </field>
@@ -1315,20 +1315,20 @@
             </group>
         </section>
         <section id="algoliasearch_extra_settings" translate="label" type="text" sortOrder="90" showInDefault="1" showInWebsite="1" showInStore="1">
-            <label>Advanced - Extra Algolia indices settings</label>
+            <label>Advanced Algolia indices settings</label>
             <tab>algolia</tab>
             <resource>Algolia_AlgoliaSearch::algolia_algoliasearch</resource>
             <group id="extra_settings" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>Advanced - Extra Algolia indices settings</label>
+                <label>Advanced Algolia indices settings</label>
                 <comment>
                     <![CDATA[
                     <p>Here, you can specify additional Algolia indices settings which can be applied only programatically via one of Algolia API clients.</p>
 
                     <p>
-                    To set extra settings, please fill the right textarea with JSON where you specify the extra settings.<br>
+                    To set settings, please fill the right textarea with JSON where you specify the settings.<br>
                     Example: <code>{"exactOnSingleWordQuery":"word"}</code>
                     </p>
-                    <p><span class="algolia-config-warning">&#9888;</span> Edit extra settings only when you're sure what you're doing. Bad settings can effect your search functionality and have a bad impact on your relevance.</p>
+                    <p><span class="algolia-config-warning">&#9888;</span> These settings will overwrite existing parameters, not add to them. Proceed to edit these settings only when you're sure what you're doing. Bad settings can effect your search functionality and have a bad impact on your relevance.</p>
                     <br/>
                     <div class="algolia-admin-content"></div>
                 ]]>
@@ -1336,26 +1336,26 @@
 
                 <field id="products_extra_settings" translate="label comment" type="\Algolia\AlgoliaSearch\Model\Textarea" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <backend_model>Algolia\AlgoliaSearch\Model\Backend\ExtraSettings</backend_model>
-                    <label>Products' indices extra settings</label>
+                    <label>Products' indices settings</label>
                     <attribute type="abrala" value="80">
                         <value>90</value>
                     </attribute>
                 </field>
                 <field id="categories_extra_settings" translate="label comment" type="\Algolia\AlgoliaSearch\Model\Textarea" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <backend_model>Algolia\AlgoliaSearch\Model\Backend\ExtraSettings</backend_model>
-                    <label>Categories' indices extra settings</label>
+                    <label>Categories' indices settings</label>
                 </field>
                 <field id="pages_extra_settings" translate="label comment" type="\Algolia\AlgoliaSearch\Model\Textarea" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                     <backend_model>Algolia\AlgoliaSearch\Model\Backend\ExtraSettings</backend_model>
-                    <label>Pages' indices extra settings</label>
+                    <label>Pages' indices settings</label>
                 </field>
                 <field id="suggestions_extra_settings" translate="label comment" type="\Algolia\AlgoliaSearch\Model\Textarea" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                     <backend_model>Algolia\AlgoliaSearch\Model\Backend\ExtraSettings</backend_model>
-                    <label>Suggestions' indices extra settings</label>
+                    <label>Suggestions' indices settings</label>
                 </field>
                 <field id="additional_sections_extra_settings" translate="label comment" type="\Algolia\AlgoliaSearch\Model\Textarea" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
                     <backend_model>Algolia\AlgoliaSearch\Model\Backend\ExtraSettings</backend_model>
-                    <label>Additional sections' indices extra settings</label>
+                    <label>Additional sections' indices settings</label>
                 </field>
             </group>
         </section>
