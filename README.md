@@ -1,7 +1,7 @@
 Algolia Search & Discovery extension for Magento 2
 ==================================================
 
-![Latest version](https://img.shields.io/badge/latest-3.12.0-green)
+![Latest version](https://img.shields.io/badge/latest-3.13.0-green)
 ![Magento 2](https://img.shields.io/badge/Magento-2.4.x-orange)
 
 ![PHP](https://img.shields.io/badge/PHP-8.2%2C8.1%2C7.4-blue)
@@ -74,14 +74,16 @@ Please check our [Custom Extension](https://github.com/algolia/algoliasearch-cus
 
 Knowing the version of the library will help you understand what is available in these libraries for you to leverage in terms of customisation. This table will help you determine which documentation to reference when you start working on your customisation.
 
-| Extension Version | 	autocomplete.js                                                  | instantsearch.js | search-insights.js | recommend.js |
-|-------------------|-------------------------------------------------------------------| --- | --- | --- |
-| v1.x              | [0.26.0](https://github.com/algolia/autocomplete.js/tree/v0.26.0) | [2.10.2](https://github.com/algolia/instantsearch.js/tree/v2.10.2) | [0.0.14](https://cdn.jsdelivr.net/npm/search-insights@0.0.14) | NA |
-| v2.x              | [0.38.0](https://github.com/algolia/autocomplete.js/tree/v0.38.0) | [4.7.2](https://github.com/algolia/instantsearch.js/tree/v4.7.2) | [1.4.0](https://github.com/algolia/search-insights.js/tree/v1.4.0) | NA |
-| v3.x              | [0.38.0](https://github.com/algolia/autocomplete.js/tree/v0.38.0) | [4.15.0](https://github.com/algolia/instantsearch.js/tree/v4.15.0) | [1.7.1](https://github.com/algolia/search-insights.js/tree/v1.7.1) | NA |
-| v3.9.1            | [1.6.3](https://github.com/algolia/autocomplete.js/tree/v1.6.3)   | [4.41.0](https://github.com/algolia/instantsearch.js/tree/v4.41.0) | [1.7.1](https://github.com/algolia/search-insights.js/tree/v1.7.1) | [1.5.0](https://github.com/algolia/recommend/tree/v1.5.0) |
-| v3.10.x            | [1.6.3](https://github.com/algolia/autocomplete.js/tree/v1.6.3)   | [4.41.0](https://github.com/algolia/instantsearch.js/tree/v4.41.0) | [1.7.1](https://github.com/algolia/search-insights.js/tree/v1.7.1) | [1.8.0](https://github.com/algolia/recommend/tree/v1.8.0) |
-| >=v3.11.0            | [1.6.3](https://github.com/algolia/autocomplete.js/tree/v1.6.3)   | [4.41.0](https://github.com/algolia/instantsearch.js/tree/v4.41.0) | [2.6.0](https://github.com/algolia/search-insights.js/tree/v2.6.0) | [1.8.0](https://github.com/algolia/recommend/tree/v1.8.0) |
+| Extension Version | 	autocomplete.js                                                  | instantsearch.js                                                   | search-insights.js | recommend.js |
+|-----------------|-------------------------------------------------------------------|--------------------------------------------------------------------| --- | --- |
+| v1.x            | [0.26.0](https://github.com/algolia/autocomplete.js/tree/v0.26.0) | [2.10.2](https://github.com/algolia/instantsearch.js/tree/v2.10.2) | [0.0.14](https://cdn.jsdelivr.net/npm/search-insights@0.0.14) | NA |
+| v2.x            | [0.38.0](https://github.com/algolia/autocomplete.js/tree/v0.38.0) | [4.7.2](https://github.com/algolia/instantsearch.js/tree/v4.7.2)   | [1.4.0](https://github.com/algolia/search-insights.js/tree/v1.4.0) | NA |
+| v3.x            | [0.38.0](https://github.com/algolia/autocomplete.js/tree/v0.38.0) | [4.15.0](https://github.com/algolia/instantsearch.js/tree/v4.15.0) | [1.7.1](https://github.com/algolia/search-insights.js/tree/v1.7.1) | NA |
+| v3.9.1          | [1.6.3](https://github.com/algolia/autocomplete.js/tree/v1.6.3)   | [4.41.0](https://github.com/algolia/instantsearch.js/tree/v4.41.0) | [1.7.1](https://github.com/algolia/search-insights.js/tree/v1.7.1) | [1.5.0](https://github.com/algolia/recommend/tree/v1.5.0) |
+| v3.10.x         | [1.6.3](https://github.com/algolia/autocomplete.js/tree/v1.6.3)   | [4.41.0](https://github.com/algolia/instantsearch.js/tree/v4.41.0) | [1.7.1](https://github.com/algolia/search-insights.js/tree/v1.7.1) | [1.8.0](https://github.com/algolia/recommend/tree/v1.8.0) |
+| v3.11.0         | [1.6.3](https://github.com/algolia/autocomplete.js/tree/v1.6.3)   | [4.41.0](https://github.com/algolia/instantsearch.js/tree/v4.41.0) | [2.6.0](https://github.com/algolia/search-insights.js/tree/v2.6.0) | [1.8.0](https://github.com/algolia/recommend/tree/v1.8.0) |
+| >=v3.13.0        | [1.6.3](https://github.com/algolia/autocomplete.js/tree/v1.6.3)   | [4.63.0](https://github.com/algolia/instantsearch/tree/instantsearch.js%404.63.0) | [2.6.0](https://github.com/algolia/search-insights.js/tree/v2.6.0) | [1.8.0](https://github.com/algolia/recommend/tree/v1.8.0) |
+
 
 The autocomplete and instantsearch libraries are accessible in the `algoliaBundle` global. This bundle is a prepackage javascript file that contains it's dependencies. What is included in this bundle can be seen here:
 
