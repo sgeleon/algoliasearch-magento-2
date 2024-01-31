@@ -1,5 +1,24 @@
 # CHANGE LOG
 
+## 3.13.0
+
+### Updates
+- Updated instantSearch library version from 4.41.0 to 4.63.0
+- Updated disclaimer for advanced algolia indices settings in the magento admin
+  
+## 3.12.1
+
+### Updates
+- Updated  insights library version from 2.6.0 to 2.11.0
+- Updated all click events to add authenticatedUserToken for login customer
+- Updated view events to add authenticatedUserToken for login customer
+- Added German translations in plugin
+- Updated code to provide a way for customers to modify timeout values for Algolia PHP Client
+
+### Bug Fixes
+- Fixed the issue with recommendations for grouped products in cart page
+- Fixed the issue with InstantSearch filters with quotations
+
 ## 3.12.0
 
 ### Updates
