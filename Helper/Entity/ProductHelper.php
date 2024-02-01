@@ -33,6 +33,7 @@ use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
 
 class ProductHelper
 {
@@ -113,6 +114,11 @@ class ProductHelper
     protected $productAttributes;
 
     /**
+     * @var GroupExcludedWebsiteRepositoryInterface
+     */
+    protected $groupExcludedWebsiteRepository;
+
+    /**
      * @var string[]
      */
     protected $predefinedProductAttributes = [
@@ -166,6 +172,7 @@ class ProductHelper
      * @param Type $productType
      * @param CollectionFactory $productCollectionFactory
      * @param GroupCollection $groupCollection
+     * @param GroupExcludedWebsiteRepositoryInterface groupExcludedWebsiteRepository
      * @param ImageHelper $imageHelper
      */
     public function __construct(
@@ -178,15 +185,15 @@ class ProductHelper
         Visibility             $visibility,
         Stock                  $stockHelper,
         StockRegistryInterface $stockRegistry,
-        CurrencyHelper         $currencyManager,
-        CategoryHelper         $categoryHelper,
-        PriceManager           $priceManager,
-        Type                   $productType,
-        CollectionFactory      $productCollectionFactory,
-        GroupCollection        $groupCollection,
-        ImageHelper            $imageHelper
-    )
-    {
+        CurrencyHelper $currencyManager,
+        CategoryHelper $categoryHelper,
+        PriceManager $priceManager,
+        Type $productType,
+        CollectionFactory $productCollectionFactory,
+        GroupCollection $groupCollection,
+        GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
+        ImageHelper $imageHelper
+    ) {
         $this->eavConfig = $eavConfig;
         $this->configHelper = $configHelper;
         $this->algoliaHelper = $algoliaHelper;
@@ -202,6 +209,7 @@ class ProductHelper
         $this->productType = $productType;
         $this->productCollectionFactory = $productCollectionFactory;
         $this->groupCollection = $groupCollection;
+        $this->groupExcludedWebsiteRepository = $groupExcludedWebsiteRepository;
         $this->imageHelper = $imageHelper;
     }
 
@@ -1313,9 +1321,14 @@ class ProductHelper
                     $facet['attribute'] = 'price.' . $currency_code . '.default';
 
                     if ($this->configHelper->isCustomerGroupsEnabled($storeId)) {
+                        $websiteId = (int)$this->storeManager->getStore($storeId)->getWebsiteId();
                         foreach ($this->groupCollection as $group) {
-                            $group_id = (int)$group->getData('customer_group_id');
-
+                            $group_id = (int) $group->getData('customer_group_id');
+                            $groupId = (int)$group->getData('customer_group_id');
+                            $excludedWebsites = $this->groupExcludedWebsiteRepository->getCustomerGroupExcludedWebsites($groupId);
+                            if (in_array($websiteId, $excludedWebsites)) {
+                                continue;
+                            }
                             $attributesForFaceting[] = 'price.' . $currency_code . '.group_' . $group_id;
                         }
                     }
