@@ -1,5 +1,10 @@
 # CHANGE LOG
 
+## 3.13.1
+
+### Bug Fixes
+- Fixed the issue with PHP8.2 compatibility for recommendations on the cart page
+
 ## 3.13.0
 
 ### Updates
