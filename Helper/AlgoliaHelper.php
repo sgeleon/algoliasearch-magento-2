@@ -147,8 +147,13 @@ class AlgoliaHelper extends AbstractHelper
         if (isset($params['disjunctiveFacets'])) {
             return $this->searchWithDisjunctiveFaceting($indexName, $q, $params);
         }
+        $searchResults = $this->client->search([
+            'requests' => [
+                ['indexName' => $indexName, 'query' =>$q],
+            ],
+        ], $params);
 
-        return $this->client->initIndex($indexName)->search($q, $params);
+        return $searchResults;
     }
 
     /**
@@ -490,15 +495,12 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function copySynonyms($fromIndexName, $toIndexName)
     {
-        $fromIndex = $this->getIndex($fromIndexName);
-        $toIndex = $this->getIndex($toIndexName);
-
         $synonymsToSet = [];
 
         $hitsPerPage = 100;
         $page = 0;
         do {
-            $fetchedSynonyms = $fromIndex->searchSynonyms('', [
+            $fetchedSynonyms = $this->client->searchSynonyms($fromIndexName, [
                 'page' => $page,
                 'hitsPerPage' => $hitsPerPage,
             ]);
@@ -513,17 +515,12 @@ class AlgoliaHelper extends AbstractHelper
         } while (($page * $hitsPerPage) < $fetchedSynonyms['nbHits']);
 
         if (!$synonymsToSet) {
-            $res = $toIndex->clearSynonyms([
-                'forwardToReplicas' => true,
-            ]);
+            $res = $this->client->clearSynonyms($toIndexName, true);
         } else {
-            $res = $toIndex->saveSynonyms($synonymsToSet, [
-                'forwardToReplicas'         => true,
-                'replaceExistingSynonyms'   => true,
-            ]);
+            $res = $this->client->saveSynonyms($toIndexName, $synonymsToSet, true, true);
         }
 
-        self::setLastOperationInfo($toIndex, $res);
+        self::setLastOperationInfo($toIndexName, $res);
     }
 
     /**
