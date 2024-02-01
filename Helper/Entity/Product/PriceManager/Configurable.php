@@ -9,15 +9,18 @@ class Configurable extends ProductWithChildren
     /**
      * @param $groupId
      * @param $product
+     * @param $subProducts
      * @return float|int|mixed
      */
-    protected function getRulePrice($groupId, $product)
+    protected function getRulePrice($groupId, $product, $subProducts)
     {
         $childrenPrices = [];
-        /** @var \Magento\ConfigurableProduct\Model\Product\Type\Configurable $typeInstance */
         $typeInstance = $product->getTypeInstance();
-        $children = $typeInstance->getUsedProducts($product);
-        foreach ($children as $child) {
+        if (!$typeInstance instanceof \Magento\ConfigurableProduct\Model\Product\Type\Configurable) {
+            return parent::getRulePrice($groupId, $product, $subProducts);
+        }
+
+        foreach ($subProducts as $child) {
             $childrenPrices[] = (float) $this->rule->getRulePrice(
                 new DateTime(),
                 $this->store->getWebsiteId(),
