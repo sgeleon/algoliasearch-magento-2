@@ -452,7 +452,7 @@ class ProductHelper
          * Handle replicas
          */
         $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
-        
+
         $replicas = [];
 
         if ($this->configHelper->isInstantEnabled($storeId)) {
@@ -483,7 +483,7 @@ class ProductHelper
             $this->logger->log('Setting replicas to "' . $indexName . '" index.');
             $this->logger->log('Replicas: ' . json_encode($replicas));
             $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
-            
+
             if (!$this->configHelper->useVirtualReplica($storeId)) {
                 foreach ($sortingIndices as $values) {
                     $replicaName = $values['name'];
@@ -574,7 +574,7 @@ class ProductHelper
         );
 
         $defaultData = $transport->getData();
-        
+
         $visibility = $product->getVisibility();
 
         $visibleInCatalog = $this->visibility->getVisibleInCatalogIds();
@@ -1056,7 +1056,7 @@ class ProductHelper
             }
 
             $attributeResource = $attributeResource->setData('store_id', $product->getStoreId());
-            
+
             $value = $product->getData($attributeName);
 
             if ($value !== null) {
@@ -1390,9 +1390,9 @@ class ProductHelper
      */
     protected function setFacetsQueryRules($indexName)
     {
-        $index = $this->algoliaHelper->getIndex($indexName);
+        $client = $this->algoliaHelper->getClient();
 
-        $this->clearFacetsQueryRules($index);
+        $this->clearFacetsQueryRules($indexName);
 
         $rules = [];
         $facets = $this->configHelper->getFacets();
@@ -1426,37 +1426,35 @@ class ProductHelper
 
         if ($rules) {
             $this->logger->log('Setting facets query rules to "' . $indexName . '" index: ' . json_encode($rules));
-            $index->saveRules($rules, [
-                'forwardToReplicas' => true,
-            ]);
+            $client->saveRules($indexName, $rules, true);
         }
     }
 
     /**
-     * @param SearchIndex $index
+     * @param  $index
      * @return void
      * @throws AlgoliaException
      */
-    protected function clearFacetsQueryRules(SearchIndex $index)
+    protected function clearFacetsQueryRules($indexName)
     {
         try {
             $hitsPerPage = 100;
             $page = 0;
             do {
-                $fetchedQueryRules = $index->searchRules('', [
+                $client = $this->algoliaHelper->getClient();
+                $fetchedQueryRules = $client->searchRules($indexName, [
                     'context' => 'magento_filters',
                     'page' => $page,
                     'hitsPerPage' => $hitsPerPage,
                 ]);
+
 
                 if (!$fetchedQueryRules || !array_key_exists('hits', $fetchedQueryRules)) {
                     break;
                 }
 
                 foreach ($fetchedQueryRules['hits'] as $hit) {
-                    $index->deleteRule($hit['objectID'], [
-                        'forwardToReplicas' => true,
-                    ]);
+                    $client->deleteRule($indexName, $hit['objectID'], true);
                 }
 
                 $page++;

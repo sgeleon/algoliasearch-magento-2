@@ -6,10 +6,10 @@ use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Response\AbstractResponse;
 use Algolia\AlgoliaSearch\Response\BatchIndexingResponse;
 use Algolia\AlgoliaSearch\Response\MultiResponse;
-use Algolia\AlgoliaSearch\Config\SearchConfig;
-use Algolia\AlgoliaSearch\SearchClient;
-use Algolia\AlgoliaSearch\SearchIndex;
-use Algolia\AlgoliaSearch\Support\UserAgent;
+use Algolia\AlgoliaSearch\Configuration\SearchConfig;
+use Algolia\AlgoliaSearch\Api\SearchClient;
+use Algolia\AlgoliaSearch\Support\AlgoliaAgent;
+use Algolia\AlgoliaSearch\Support\Helpers;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\Message\ManagerInterface;
@@ -70,10 +70,10 @@ class AlgoliaHelper extends AbstractHelper
             $this->config->getNonCastableAttributes()
         );
 
-        UserAgent::addCustomUserAgent('Magento2 integration', $this->config->getExtensionVersion());
-        UserAgent::addCustomUserAgent('PHP', phpversion());
-        UserAgent::addCustomUserAgent('Magento', $this->config->getMagentoVersion());
-        UserAgent::addCustomUserAgent('Edition', $this->config->getMagentoEdition());
+        AlgoliaAgent::addAlgoliaAgent('Magento2 integration', 'desktop', $this->config->getExtensionVersion());
+        AlgoliaAgent::addAlgoliaAgent('PHP', 'desktop', phpversion());
+        AlgoliaAgent::addAlgoliaAgent('Magento', 'desktop', $this->config->getMagentoVersion());
+        AlgoliaAgent::addAlgoliaAgent('Edition', 'desktop', $this->config->getMagentoEdition());
     }
 
     /**
@@ -121,6 +121,7 @@ class AlgoliaHelper extends AbstractHelper
         return $this->client->initIndex($name);
     }
 
+
     /**
      * @return mixed
      * @throws AlgoliaException
@@ -160,7 +161,7 @@ class AlgoliaHelper extends AbstractHelper
     {
         $this->checkClient(__FUNCTION__);
 
-        return $this->getIndex($indexName)->getObjects($objectIds);
+        return $this->client->getObject($indexName, $objectIds);
     }
 
     /**
@@ -181,15 +182,11 @@ class AlgoliaHelper extends AbstractHelper
     ) {
         $this->checkClient(__FUNCTION__);
 
-        $index = $this->getIndex($indexName);
-
         if ($mergeSettings === true) {
             $settings = $this->mergeSettings($indexName, $settings, $mergeSettingsFrom);
         }
 
-        $res = $index->setSettings($settings, [
-            'forwardToReplicas' => $forwardToReplicas,
-        ]);
+        $res = $this->client->setSettings($indexName, $settings, $forwardToReplicas);
 
         self::setLastOperationInfo($indexName, $res);
     }
@@ -218,10 +215,11 @@ class AlgoliaHelper extends AbstractHelper
         $this->checkClient(__FUNCTION__);
 
         $index = $this->getIndex($indexName);
-
-        $res = $index->deleteObjects($ids);
-
-        self::setLastOperationInfo($indexName, $res);
+        foreach ($ids as $id){
+            $res = $this->client->deleteObject($id);
+            self::setLastOperationInfo($indexName, $id);
+        }
+        /*Need to implement function for delete by Query for bulk*/
     }
 
     /**
@@ -250,7 +248,19 @@ class AlgoliaHelper extends AbstractHelper
             $params['tagFilters'] = '';
         }
 
-        return SearchClient::generateSecuredApiKey($key, $params);
+        return $this->generateSecuredApiKey($key, $params);
+    }
+
+    public function  generateSecuredApiKey($key, $params)
+    {
+        $validUntil = time() + (3600 * 25);
+
+        $urlEncodedRestrictions = Helpers::buildQuery([
+            'validUntil' => $validUntil,
+        ]);
+
+        $content = hash_hmac('sha256', $urlEncodedRestrictions, $key).$urlEncodedRestrictions;
+        return base64_encode($content);
     }
 
     /**
@@ -261,7 +271,7 @@ class AlgoliaHelper extends AbstractHelper
     public function getSettings($indexName)
     {
         try {
-            return $this->getIndex($indexName)->getSettings();
+            return $this->client->getSettings($indexName);
         }catch (\Exception $e) {
             if ($e->getCode() !== 404) {
                 throw $e;
@@ -285,7 +295,7 @@ class AlgoliaHelper extends AbstractHelper
                 $sourceIndex = $mergeSettingsFrom;
             }
 
-            $onlineSettings = $this->getSettings($sourceIndex);
+            $onlineSettings = $this->client->getSettings($sourceIndex);
         } catch (\Exception $e) {
         }
 
