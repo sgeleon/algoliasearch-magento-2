@@ -33,6 +33,10 @@ class Sorts extends AbstractTable
             'sortLabel' => [
                 'label' => 'Label',
             ],
+            'virtualReplica' => [
+                'label' => 'Enable Virtual Replica?',
+                'values' => ['0' => __('No'), '1' => __('Yes')],
+            ],
         ];
     }
 }
