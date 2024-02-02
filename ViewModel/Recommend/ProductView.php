@@ -4,7 +4,7 @@ namespace Algolia\AlgoliaSearch\ViewModel\Recommend;
 
 use Magento\Catalog\Model\Product;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
-use Magento\Framework\Registry;
+use Algolia\AlgoliaSearch\Registry\CurrentProduct;
 use Magento\Framework\View\Element\Block\ArgumentInterface;
 
 class ProductView implements ArgumentInterface
@@ -15,11 +15,9 @@ class ProductView implements ArgumentInterface
     protected $product = null;
 
     /**
-     * Core registry
-     *
-     * @var Registry
+     * @var CurrentProduct
      */
-    protected $coreRegistry = null;
+    protected $currentProduct;
 
     /**
      * @var ConfigHelper
@@ -27,14 +25,14 @@ class ProductView implements ArgumentInterface
     protected $configHelper;
 
     /**
-     * @param Registry $registry
+     * @param CurrentProduct $currentProduct
      * @param ConfigHelper $configHelper
      */
     public function __construct(
-        Registry     $registry,
+        CurrentProduct $currentProduct,
         ConfigHelper $configHelper
     ) {
-        $this->coreRegistry = $registry;
+        $this->currentProduct = $currentProduct;
         $this->configHelper = $configHelper;
     }
     /**
@@ -45,9 +43,20 @@ class ProductView implements ArgumentInterface
     public function getProduct()
     {
         if (!$this->product) {
-            $this->product = $this->coreRegistry->registry('product');
+            $this->product = $this->getCurrentProduct();
         }
         return $this->product;
+    }
+
+    /**
+     * Get product
+     *
+     * @return array
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function getCurrentProduct()
+    {
+        return $this->currentProduct->get();
     }
 
     /**
