@@ -204,7 +204,7 @@ class AlgoliaHelper extends AbstractHelper
     public function deleteIndex($indexName)
     {
         $this->checkClient(__FUNCTION__);
-        $res = $this->client->initIndex($indexName)->delete()->wait();
+        $res = $this->client->clearObjects($indexName);
 
         self::setLastOperationInfo($indexName, $res);
     }
@@ -219,7 +219,7 @@ class AlgoliaHelper extends AbstractHelper
     {
         $this->checkClient(__FUNCTION__);
 
-        $index = $this->getIndex($indexName);
+        //$index = $this->getIndex($indexName);
         foreach ($ids as $id){
             $res = $this->client->deleteObject($id);
             self::setLastOperationInfo($indexName, $id);
@@ -338,17 +338,16 @@ class AlgoliaHelper extends AbstractHelper
     public function addObjects($objects, $indexName)
     {
         $this->prepareRecords($objects, $indexName);
-
-        $index = $this->getIndex($indexName);
-
         if ($this->config->isPartialUpdateEnabled()) {
-            $response = $index->partialUpdateObjects($objects, [
+            $response = $this->client->partialUpdateObject($indexName, $objects, [
                 'createIfNotExists' => true,
             ]);
         } else {
-            $response = $index->saveObjects($objects, [
-                'autoGenerateObjectIDIfNotExist' => true,
-            ]);
+            $requests['requests'] = (array) $objects;
+            $response = $this->client->batch(
+                $indexName,
+                $requests
+            );
         }
 
         self::setLastOperationInfo($indexName, $response);
@@ -577,23 +576,12 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function waitLastTask($lastUsedIndexName = null, $lastTaskId = null)
     {
-        if ($lastUsedIndexName === null && isset(self::$lastUsedIndexName)) {
-            $lastUsedIndexName = self::$lastUsedIndexName;
-            if ($lastUsedIndexName instanceof SearchIndex) {
-                $lastUsedIndexName = $lastUsedIndexName->getIndexName();
-            }
-        }
-
-        if ($lastTaskId === null && isset(self::$lastTaskId)) {
-            $lastTaskId = self::$lastTaskId;
-        }
-
         if (!$lastUsedIndexName || !$lastTaskId) {
             return;
         }
 
         $this->checkClient(__FUNCTION__);
-        $this->client->initIndex($lastUsedIndexName)->waitTask($lastTaskId);
+        $this->client->waitForTask($lastUsedIndexName, $lastTaskId);
     }
 
     /**
@@ -602,13 +590,13 @@ class AlgoliaHelper extends AbstractHelper
      * @return void
      * @throws \Exception
      */
-    protected function prepareRecords(&$objects, $indexName)
+    protected function prepareRecords($objects, $indexName)
     {
         $currentCET = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
         $currentCET = $currentCET->format('Y-m-d H:i:s');
 
         $modifiedIds = [];
-        foreach ($objects as $key => &$object) {
+        foreach ($objects as $key => $object) {
             $object['algoliaLastUpdateAtCET'] = $currentCET;
 
             $previousObject = $object;
