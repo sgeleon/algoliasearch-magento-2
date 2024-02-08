@@ -112,7 +112,7 @@ class MerchandisingHelper
     public function copyQueryRules($storeId, $entityIdFrom, $entityIdTo, $entityType)
     {
         $productsIndexName = $this->coreHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
-        $productIndex = $this->algoliaHelper->getIndex($productsIndexName);
+        $client = $this->algoliaHelper->getClient();
         $context = $this->getQueryRuleId($entityIdFrom, $entityType);
         $queryRulesToSet = [];
 
@@ -120,8 +120,8 @@ class MerchandisingHelper
             $hitsPerPage = 100;
             $page = 0;
             do {
-                $fetchedQueryRules = $productIndex->searchRules('', [
-                    'context' => $context,
+                $fetchedQueryRules = $client->searchRules($productsIndexName, [
+                    'context' => 'magento_filters',
                     'page' => $page,
                     'hitsPerPage' => $hitsPerPage,
                 ]);
@@ -154,10 +154,7 @@ class MerchandisingHelper
             } while (($page * $hitsPerPage) < $fetchedQueryRules['nbHits']);
 
             if (!empty($queryRulesToSet)) {
-                $productIndex->saveRules($queryRulesToSet, [
-                    'forwardToReplicas'  => false,
-                    'clearExistingRules' => false,
-                ]);
+                $client->saveRules($productsIndexName, $queryRulesToSet, false, false);
             }
         } catch (AlgoliaException $e) {
             if ($e->getCode() !== 404) {

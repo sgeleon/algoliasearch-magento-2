@@ -260,7 +260,7 @@ class Data
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
         }
-        
+
         if (!$this->configHelper->isPagesIndexEnabled($storeId)) {
             $this->logger->log('Pages Indexing is not enabled for the store.');
             return;
@@ -522,10 +522,10 @@ class Data
                 array_push($indexData, $suggestionObject);
             }
         }
-
         if (count($indexData) > 0) {
             $this->algoliaHelper->addObjects($indexData, $indexName);
         }
+
         unset($indexData);
         $collection->walk('clearInstance');
         $collection->clear();
@@ -897,14 +897,14 @@ class Data
     public function deleteInactiveProducts($storeId)
     {
         $indexName = $this->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
-        $index = $this->algoliaHelper->getIndex($indexName);
+        $client = $this->algoliaHelper->getClient();
         $objectIds = [];
         $counter = 0;
         $browseOptions = [
             'query'                => '',
             'attributesToRetrieve' => ['objectID'],
         ];
-        foreach ($index->browseObjects($browseOptions) as $hit) {
+        foreach ($client->browseObjects($indexName, $browseOptions) as $hit) {
             $objectIds[] = $hit['objectID'];
             $counter++;
             if ($counter === 1000) {

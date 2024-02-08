@@ -218,11 +218,9 @@ class AlgoliaHelper extends AbstractHelper
     public function deleteObjects($ids, $indexName)
     {
         $this->checkClient(__FUNCTION__);
-
-        //$index = $this->getIndex($indexName);
         foreach ($ids as $id){
             $res = $this->client->deleteObject($id);
-            self::setLastOperationInfo($indexName, $id);
+            self::setLastOperationInfo($indexName, $res);
         }
         /*Need to implement function for delete by Query for bulk*/
     }
@@ -236,9 +234,16 @@ class AlgoliaHelper extends AbstractHelper
     public function moveIndex($tmpIndexName, $indexName)
     {
         $this->checkClient(__FUNCTION__);
-        $res = $this->client->moveIndex($tmpIndexName, $indexName);
+        $response = $this->client->operationIndex(
+            $tmpIndexName,
+            [
+                'operation' => 'move', // 'move'
+                'destination' => $indexName
+            ]
+        );
+        $this->client->waitForTask($indexName, $response['taskID']);
 
-        self::setLastOperationInfo($indexName, $res);
+        self::setLastOperationInfo($indexName, $response);
     }
 
     /**
@@ -343,14 +348,20 @@ class AlgoliaHelper extends AbstractHelper
                 'createIfNotExists' => true,
             ]);
         } else {
-            $requests['requests'] = (array) $objects;
-            $response = $this->client->batch(
+            //$requests['requests'] = (array) $objects;
+            foreach ($objects as $object) {
+                $res = $this->client->saveObject($indexName, $object);
+
+               // $this->client->waitForTask($indexName, $res['taskID']);
+            }
+            /*$response = $this->client->batch(
                 $indexName,
                 $requests
-            );
+            );*/
         }
 
-        self::setLastOperationInfo($indexName, $response);
+
+        //self::setLastOperationInfo($indexName, $response);
     }
 
     /**
@@ -383,45 +394,11 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function saveRule($rule, $indexName, $forwardToReplicas = false)
     {
-        $index = $this->getIndex($indexName);
-        $res = $index->saveRule($rule, [
-            'forwardToReplicas' => $forwardToReplicas,
-        ]);
+        $res = $this->client->saveRule($indexName, $rule, $forwardToReplicas);
 
         self::setLastOperationInfo($indexName, $res);
     }
 
-    /**
-     * @param $rules
-     * @param $indexName
-     * @return void
-     */
-    public function batchRules($rules, $indexName)
-    {
-        $index = $this->getIndex($indexName);
-        $res = $index->saveRules($rules, [
-            'forwardToReplicas'     => false,
-            'clearExistingRules'    => false,
-        ]);
-
-        self::setLastOperationInfo($indexName, $res);
-    }
-
-    /**
-     * @param $indexName
-     * @param $parameters
-     * @return mixed
-     */
-    public function searchRules($indexName, $parameters)
-    {
-        $index = $this->getIndex($indexName);
-
-        if (! isset($parameters['query'])) {
-            $parameters['query'] = '';
-        }
-
-        return $index->searchRules($parameters['query'], $parameters);
-    }
 
     /**
      * @param $indexName
@@ -431,10 +408,7 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function deleteRule($indexName, $objectID, $forwardToReplicas = false)
     {
-        $index = $this->getIndex($indexName);
-        $res = $index->deleteRule($objectID, [
-            'forwardToReplicas' => $forwardToReplicas,
-        ]);
+        $res = $this->client->deleteRule($indexName, $objectID, $forwardToReplicas);
 
         self::setLastOperationInfo($indexName, $res);
     }
@@ -529,12 +503,16 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function copyQueryRules($fromIndexName, $toIndexName)
     {
-        $res = $this->getClient()->copyRules($fromIndexName, $toIndexName, [
-            'forwardToReplicas'  => false,
-            'clearExistingRules' => true,
-        ]);
+        $response = $this->client->operationIndex(
+            $fromIndexName,
+            [
+                'operation' => 'copy',
+                'destination' => $toIndexName
+            ]
+        );
+        $this->client->waitForTask($toIndexName, $response['taskID']);
 
-        self::setLastOperationInfo($toIndexName, $res);
+        self::setLastOperationInfo($toIndexName, $response);
     }
 
     /**
@@ -563,7 +541,7 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function clearIndex($indexName)
     {
-        $res = $this->getIndex($indexName)->clearObjects();
+        $res = $this->client->clearObjects($indexName);
 
         self::setLastOperationInfo($indexName, $res);
     }
