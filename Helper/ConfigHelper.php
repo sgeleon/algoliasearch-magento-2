@@ -145,7 +145,6 @@ class ConfigHelper
     public const ENHANCED_QUEUE_ARCHIVE = 'algoliasearch_advanced/queue/enhanced_archive';
     public const NUMBER_OF_ELEMENT_BY_PAGE = 'algoliasearch_advanced/queue/number_of_element_by_page';
     public const ARCHIVE_LOG_CLEAR_LIMIT = 'algoliasearch_advanced/queue/archive_clear_limit';
-    public const MAX_VIRTUAL_REPLICA_COUNT = 50;
 
     /**
      * @var Magento\Framework\App\Config\ScopeConfigInterface
@@ -1021,14 +1020,7 @@ class ConfigHelper
 
         $currency = $this->getCurrencyCode($storeId);
         $attributesToAdd = [];
-        $defaultVirtualReplicaEnabled = $this->useVirtualReplica($storeId);
-        $virtualReplicaCount = 0;
         foreach ($attrs as $key => $attr) {
-            if ($virtualReplicaCount < self::MAX_VIRTUAL_REPLICA_COUNT && ($defaultVirtualReplicaEnabled || (isset($attr['virtualReplica']) && $attr['virtualReplica']))){
-                $virtualReplica = 1;
-            } else {
-                $virtualReplica = 0;
-            }
             $indexName = false;
             $sortAttribute = false;
             if ($this->isCustomerGroupsEnabled($storeId) && $attr['attribute'] === 'price') {
@@ -1052,7 +1044,6 @@ class ConfigHelper
                     $newAttr['attribute'] = $attr['attribute'];
                     $newAttr['sort'] = $attr['sort'];
                     $newAttr['sortLabel'] = $attr['sortLabel'];
-                    $newAttr['virtualReplica'] = $virtualReplica;
                     if (!array_key_exists('label', $newAttr) && array_key_exists('sortLabel', $newAttr)) {
                         $newAttr['label'] = $newAttr['sortLabel'];
                     }
@@ -1068,7 +1059,6 @@ class ConfigHelper
                         'custom',
                     ];
                     $attributesToAdd[$newAttr['sort']][] = $newAttr;
-                    $virtualReplicaCount++;
                 }
             } elseif ($attr['attribute'] === 'price') {
                 $indexName = $originalIndexName . '_' . $attr['attribute'] . '_' . 'default' . '_' . $attr['sort'];
@@ -1078,8 +1068,7 @@ class ConfigHelper
                 $sortAttribute = $attr['attribute'];
             }
             if ($indexName && $sortAttribute) {
-                $attrs[$key]['name'] = $indexName;
-                $attrs[$key]['virtualReplica'] = $virtualReplica;
+                $attrs[$key]['name'] = $indexName;                
                 if (!array_key_exists('label', $attrs[$key]) && array_key_exists('sortLabel', $attrs[$key])) {
                     $attrs[$key]['label'] = $attrs[$key]['sortLabel'];
                 }
@@ -1094,7 +1083,6 @@ class ConfigHelper
                     'exact',
                     'custom',
                 ];
-                $virtualReplicaCount++;
             }
         }
         $attrsToReturn = [];
