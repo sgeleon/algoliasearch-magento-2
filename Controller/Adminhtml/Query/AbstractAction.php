@@ -5,12 +5,12 @@ namespace Algolia\AlgoliaSearch\Controller\Adminhtml\Query;
 use Algolia\AlgoliaSearch\Helper\MerchandisingHelper;
 use Algolia\AlgoliaSearch\Model\QueryFactory;
 use Magento\Backend\App\Action\Context;
-use Magento\Backend\Model\Session;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 abstract class AbstractAction extends \Magento\Backend\App\Action
 {
-    /** @var Session */
+    /** @var SessionManagerInterface */
     protected $backendSession;
 
     /** @var QueryFactory */
@@ -24,14 +24,14 @@ abstract class AbstractAction extends \Magento\Backend\App\Action
 
     /**
      * @param Context $context
-     * @param Session $backendSession
+     * @param SessionManagerInterface $backendSession
      * @param QueryFactory $queryFactory
      * @param MerchandisingHelper $merchandisingHelper
      * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         Context $context,
-        Session $backendSession,
+        SessionManagerInterface $backendSession,
         QueryFactory $queryFactory,
         MerchandisingHelper $merchandisingHelper,
         StoreManagerInterface $storeManager

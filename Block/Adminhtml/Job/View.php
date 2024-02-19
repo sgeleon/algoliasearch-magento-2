@@ -3,27 +3,26 @@
 namespace Algolia\AlgoliaSearch\Block\Adminhtml\Job;
 
 use Magento\Backend\Block\Widget\Button;
-use Magento\Framework\Session\SessionManager;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 
 class View extends Template
 {
-    /** @var SessionManager */
+    /** @var SessionManagerInterface */
     protected $backendSession;
 
     /**
      * @param Context $context
-     * @param SessionManager $backendSession
+     * @param SessionManagerInterface $backendSession
      * @param array $data
      */
     public function __construct(
         Context          $context,
-        SessionManager   $backendSession,
+        SessionManagerInterface   $backendSession,
         array $data = []
     ) {
         parent::__construct($context, $data);
-
         $this->backendSession = $backendSession;
     }
 

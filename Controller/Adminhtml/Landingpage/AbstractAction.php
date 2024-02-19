@@ -5,13 +5,13 @@ namespace Algolia\AlgoliaSearch\Controller\Adminhtml\Landingpage;
 use Algolia\AlgoliaSearch\Helper\MerchandisingHelper;
 use Algolia\AlgoliaSearch\Model\LandingPageFactory;
 use Magento\Backend\App\Action\Context;
-use Magento\Backend\Model\Session;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 abstract class AbstractAction extends \Magento\Backend\App\Action
 {
 
-    /** @var Session */
+    /** @var SessionManagerInterface */
     protected $backendSession;
 
     /** @var LandingPageFactory */
@@ -25,14 +25,14 @@ abstract class AbstractAction extends \Magento\Backend\App\Action
 
     /**
      * @param Context $context
-     * @param Session $backendSession
+     * @param SessionManagerInterface $backendSession
      * @param LandingPageFactory $landingPageFactory
      * @param MerchandisingHelper $merchandisingHelper
      * @param StoreManagerInterface $storeManager
      */
     public function __construct(
         Context $context,
-        Session $backendSession,
+        SessionManagerInterface $backendSession,
         LandingPageFactory $landingPageFactory,
         MerchandisingHelper $merchandisingHelper,
         StoreManagerInterface $storeManager

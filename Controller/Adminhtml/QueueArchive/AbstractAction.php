@@ -5,12 +5,12 @@ namespace Algolia\AlgoliaSearch\Controller\Adminhtml\QueueArchive;
 use Algolia\AlgoliaSearch\Model\QueueArchiveFactory;
 use Algolia\AlgoliaSearch\Model\ResourceModel\QueueArchive as QueueArchiveResourceModel;
 use Magento\Backend\App\Action\Context;
-use Magento\Framework\Session\SessionManager;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Indexer\Model\IndexerFactory;
 
 abstract class AbstractAction extends \Magento\Backend\App\Action
 {
-    /** @var SessionManager */
+    /** @var SessionManagerInterface */
     protected $backendSession;
 
     /** @var \Algolia\AlgoliaSearch\Model\QueueArchiveFactory */
@@ -24,14 +24,14 @@ abstract class AbstractAction extends \Magento\Backend\App\Action
 
     /**
      * @param Context          $context
-     * @param SessionManager          $backendSession
+     * @param SessionManagerInterface          $backendSession
      * @param QueueArchiveFactory       $queueArchiveFactory
      * @param QueueArchiveResourceModel $queueArchiveResourceModel
      * @param IndexerFactory   $indexerFactory
      */
     public function __construct(
         Context $context,
-        SessionManager $backendSession,
+        SessionManagerInterface $backendSession,
         QueueArchiveFactory $queueArchiveFactory,
         QueueArchiveResourceModel $queueArchiveResourceModel,
         IndexerFactory $indexerFactory

@@ -200,7 +200,7 @@ class ConfigHelper
      * @var GroupExcludedWebsiteRepositoryInterface
      */
     protected $groupExcludedWebsiteRepository;
-  
+
     /**
      * @var CookieHelper
      */
@@ -1010,6 +1010,7 @@ class ConfigHelper
      * @param $currentCustomerGroupId
      * @param $attrs
      * @return array
+     * @throws Magento\Framework\Exception\LocalizedException
      * @throws Magento\Framework\Exception\NoSuchEntityException
      */
     public function getSortingIndices($originalIndexName, $storeId = null, $currentCustomerGroupId = null, $attrs = null)
@@ -1068,7 +1069,7 @@ class ConfigHelper
                 $sortAttribute = $attr['attribute'];
             }
             if ($indexName && $sortAttribute) {
-                $attrs[$key]['name'] = $indexName;                
+                $attrs[$key]['name'] = $indexName;
                 if (!array_key_exists('label', $attrs[$key]) && array_key_exists('sortLabel', $attrs[$key])) {
                     $attrs[$key]['label'] = $attrs[$key]['sortLabel'];
                 }

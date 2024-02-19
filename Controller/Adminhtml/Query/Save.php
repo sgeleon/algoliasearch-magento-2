@@ -6,7 +6,7 @@ use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\MerchandisingHelper;
 use Algolia\AlgoliaSearch\Model\ImageUploader;
 use Algolia\AlgoliaSearch\Model\QueryFactory;
-use Magento\Backend\Model\Session;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\App\Request\DataPersistorInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
@@ -30,10 +30,15 @@ class Save extends AbstractAction
     protected $imageUploader;
 
     /**
+     * @var SessionManagerInterface
+     */
+    protected  $backendSession;
+
+    /**
      * PHP Constructor
      *
      * @param \Magento\Backend\App\Action\Context $context
-     * @param Session $backendSession
+     * @param SessionManagerInterface $backendSession
      * @param QueryFactory $queryFactory
      * @param MerchandisingHelper $merchandisingHelper
      * @param StoreManagerInterface $storeManager
@@ -45,7 +50,7 @@ class Save extends AbstractAction
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
-        Session $backendSession,
+        SessionManagerInterface $backendSession,
         QueryFactory $queryFactory,
         MerchandisingHelper $merchandisingHelper,
         StoreManagerInterface $storeManager,

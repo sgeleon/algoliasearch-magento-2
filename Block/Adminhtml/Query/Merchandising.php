@@ -6,14 +6,14 @@ use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Data;
 use Algolia\AlgoliaSearch\Model\Query;
 use Magento\Backend\Block\Template\Context;
-use Magento\Backend\Model\Session;
+use Magento\Framework\Session\SessionManagerInterface;
 
 class Merchandising extends \Magento\Backend\Block\Template
 {
     /** @var string */
     protected $_template = 'query/edit/merchandising.phtml';
 
-    /** @var Session */
+    /** @var SessionManagerInterface */
     protected $backendSession;
 
     /** @var ConfigHelper */
@@ -27,14 +27,14 @@ class Merchandising extends \Magento\Backend\Block\Template
 
     /**
      * @param Context $context
-     * @param Session $backendSession
+     * @param SessionManagerInterface $backendSession
      * @param ConfigHelper $configHelper
      * @param Data $coreHelper
      * @param array $data
      */
     public function __construct(
         Context $context,
-        Session $backendSession,
+        SessionManagerInterface $backendSession,
         ConfigHelper $configHelper,
         Data $coreHelper,
         array $data = []

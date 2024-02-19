@@ -3,6 +3,7 @@
 namespace Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
 
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Helper\Logger;
 use DateTime;
 use Magento\Catalog\Helper\Data as CatalogHelper;
 use Magento\Catalog\Model\Product;
@@ -52,11 +53,16 @@ abstract class ProductWithoutChildren
      * @var GroupExcludedWebsiteRepositoryInterface
      */
     protected $groupExcludedWebsiteRepository;
-  
+
     /**
      * @var ScopedProductTierPriceManagementInterface
      */
     private $productTierPrice;
+
+    /**
+     * @var Logger
+     */
+    protected $logger;
 
     protected $store;
     protected $baseCurrencyCode;
@@ -67,13 +73,14 @@ abstract class ProductWithoutChildren
     /**
      * @param ConfigHelper $configHelper
      * @param CollectionFactory $customerGroupCollectionFactory
-     * @param GroupExcludedWebsiteRepositoryInterface groupExcludedWebsiteRepository
+     * @param GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository
      * @param PriceCurrencyInterface $priceCurrency
      * @param CatalogHelper $catalogHelper
      * @param TaxHelper $taxHelper
      * @param Rule $rule
      * @param ProductFactory $productloader
      * @param ScopedProductTierPriceManagementInterface $productTierPrice
+     * @param Logger $logger
      */
     public function __construct(
         ConfigHelper $configHelper,
@@ -84,7 +91,8 @@ abstract class ProductWithoutChildren
         TaxHelper $taxHelper,
         Rule $rule,
         ProductFactory $productloader,
-        ScopedProductTierPriceManagementInterface $productTierPrice
+        ScopedProductTierPriceManagementInterface $productTierPrice,
+        Logger $logger,
     ) {
         $this->configHelper = $configHelper;
         $this->customerGroupCollectionFactory = $customerGroupCollectionFactory;
@@ -95,6 +103,7 @@ abstract class ProductWithoutChildren
         $this->rule = $rule;
         $this->productloader = $productloader;
         $this->productTierPrice = $productTierPrice;
+        $this->logger = $logger;
     }
 
     /**
@@ -102,6 +111,7 @@ abstract class ProductWithoutChildren
      * @param Product $product
      * @param $subProducts
      * @return array
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function addPriceData($customData, Product $product, $subProducts): array
     {
@@ -262,7 +272,7 @@ abstract class ProductWithoutChildren
         }
         return $specialPrice;
     }
-    
+
     /**
      * @param Product $product
      * @param $currencyCode
@@ -370,7 +380,7 @@ abstract class ProductWithoutChildren
                 $this->formatPrice($tierPrice[0], $currencyCode);
         }
     }
-
+    # TODO bookmarking getRulePrice function for a future refactor effort.
     /**
      * @param $groupId
      * @param $product

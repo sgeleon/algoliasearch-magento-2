@@ -471,7 +471,7 @@ class ProductHelper
         // Managing Virtual Replica
         if ($this->configHelper->useVirtualReplica($storeId)) {
            $replicas = $this->handleVirtualReplica($replicas);
-        }    
+        }
 
         // Merge current replicas with sorting replicas to not delete A/B testing replica indices
         try {
@@ -1062,7 +1062,7 @@ class ProductHelper
             }
 
             $attributeResource = $attributeResource->setData('store_id', $product->getStoreId());
-          
+
             $value = $product->getData($attributeName);
 
             if ($value !== null) {
@@ -1308,6 +1308,8 @@ class ProductHelper
     /**
      * @param $storeId
      * @return array
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
     protected function getAttributesForFaceting($storeId)
     {
@@ -1316,21 +1318,20 @@ class ProductHelper
         $currencies = $this->currencyManager->getConfigAllowCurrencies();
 
         $facets = $this->configHelper->getFacets($storeId);
+        $websiteId = (int)$this->storeManager->getStore($storeId)->getWebsiteId();
         foreach ($facets as $facet) {
             if ($facet['attribute'] === 'price') {
                 foreach ($currencies as $currency_code) {
                     $facet['attribute'] = 'price.' . $currency_code . '.default';
 
                     if ($this->configHelper->isCustomerGroupsEnabled($storeId)) {
-                        $websiteId = (int)$this->storeManager->getStore($storeId)->getWebsiteId();
                         foreach ($this->groupCollection as $group) {
-                            $group_id = (int) $group->getData('customer_group_id');
                             $groupId = (int)$group->getData('customer_group_id');
                             $excludedWebsites = $this->groupExcludedWebsiteRepository->getCustomerGroupExcludedWebsites($groupId);
                             if (in_array($websiteId, $excludedWebsites)) {
                                 continue;
                             }
-                            $attributesForFaceting[] = 'price.' . $currency_code . '.group_' . $group_id;
+                            $attributesForFaceting[] = 'price.' . $currency_code . '.group_' . $groupId;
                         }
                     }
 
