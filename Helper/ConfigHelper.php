@@ -11,7 +11,9 @@ use Magento\Framework\Locale\Currency;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
 use Magento\Cookie\Helper\Cookie as CookieHelper;
+
 
 class ConfigHelper
 {
@@ -195,6 +197,11 @@ class ConfigHelper
     protected $groupCollection;
 
     /**
+     * @var GroupExcludedWebsiteRepositoryInterface
+     */
+    protected $groupExcludedWebsiteRepository;
+
+    /**
      * @var CookieHelper
      */
     protected $cookieHelper;
@@ -210,7 +217,9 @@ class ConfigHelper
      * @param Magento\Framework\Event\ManagerInterface $eventManager
      * @param SerializerInterface $serializer
      * @param GroupCollection $groupCollection
+     * @param GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository
      * @param CookieHelper $cookieHelper
+
      */
     public function __construct(
         Magento\Framework\App\Config\ScopeConfigInterface $configInterface,
@@ -223,6 +232,7 @@ class ConfigHelper
         Magento\Framework\Event\ManagerInterface          $eventManager,
         SerializerInterface                               $serializer,
         GroupCollection                                   $groupCollection,
+        GroupExcludedWebsiteRepositoryInterface           $groupExcludedWebsiteRepository,
         CookieHelper                                      $cookieHelper
     ) {
         $this->configInterface = $configInterface;
@@ -235,6 +245,7 @@ class ConfigHelper
         $this->eventManager = $eventManager;
         $this->serializer = $serializer;
         $this->groupCollection = $groupCollection;
+        $this->groupExcludedWebsiteRepository = $groupExcludedWebsiteRepository;
         $this->cookieHelper = $cookieHelper;
     }
 
@@ -999,6 +1010,7 @@ class ConfigHelper
      * @param $currentCustomerGroupId
      * @param $attrs
      * @return array
+     * @throws Magento\Framework\Exception\LocalizedException
      * @throws Magento\Framework\Exception\NoSuchEntityException
      */
     public function getSortingIndices($originalIndexName, $storeId = null, $currentCustomerGroupId = null, $attrs = null)
@@ -1013,12 +1025,17 @@ class ConfigHelper
             $indexName = false;
             $sortAttribute = false;
             if ($this->isCustomerGroupsEnabled($storeId) && $attr['attribute'] === 'price') {
+                $websiteId = (int)$this->storeManager->getStore($storeId)->getWebsiteId();
                 $groupCollection = $this->groupCollection;
                 if (!is_null($currentCustomerGroupId)) {
                     $groupCollection->addFilter('customer_group_id', $currentCustomerGroupId);
                 }
                 foreach ($groupCollection as $group) {
                     $customerGroupId = (int)$group->getData('customer_group_id');
+                    $excludedWebsites = $this->groupExcludedWebsiteRepository->getCustomerGroupExcludedWebsites($customerGroupId);
+                    if (in_array($websiteId, $excludedWebsites)) {
+                        continue;
+                    }
                     $groupIndexNameSuffix = 'group_' . $customerGroupId;
                     $groupIndexName =
                         $originalIndexName . '_' . $attr['attribute'] . '_' . $groupIndexNameSuffix . '_' . $attr['sort'];
