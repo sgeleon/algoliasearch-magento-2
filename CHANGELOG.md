@@ -1,5 +1,23 @@
 # CHANGE LOG
 
+## 3.13.2
+
+### Updates
+- Updated code to refactor the deprecated usage of the registry in the extension
+- Updated the code to prevent the creation of indexer for websites excluded in customer groups
+- Removed the unused polyfill script from the extension.
+
+### Bug Fixes
+- Fixed issue with the special price range for configurable products
+- Fixed issue with tier prices
+- Fixed issue causing duplicate replica errors to occur when saving the configuration.
+
+
+## 3.13.1
+
+### Bug Fixes
+- Fixed the issue with PHP8.2 compatibility for recommendations on the cart page
+
 ## 3.13.0
 
 ### Updates

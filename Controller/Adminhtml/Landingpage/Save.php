@@ -5,6 +5,7 @@ namespace Algolia\AlgoliaSearch\Controller\Adminhtml\Landingpage;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\MerchandisingHelper;
 use Algolia\AlgoliaSearch\Model\LandingPageFactory;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\App\Request\DataPersistorInterface;
 use Magento\Framework\Controller\ResultFactory;
 use Magento\Framework\Exception\LocalizedException;
@@ -29,10 +30,15 @@ class Save extends AbstractAction
     protected $configHelper;
 
     /**
+     * @var SessionManagerInterface
+     */
+    protected $backendSession;
+
+    /**
      * PHP Constructor
      *
      * @param \Magento\Backend\App\Action\Context $context
-     * @param \Magento\Framework\Registry $coreRegistry
+     * @param SessionManagerInterface $backendSession
      * @param LandingPageFactory $landingPageFactory
      * @param MerchandisingHelper $merchandisingHelper
      * @param StoreManagerInterface $storeManager
@@ -42,7 +48,7 @@ class Save extends AbstractAction
      */
     public function __construct(
         \Magento\Backend\App\Action\Context $context,
-        \Magento\Framework\Registry $coreRegistry,
+        SessionManagerInterface $backendSession,
         LandingPageFactory $landingPageFactory,
         MerchandisingHelper $merchandisingHelper,
         StoreManagerInterface $storeManager,
@@ -55,7 +61,7 @@ class Save extends AbstractAction
         $this->configHelper = $configHelper;
         parent::__construct(
             $context,
-            $coreRegistry,
+            $backendSession,
             $landingPageFactory,
             $merchandisingHelper,
             $storeManager
