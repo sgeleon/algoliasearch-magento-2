@@ -8,7 +8,7 @@ namespace Algolia\AlgoliaSearch\Block;
 
 use Magento\Catalog\Model\Product;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
-use Magento\Framework\Registry;
+use Algolia\AlgoliaSearch\Registry\CurrentProduct;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 
@@ -20,11 +20,9 @@ class RecommendProductView extends Template
     protected $product = null;
 
     /**
-     * Core registry
-     *
-     * @var Registry
+     * @var CurrentProduct
      */
-    protected $coreRegistry = null;
+    protected $currentProduct;
 
     /**
      * @var ConfigHelper
@@ -33,17 +31,17 @@ class RecommendProductView extends Template
 
     /**
      * @param Context $context
-     * @param Registry $registry
+     * @param CurrentProduct $currentProduct
      * @param ConfigHelper $configHelper
      * @param array $data
      */
     public function __construct(
         Context      $context,
-        Registry     $registry,
+        CurrentProduct     $currentProduct,
         ConfigHelper $configHelper,
         array        $data = []
     ) {
-        $this->coreRegistry = $registry;
+        $this->currentProduct = $currentProduct;
         $this->configHelper = $configHelper;
         parent::__construct($context, $data);
     }
@@ -56,7 +54,7 @@ class RecommendProductView extends Template
     public function getProduct()
     {
         if (!$this->product) {
-            $this->product = $this->coreRegistry->registry('product');
+            $this->product = $this->currentProduct->get();
         }
         return $this->product;
     }

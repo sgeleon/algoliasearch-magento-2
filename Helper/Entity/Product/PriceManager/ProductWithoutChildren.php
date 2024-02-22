@@ -3,6 +3,7 @@
 namespace Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
 
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Helper\Logger;
 use DateTime;
 use Magento\Catalog\Helper\Data as CatalogHelper;
 use Magento\Catalog\Model\Product;
@@ -11,9 +12,11 @@ use Magento\CatalogRule\Model\ResourceModel\Rule;
 use Magento\Customer\Model\Group;
 use Magento\Customer\Api\Data\GroupInterface;
 use Magento\Customer\Model\ResourceModel\Group\CollectionFactory;
+use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
 use Magento\Framework\Pricing\PriceCurrencyInterface;
 use Magento\Tax\Helper\Data as TaxHelper;
 use Magento\Tax\Model\Config as TaxConfig;
+use Magento\Catalog\Api\ScopedProductTierPriceManagementInterface;
 
 abstract class ProductWithoutChildren
 {
@@ -46,6 +49,21 @@ abstract class ProductWithoutChildren
      */
     protected $productloader;
 
+    /**
+     * @var GroupExcludedWebsiteRepositoryInterface
+     */
+    protected $groupExcludedWebsiteRepository;
+
+    /**
+     * @var ScopedProductTierPriceManagementInterface
+     */
+    private $productTierPrice;
+
+    /**
+     * @var Logger
+     */
+    protected $logger;
+
     protected $store;
     protected $baseCurrencyCode;
     protected $groups;
@@ -55,28 +73,37 @@ abstract class ProductWithoutChildren
     /**
      * @param ConfigHelper $configHelper
      * @param CollectionFactory $customerGroupCollectionFactory
+     * @param GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository
      * @param PriceCurrencyInterface $priceCurrency
      * @param CatalogHelper $catalogHelper
      * @param TaxHelper $taxHelper
      * @param Rule $rule
      * @param ProductFactory $productloader
+     * @param ScopedProductTierPriceManagementInterface $productTierPrice
+     * @param Logger $logger
      */
     public function __construct(
         ConfigHelper $configHelper,
         CollectionFactory $customerGroupCollectionFactory,
+        GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
         PriceCurrencyInterface $priceCurrency,
         CatalogHelper $catalogHelper,
         TaxHelper $taxHelper,
         Rule $rule,
-        ProductFactory $productloader
+        ProductFactory $productloader,
+        ScopedProductTierPriceManagementInterface $productTierPrice,
+        Logger $logger,
     ) {
         $this->configHelper = $configHelper;
         $this->customerGroupCollectionFactory = $customerGroupCollectionFactory;
+        $this->groupExcludedWebsiteRepository = $groupExcludedWebsiteRepository;
         $this->priceCurrency = $priceCurrency;
         $this->catalogHelper = $catalogHelper;
         $this->taxHelper = $taxHelper;
         $this->rule = $rule;
         $this->productloader = $productloader;
+        $this->productTierPrice = $productTierPrice;
+        $this->logger = $logger;
     }
 
     /**
@@ -84,6 +111,7 @@ abstract class ProductWithoutChildren
      * @param Product $product
      * @param $subProducts
      * @return array
+     * @throws \Magento\Framework\Exception\LocalizedException
      */
     public function addPriceData($customData, Product $product, $subProducts): array
     {
@@ -96,6 +124,18 @@ abstract class ProductWithoutChildren
         $fields = $this->getFields();
         if (!$this->areCustomersGroupsEnabled) {
             $this->groups->addFieldToFilter('main_table.customer_group_id', 0);
+        } else {
+            $excludedGroups = array();
+            foreach ($this->groups as $group) {
+                $groupId = (int)$group->getData('customer_group_id');
+                $excludedWebsites = $this->groupExcludedWebsiteRepository->getCustomerGroupExcludedWebsites($groupId);
+                if (in_array($product->getStore()->getWebsiteId(), $excludedWebsites)) {
+                    $excludedGroups[] = $groupId;
+                }
+            }
+            if(count($excludedGroups) > 0) {
+                $this->groups->addFieldToFilter('main_table.customer_group_id', ["nin" => $excludedGroups]);
+            }
         }
         // price/price_with_tax => true/false
         foreach ($fields as $field => $withTax) {
@@ -110,7 +150,7 @@ abstract class ProductWithoutChildren
                 $price = $this->getTaxPrice($product, $price, $withTax);
                 $this->customData[$field][$currencyCode]['default'] = $this->priceCurrency->round($price);
                 $this->customData[$field][$currencyCode]['default_formated'] = $this->formatPrice($price, $currencyCode);
-                $specialPrice = $this->getSpecialPrice($product, $currencyCode, $withTax);
+                $specialPrice = $this->getSpecialPrice($product, $currencyCode, $withTax, $subProducts);
                 $tierPrice = $this->getTierPrice($product, $currencyCode, $withTax);
                 if ($this->areCustomersGroupsEnabled) {
                     $this->addCustomerGroupsPrices($product, $currencyCode, $withTax, $field);
@@ -202,16 +242,17 @@ abstract class ProductWithoutChildren
      * @param Product $product
      * @param $currencyCode
      * @param $withTax
+     * @param $subProducts
      * @return array
      */
-    protected function getSpecialPrice(Product $product, $currencyCode, $withTax): array
+    protected function getSpecialPrice(Product $product, $currencyCode, $withTax, $subProducts): array
     {
         $specialPrice = [];
         /** @var Group $group */
         foreach ($this->groups as $group) {
             $groupId = (int) $group->getData('customer_group_id');
             $specialPrices[$groupId] = [];
-            $specialPrices[$groupId][] = $this->getRulePrice($groupId, $product);
+            $specialPrices[$groupId][] = $this->getRulePrice($groupId, $product, $subProducts);
             // The price with applied catalog rules
             $specialPrices[$groupId][] = $product->getFinalPrice(); // The product's special price
             $specialPrices[$groupId] = array_filter($specialPrices[$groupId], function ($price) {
@@ -231,7 +272,7 @@ abstract class ProductWithoutChildren
         }
         return $specialPrice;
     }
-    
+
     /**
      * @param Product $product
      * @param $currencyCode
@@ -243,7 +284,7 @@ abstract class ProductWithoutChildren
         $tierPrice = [];
         $tierPrices = [];
 
-        if (!is_null($product->getTierPrices())) {
+        if (!empty($product->getTierPrices())) {
             $product->setData('website_id', $product->getStore()->getWebsiteId());
             $productTierPrices = $product->getTierPrices();
             foreach ($productTierPrices as $productTierPrice) {
@@ -257,6 +298,24 @@ abstract class ProductWithoutChildren
                     $tierPrices[$productTierPrice->getCustomerGroupId()],
                     $productTierPrice->getValue()
                 );
+            }
+        } else {
+            /** @var Group $group */
+            foreach ($this->groups as $group) {
+                $customerGroupId = (int) $group->getData('customer_group_id');
+                $productTierPrices = $this->productTierPrice->getList($product->getSku(), $customerGroupId);
+                if(!empty($productTierPrices)) {
+                    foreach ($productTierPrices as $productTierPrice) {
+                        if (!isset($tierPrices[$productTierPrice->getCustomerGroupId()])) {
+                            $tierPrices[$productTierPrice->getCustomerGroupId()] = $productTierPrice->getValue();
+                            continue;
+                        }
+                        $tierPrices[$productTierPrice->getCustomerGroupId()] = min(
+                            $tierPrices[$productTierPrice->getCustomerGroupId()],
+                            $productTierPrice->getValue()
+                        );
+                    }
+                }
             }
         }
 
@@ -321,13 +380,14 @@ abstract class ProductWithoutChildren
                 $this->formatPrice($tierPrice[0], $currencyCode);
         }
     }
-
+    # TODO bookmarking getRulePrice function for a future refactor effort.
     /**
      * @param $groupId
      * @param $product
+     * @param $subProducts
      * @return float
      */
-    protected function getRulePrice($groupId, $product)
+    protected function getRulePrice($groupId, $product, $subProducts)
     {
         return (float) $this->rule->getRulePrice(
             new DateTime(),

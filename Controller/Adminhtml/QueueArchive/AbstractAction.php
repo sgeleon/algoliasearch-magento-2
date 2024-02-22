@@ -5,13 +5,13 @@ namespace Algolia\AlgoliaSearch\Controller\Adminhtml\QueueArchive;
 use Algolia\AlgoliaSearch\Model\QueueArchiveFactory;
 use Algolia\AlgoliaSearch\Model\ResourceModel\QueueArchive as QueueArchiveResourceModel;
 use Magento\Backend\App\Action\Context;
-use Magento\Framework\Registry;
+use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Indexer\Model\IndexerFactory;
 
 abstract class AbstractAction extends \Magento\Backend\App\Action
 {
-    /** @var Registry */
-    protected $coreRegistry;
+    /** @var SessionManagerInterface */
+    protected $backendSession;
 
     /** @var \Algolia\AlgoliaSearch\Model\QueueArchiveFactory */
     protected $queueArchiveFactory;
@@ -24,21 +24,21 @@ abstract class AbstractAction extends \Magento\Backend\App\Action
 
     /**
      * @param Context          $context
-     * @param Registry         $coreRegistry
+     * @param SessionManagerInterface          $backendSession
      * @param QueueArchiveFactory       $queueArchiveFactory
      * @param QueueArchiveResourceModel $queueArchiveResourceModel
      * @param IndexerFactory   $indexerFactory
      */
     public function __construct(
         Context $context,
-        Registry $coreRegistry,
+        SessionManagerInterface $backendSession,
         QueueArchiveFactory $queueArchiveFactory,
         QueueArchiveResourceModel $queueArchiveResourceModel,
         IndexerFactory $indexerFactory
     ) {
         parent::__construct($context);
 
-        $this->coreRegistry     = $coreRegistry;
+        $this->backendSession     = $backendSession;
         $this->queueArchiveFactory       = $queueArchiveFactory;
         $this->queueArchiveResourceModel = $queueArchiveResourceModel;
         $this->indexerFactory   = $indexerFactory;
@@ -68,7 +68,7 @@ abstract class AbstractAction extends \Magento\Backend\App\Action
         }
 
         // Register model to use later in blocks
-        $this->coreRegistry->register('current_job', $model);
+        $this->backendSession->setData('current_job', $model);
 
         return $model;
     }

@@ -20,7 +20,7 @@ use Magento\Framework\Data\CollectionDataSourceInterface;
 use Magento\Framework\Data\Form\FormKey;
 use Magento\Framework\Locale\Currency;
 use Magento\Framework\Locale\Format;
-use Magento\Framework\Registry;
+use Algolia\AlgoliaSearch\Registry\CurrentProduct;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\Url\Helper\Data;
 use Magento\Framework\View\Element\Template;
@@ -38,9 +38,9 @@ class Algolia extends Template implements CollectionDataSourceInterface
      */
     protected $catalogSearchHelper;
     /**
-     * @var Registry
+     * @var CurrentProduct
      */
-    protected $registry;
+    protected $currentProduct;
     /**
      * @var ProductHelper
      */
@@ -110,7 +110,7 @@ class Algolia extends Template implements CollectionDataSourceInterface
      * @param ProductHelper $productHelper
      * @param Currency $currency
      * @param Format $format
-     * @param Registry $registry
+     * @param CurrentProduct $currentProduct
      * @param AlgoliaHelper $algoliaHelper
      * @param Data $urlHelper
      * @param FormKey $formKey
@@ -131,7 +131,7 @@ class Algolia extends Template implements CollectionDataSourceInterface
         ProductHelper $productHelper,
         Currency $currency,
         Format $format,
-        Registry $registry,
+        CurrentProduct $currentProduct,
         AlgoliaHelper $algoliaHelper,
         Data $urlHelper,
         FormKey $formKey,
@@ -151,7 +151,7 @@ class Algolia extends Template implements CollectionDataSourceInterface
         $this->productHelper = $productHelper;
         $this->currency = $currency;
         $this->format = $format;
-        $this->registry = $registry;
+        $this->currentProduct = $currentProduct;
         $this->algoliaHelper = $algoliaHelper;
         $this->urlHelper = $urlHelper;
         $this->formKey = $formKey;
@@ -267,7 +267,7 @@ class Algolia extends Template implements CollectionDataSourceInterface
     /** @return Product */
     public function getCurrentProduct()
     {
-        return $this->registry->registry('product');
+        return $this->currentProduct->get();
     }
 
     /** @return Order */
