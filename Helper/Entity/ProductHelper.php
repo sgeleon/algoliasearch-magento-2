@@ -13,7 +13,6 @@ use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
 use Algolia\AlgoliaSearch\Helper\Image as ImageHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
-use Algolia\AlgoliaSearch\SearchIndex;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
@@ -26,6 +25,7 @@ use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\CatalogInventory\Api\StockRegistryInterface;
 use Magento\CatalogInventory\Helper\Stock;
 use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
 use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
 use Magento\Directory\Model\Currency as CurrencyHelper;
 use Magento\Eav\Model\Config;
@@ -33,7 +33,6 @@ use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
 
 class ProductHelper
 {
