@@ -2,12 +2,12 @@
 
 namespace Algolia\AlgoliaSearch\Helper;
 
+use Algolia\AlgoliaSearch\Api\SearchClient;
+use Algolia\AlgoliaSearch\Configuration\SearchConfig;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Response\AbstractResponse;
 use Algolia\AlgoliaSearch\Response\BatchIndexingResponse;
 use Algolia\AlgoliaSearch\Response\MultiResponse;
-use Algolia\AlgoliaSearch\Configuration\SearchConfig;
-use Algolia\AlgoliaSearch\Api\SearchClient;
 use Algolia\AlgoliaSearch\Support\AlgoliaAgent;
 use Algolia\AlgoliaSearch\Support\Helpers;
 use Magento\Framework\App\Helper\AbstractHelper;
@@ -70,10 +70,12 @@ class AlgoliaHelper extends AbstractHelper
             $this->config->getNonCastableAttributes()
         );
 
-        AlgoliaAgent::addAlgoliaAgent('Magento2 integration', 'desktop', $this->config->getExtensionVersion());
-        AlgoliaAgent::addAlgoliaAgent('PHP', 'desktop', phpversion());
-        AlgoliaAgent::addAlgoliaAgent('Magento', 'desktop', $this->config->getMagentoVersion());
-        AlgoliaAgent::addAlgoliaAgent('Edition', 'desktop', $this->config->getMagentoEdition());
+        $clientName = $this->client->getClientConfig()->getClientName();
+
+        AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento2 integration', $this->config->getExtensionVersion());
+        AlgoliaAgent::addAlgoliaAgent($clientName, 'PHP', phpversion());
+        AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento', $this->config->getMagentoVersion());
+        AlgoliaAgent::addAlgoliaAgent($clientName, 'Edition', $this->config->getMagentoEdition());
     }
 
     /**
