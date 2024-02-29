@@ -576,7 +576,7 @@ class AlgoliaHelper extends AbstractHelper
         $currentCET = $currentCET->format('Y-m-d H:i:s');
 
         $modifiedIds = [];
-        foreach ($objects as $key => $object) {
+        foreach ($objects as $key => &$object) {
             $object['algoliaLastUpdateAtCET'] = $currentCET;
 
             $previousObject = $object;
