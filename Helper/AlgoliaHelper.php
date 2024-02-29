@@ -113,16 +113,14 @@ class AlgoliaHelper extends AbstractHelper
 
     /**
      * @param $name
-     * @return SearchIndex
      * @throws AlgoliaException
+     *
+     * @deprecated This method has been completely removed from the Algolia PHP connector version 4 and should not be used.
      */
     public function getIndex($name)
     {
-        $this->checkClient(__FUNCTION__);
-
-        return $this->client->initIndex($name);
+        throw new AlgoliaException("This method is no longer supported for PHP client v4!");
     }
-
 
     /**
      * @return mixed
