@@ -335,33 +335,42 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $objects
-     * @param $indexName
+     * @param array $objects
+     * @param string $indexName
      * @return void
-     * @throws \Algolia\AlgoliaSearch\Exceptions\MissingObjectId
+     * @throws \Exception
      */
-    public function addObjects($objects, $indexName)
+    public function addObjects(array $objects, string $indexName): void
     {
         $this->prepareRecords($objects, $indexName);
+
         if ($this->config->isPartialUpdateEnabled()) {
+            // TODO: Fix partial updates for new API
             $response = $this->client->partialUpdateObject($indexName, $objects, [
                 'createIfNotExists' => true,
             ]);
         } else {
-            //$requests['requests'] = (array) $objects;
-            foreach ($objects as $object) {
-                $res = $this->client->saveObject($indexName, $object);
+            $requests = array_map(
+                function ($object) {
+                    return [
+                        'action' => 'addObject',
+                        'body' => $object
+                    ];
+                },
+                $objects
+            );
 
-               // $this->client->waitForTask($indexName, $res['taskID']);
-            }
-            /*$response = $this->client->batch(
-                $indexName,
-                $requests
-            );*/
+            $response = $this->client->batch($indexName, $requests);
+
+            self::setLastOperationInfo($indexName, $response);
+
+            // Do we need to wait for this?
+            // $this->client->waitForTask($indexName, $response['taskID']);
+
         }
 
 
-        //self::setLastOperationInfo($indexName, $response);
+
     }
 
     /**
@@ -369,21 +378,10 @@ class AlgoliaHelper extends AbstractHelper
      * @param $response
      * @return void
      */
-    protected static function setLastOperationInfo($indexName, $response)
+    protected static function setLastOperationInfo(string $indexName, array $response)
     {
         self::$lastUsedIndexName = $indexName;
-
-        if ($response instanceof BatchIndexingResponse || $response instanceof MultiResponse) {
-            foreach ($response->getBody() as $res) {
-                $response = $res;
-            }
-        }
-
-        if ($response instanceof AbstractResponse) {
-            $response = $response->getBody();
-        }
-
-        self::$lastTaskId = isset($response['taskID']) ? $response['taskID'] : null;
+        self::$lastTaskId = $response['taskID'] ?? null;
     }
 
     /**
