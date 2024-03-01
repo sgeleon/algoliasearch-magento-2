@@ -346,17 +346,19 @@ class AlgoliaHelper extends AbstractHelper
 
         $action = $this->config->isPartialUpdateEnabled() ? 'partialUpdateObject' : 'addObject';
 
-        $requests = array_map(
-            function ($object) use ($action) {
-                return [
-                    'action' => $action,
-                    'body' => $object
-                ];
-            },
-            $objects
+        $requests = array_values(
+            array_map(
+                function ($object) use ($action) {
+                    return [
+                        'action' => $action,
+                        'body'   => $object
+                    ];
+                },
+                $objects
+            )
         );
 
-        $response = $this->client->batch($indexName, $requests);
+        $response = $this->client->batch($indexName, [ 'requests' => $requests ] );
 
         self::setLastOperationInfo($indexName, $response);
 
