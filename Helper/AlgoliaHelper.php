@@ -344,33 +344,24 @@ class AlgoliaHelper extends AbstractHelper
     {
         $this->prepareRecords($objects, $indexName);
 
-        if ($this->config->isPartialUpdateEnabled()) {
-            // TODO: Fix partial updates for new API
-            $response = $this->client->partialUpdateObject($indexName, $objects, [
-                'createIfNotExists' => true,
-            ]);
-        } else {
-            $requests = array_map(
-                function ($object) {
-                    return [
-                        'action' => 'addObject',
-                        'body' => $object
-                    ];
-                },
-                $objects
-            );
+        $action = $this->config->isPartialUpdateEnabled() ? 'partialUpdateObject' : 'addObject';
 
-            $response = $this->client->batch($indexName, $requests);
+        $requests = array_map(
+            function ($object) use ($action) {
+                return [
+                    'action' => $action,
+                    'body' => $object
+                ];
+            },
+            $objects
+        );
 
-            self::setLastOperationInfo($indexName, $response);
+        $response = $this->client->batch($indexName, $requests);
 
-            // Do we need to wait for this?
-            // $this->client->waitForTask($indexName, $response['taskID']);
+        self::setLastOperationInfo($indexName, $response);
 
-        }
-
-
-
+        // Do we need to wait for this?
+        // $this->client->waitForTask($indexName, $response['taskID']);
     }
 
     /**
@@ -378,7 +369,7 @@ class AlgoliaHelper extends AbstractHelper
      * @param $response
      * @return void
      */
-    protected static function setLastOperationInfo(string $indexName, array $response)
+    protected static function setLastOperationInfo(string $indexName, array $response): void
     {
         self::$lastUsedIndexName = $indexName;
         self::$lastTaskId = $response['taskID'] ?? null;
@@ -561,12 +552,12 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $objects
-     * @param $indexName
+     * @param array $objects
+     * @param string $indexName
      * @return void
      * @throws \Exception
      */
-    protected function prepareRecords($objects, $indexName)
+    protected function prepareRecords(array $objects, string $indexName)
     {
         $currentCET = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
         $currentCET = $currentCET->format('Y-m-d H:i:s');
