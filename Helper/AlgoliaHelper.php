@@ -222,19 +222,31 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $ids
-     * @param $indexName
+     * @param array $ids
+     * @param string $indexName
      * @return void
      * @throws AlgoliaException
      */
-    public function deleteObjects($ids, $indexName)
+    public function deleteObjects(array $ids, string $indexName): void
     {
         $this->checkClient(__FUNCTION__);
-        foreach ($ids as $id){
-            $res = $this->client->deleteObject($id);
-            self::setLastOperationInfo($indexName, $res);
-        }
-        /*Need to implement function for delete by Query for bulk*/
+        $requests = array_values(
+            array_map(
+                function ($id) {
+                    return [
+                        'action' => 'deleteObject',
+                        'body'   => [
+                            'objectID' => $id
+                        ]
+                    ];
+                },
+                $ids
+            )
+        );
+
+        $response = $this->client->batch($indexName, [ 'requests' => $requests ] );
+
+        self::setLastOperationInfo($indexName, $response);
     }
 
     /**
