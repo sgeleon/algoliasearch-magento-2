@@ -157,16 +157,28 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $indexName
-     * @param $objectIds
-     * @return mixed
+     * @param string $indexName
+     * @param array $objectIds
+     * @return array<string, mixed>
      * @throws AlgoliaException
      */
-    public function getObjects($indexName, $objectIds)
+    public function getObjects(string $indexName, array $objectIds): array
     {
         $this->checkClient(__FUNCTION__);
 
-        return $this->client->getObject($indexName, $objectIds);
+        $requests = array_values(
+            array_map(
+                function($id) use ($indexName) {
+                    return [
+                        'indexName' => $indexName,
+                        'objectID' => $id
+                    ];
+                },
+                $objectIds
+            )
+        );
+
+        return $this->client->getObjects([ 'requests' => $requests ]);
     }
 
     /**
