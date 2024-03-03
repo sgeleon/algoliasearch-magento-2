@@ -417,13 +417,9 @@ class AnalyticsHelper
 
             $this->setupAnalyticsClient();
 
-            $requestOptions = new RequestOptionsFactory($this->analyticsConfig);
-            $requestOptions = $requestOptions->create([]);
-
-            $requestOptions->addQueryParameters($params);
-
             $response = $this->analyticsClient->customGet($path, $params);
         } catch (\Exception $e) {
+            // TODO: Revisit this error handling code to provide better feedback to front end with PHP connect v4 API
             $this->errors[] = $e->getMessage() . ': ' . $path;
             $this->logger->log($e->getMessage());
 
