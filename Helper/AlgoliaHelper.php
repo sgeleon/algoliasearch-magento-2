@@ -27,6 +27,10 @@ class AlgoliaHelper extends AbstractHelper
      * @var string
      */
     public const ALGOLIA_API_INDEX_NAME = 'indexName';
+    /**
+     * @var string
+     */
+    public const ALGOLIA_API_TASK_ID = 'taskID';
 
     protected SearchClient $client;
 
@@ -283,7 +287,7 @@ class AlgoliaHelper extends AbstractHelper
                 'destination' => $indexName
             ]
         );
-        $this->client->waitForTask($indexName, $response['taskID']);
+        $this->client->waitForTask($indexName, $response[self::ALGOLIA_API_TASK_ID]);
 
         self::setLastOperationInfo($indexName, $response);
     }
@@ -411,7 +415,7 @@ class AlgoliaHelper extends AbstractHelper
     protected static function setLastOperationInfo(string $indexName, array $response): void
     {
         self::$lastUsedIndexName = $indexName;
-        self::$lastTaskId = $response['taskID'] ?? null;
+        self::$lastTaskId = $response[self::ALGOLIA_API_TASK_ID] ?? null;
     }
 
     /**
@@ -538,7 +542,7 @@ class AlgoliaHelper extends AbstractHelper
                 'destination' => $toIndexName
             ]
         );
-        $this->client->waitForTask($toIndexName, $response['taskID']);
+        $this->client->waitForTask($toIndexName, $response[self::ALGOLIA_API_TASK_ID]);
 
         self::setLastOperationInfo($toIndexName, $response);
     }
