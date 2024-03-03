@@ -91,8 +91,8 @@ class AdditionalSectionHelper
 
         $values = array_map(function ($value) use ($section, $storeId) {
             $record = [
-                'objectID' => $value,
-                'value'    => $value,
+                AlgoliaHelper::ALGOLIA_API_OBJECT_ID => $value,
+                'value'                              => $value,
             ];
 
             $transport = new DataObject($record);

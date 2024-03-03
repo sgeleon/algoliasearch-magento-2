@@ -591,12 +591,12 @@ class ProductHelper
         ];
 
         $customData = [
-            'objectID'           => $product->getId(),
-            'name'               => $product->getName(),
-            'url'                => $product->getUrlModel()->getUrl($product, $urlParams),
-            'visibility_search'  => (int)(in_array($visibility, $visibleInSearch)),
-            'visibility_catalog' => (int)(in_array($visibility, $visibleInCatalog)),
-            'type_id'            => $product->getTypeId(),
+            AlgoliaHelper::ALGOLIA_API_OBJECT_ID => $product->getId(),
+            'name'                               => $product->getName(),
+            'url'                                => $product->getUrlModel()->getUrl($product, $urlParams),
+            'visibility_search'                  => (int) (in_array($visibility, $visibleInSearch)),
+            'visibility_catalog'                 => (int) (in_array($visibility, $visibleInCatalog)),
+            'type_id'                            => $product->getTypeId(),
         ];
 
         $additionalAttributes = $this->getAdditionalAttributes($product->getStoreId());
@@ -1421,7 +1421,7 @@ class ProductHelper
             ];
 
             $rules[] = [
-                'objectID' => 'filter_' . $attribute,
+                AlgoliaHelper::ALGOLIA_API_OBJECT_ID => 'filter_' . $attribute,
                 'description' => 'Filter facet "' . $attribute . '"',
                 'conditions' => [$condition],
                 'consequence' => [
@@ -1465,7 +1465,7 @@ class ProductHelper
                 }
 
                 foreach ($fetchedQueryRules['hits'] as $hit) {
-                    $client->deleteRule($indexName, $hit['objectID'], true);
+                    $client->deleteRule($indexName, $hit[AlgoliaHelper::ALGOLIA_API_OBJECT_ID], true);
                 }
 
                 $page++;

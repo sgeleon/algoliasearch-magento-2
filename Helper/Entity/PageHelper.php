@@ -131,7 +131,7 @@ class PageHelper
                 $content = $this->filterProvider->getPageFilter()->filter($content);
             }
 
-            $pageObject['objectID'] = $page->getId();
+            $pageObject[AlgoliaHelper::ALGOLIA_API_OBJECT_ID] = $page->getId();
             $pageObject['url'] = $frontendUrlBuilder->getUrl(
                 null,
                 [

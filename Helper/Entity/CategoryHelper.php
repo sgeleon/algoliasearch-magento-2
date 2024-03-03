@@ -307,15 +307,15 @@ class CategoryHelper
         }
 
         $data = [
-            'objectID' => $category->getId(),
-            'name' => $category->getName(),
-            'path' => $path,
-            'level' => $category->getLevel(),
-            'url' => $this->getUrl($category),
-            'include_in_menu' => $category->getIncludeInMenu(),
-            '_tags' => ['category'],
-            'popularity' => 1,
-            'product_count' => $category->getProductCount(),
+            AlgoliaHelper::ALGOLIA_API_OBJECT_ID => $category->getId(),
+            'name'                               => $category->getName(),
+            'path'                               => $path,
+            'level'                              => $category->getLevel(),
+            'url'                                => $this->getUrl($category),
+            'include_in_menu'                    => $category->getIncludeInMenu(),
+            '_tags'                              => ['category'],
+            'popularity'                         => 1,
+            'product_count'                      => $category->getProductCount(),
         ];
 
         if (!empty($imageUrl)) {

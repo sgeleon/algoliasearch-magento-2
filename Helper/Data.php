@@ -180,7 +180,7 @@ class Data
 
         $params = [
             'hitsPerPage'            => $numberOfResults, // retrieve all the hits (hard limit is 1000)
-            'attributesToRetrieve'   => 'objectID',
+            'attributesToRetrieve'   => AlgoliaHelper::ALGOLIA_API_OBJECT_ID,
             'attributesToHighlight'  => '',
             'attributesToSnippet'    => '',
             'numericFilters'         => ['visibility_search=1'],
@@ -199,7 +199,7 @@ class Data
         $data = [];
 
         foreach ($answer['hits'] as $i => $hit) {
-            $productId = $hit['objectID'];
+            $productId = $hit[AlgoliaHelper::ALGOLIA_API_OBJECT_ID];
 
             if ($productId) {
                 $data[$productId] = [
@@ -847,8 +847,8 @@ class Data
         foreach (array_chunk($idsToRemove, 1000) as $chunk) {
             $objects = $this->algoliaHelper->getObjects($indexName, $chunk);
             foreach ($objects['results'] as $object) {
-                if (isset($object['objectID'])) {
-                    $toRealRemove[] = $object['objectID'];
+                if (isset($object[AlgoliaHelper::ALGOLIA_API_OBJECT_ID])) {
+                    $toRealRemove[] = $object[AlgoliaHelper::ALGOLIA_API_OBJECT_ID];
                 }
             }
         }
@@ -902,10 +902,10 @@ class Data
         $counter = 0;
         $browseOptions = [
             'query'                => '',
-            'attributesToRetrieve' => ['objectID'],
+            'attributesToRetrieve' => [AlgoliaHelper::ALGOLIA_API_OBJECT_ID],
         ];
         foreach ($client->browseObjects($indexName, $browseOptions) as $hit) {
-            $objectIds[] = $hit['objectID'];
+            $objectIds[] = $hit[AlgoliaHelper::ALGOLIA_API_OBJECT_ID];
             $counter++;
             if ($counter === 1000) {
                 $this->deleteInactiveIds($storeId, $objectIds, $indexName);

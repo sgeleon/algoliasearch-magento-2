@@ -1420,7 +1420,7 @@ class ConfigHelper
             }
         }
         $attributes = array_merge($attributes, [
-            'objectID',
+            AlgoliaHelper::ALGOLIA_API_OBJECT_ID,
             'name',
             'url',
             'visibility_search',

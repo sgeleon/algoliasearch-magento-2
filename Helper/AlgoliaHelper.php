@@ -12,37 +12,41 @@ use Algolia\AlgoliaSearch\Support\AlgoliaAgent;
 use Algolia\AlgoliaSearch\Support\Helpers;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Message\ManagerInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
 class AlgoliaHelper extends AbstractHelper
 {
-    /** @var SearchClient */
-    protected $client;
 
-    /** @var ConfigHelper */
-    protected $config;
+    /**
+     * @var string Case-sensitive object ID key
+     */
+    public const ALGOLIA_API_OBJECT_ID = 'objectID';
+    /**
+     * @var string
+     */
+    public const ALGOLIA_API_INDEX_NAME = 'indexName';
 
-    /** @var ManagerInterface */
-    protected $messageManager;
+    protected SearchClient $client;
 
-    /** @var ConsoleOutput */
-    protected $consoleOutput;
+    protected ConfigHelper $config;
 
-    /** @var int */
-    protected $maxRecordSize;
+    protected ManagerInterface $messageManager;
 
-    /** @var array */
-    protected $potentiallyLongAttributes = ['description', 'short_description', 'meta_description', 'content'];
+    protected ConsoleOutput $consoleOutput;
 
-    /** @var array */
-    protected $nonCastableAttributes = ['sku', 'name', 'description', 'query'];
+    protected ?int $maxRecordSize = null;
 
-    /** @var string */
-    protected static $lastUsedIndexName;
+    /** @var string[] */
+    protected array $potentiallyLongAttributes = ['description', 'short_description', 'meta_description', 'content'];
 
-    /** @var string */
-    protected static $lastTaskId;
+    /** @var string[] */
+    protected array $nonCastableAttributes = ['sku', 'name', 'description', 'query'];
+
+    protected static string $lastUsedIndexName;
+
+    protected static string $lastTaskId;
 
     /**
      * @param Context $context
@@ -79,9 +83,9 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @return \Magento\Framework\App\RequestInterface
+     * @return RequestInterface
      */
-    public function getRequest()
+    public function getRequest(): RequestInterface
     {
         return $this->_getRequest();
     }
@@ -89,7 +93,7 @@ class AlgoliaHelper extends AbstractHelper
     /**
      * @return void
      */
-    public function resetCredentialsFromConfig()
+    public function resetCredentialsFromConfig(): void
     {
         if ($this->config->getApplicationID() && $this->config->getAPIKey()) {
             $config = SearchConfig::create($this->config->getApplicationID(), $this->config->getAPIKey());
@@ -104,7 +108,7 @@ class AlgoliaHelper extends AbstractHelper
      * @return SearchClient
      * @throws AlgoliaException
      */
-    public function getClient()
+    public function getClient(): SearchClient
     {
         $this->checkClient(__FUNCTION__);
 
@@ -112,12 +116,11 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $name
+     * @param string $name
      * @throws AlgoliaException
-     *
      * @deprecated This method has been completely removed from the Algolia PHP connector version 4 and should not be used.
      */
-    public function getIndex($name)
+    public function getIndex(string $name)
     {
         throw new AlgoliaException("This method is no longer supported for PHP client v4!");
     }
@@ -140,7 +143,7 @@ class AlgoliaHelper extends AbstractHelper
      * @return mixed|null
      * @throws AlgoliaException
      */
-    public function query($indexName, $q, $params)
+    public function query(sring $indexName, string $q, $params)
     {
         $this->checkClient(__FUNCTION__);
 
@@ -149,7 +152,10 @@ class AlgoliaHelper extends AbstractHelper
         }
         $searchResults = $this->client->search([
             'requests' => [
-                ['indexName' => $indexName, 'query' =>$q],
+                [
+                    self::ALGOLIA_API_INDEX_NAME => $indexName,
+                    'query'     => $q
+                ],
             ],
         ], $params);
 
@@ -170,8 +176,8 @@ class AlgoliaHelper extends AbstractHelper
             array_map(
                 function($id) use ($indexName) {
                     return [
-                        'indexName' => $indexName,
-                        'objectID' => $id
+                        self::ALGOLIA_API_INDEX_NAME => $indexName,
+                        self::ALGOLIA_API_OBJECT_ID => $id
                     ];
                 },
                 $objectIds
@@ -209,11 +215,25 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $indexName
+     * @param string $indexName
+     * @param array $requests
+     * @return array<string, mixed>
+     */
+    protected function performBatchOperation(string $indexName, array $requests): array
+    {
+        $response = $this->client->batch($indexName, [ 'requests' => $requests ] );
+
+        self::setLastOperationInfo($indexName, $response);
+
+        return $response;
+    }
+
+    /**
+     * @param string $indexName
      * @return void
      * @throws AlgoliaException
      */
-    public function deleteIndex($indexName)
+    public function deleteIndex(string $indexName): void
     {
         $this->checkClient(__FUNCTION__);
         $res = $this->client->clearObjects($indexName);
@@ -236,7 +256,7 @@ class AlgoliaHelper extends AbstractHelper
                     return [
                         'action' => 'deleteObject',
                         'body'   => [
-                            'objectID' => $id
+                            self::ALGOLIA_API_OBJECT_ID => $id
                         ]
                     ];
                 },
@@ -244,9 +264,7 @@ class AlgoliaHelper extends AbstractHelper
             )
         );
 
-        $response = $this->client->batch($indexName, [ 'requests' => $requests ] );
-
-        self::setLastOperationInfo($indexName, $response);
+        $this->performBatchOperation($indexName, $requests);
     }
 
     /**
@@ -382,12 +400,7 @@ class AlgoliaHelper extends AbstractHelper
             )
         );
 
-        $response = $this->client->batch($indexName, [ 'requests' => $requests ] );
-
-        self::setLastOperationInfo($indexName, $response);
-
-        // Do we need to wait for this?
-        // $this->client->waitForTask($indexName, $response['taskID']);
+        $this->performBatchOperation($indexName, $requests);
     }
 
     /**
@@ -599,13 +612,13 @@ class AlgoliaHelper extends AbstractHelper
             if ($object === false) {
                 $longestAttribute = $this->getLongestAttribute($previousObject);
                 $modifiedIds[] = $indexName . '
-                    - ID ' . $previousObject['objectID'] . ' - skipped - longest attribute: ' . $longestAttribute;
+                    - ID ' . $previousObject[self::ALGOLIA_API_OBJECT_ID] . ' - skipped - longest attribute: ' . $longestAttribute;
 
                 unset($objects[$key]);
 
                 continue;
             } elseif ($previousObject !== $object) {
-                $modifiedIds[] = $indexName . ' - ID ' . $previousObject['objectID'] . ' - truncated';
+                $modifiedIds[] = $indexName . ' - ID ' . $previousObject[self::ALGOLIA_API_OBJECT_ID] . ' - truncated';
             }
 
             $object = $this->castRecord($object);
@@ -841,7 +854,7 @@ class AlgoliaHelper extends AbstractHelper
 
         // Format disjunctive queries for multipleQueries call
         foreach ($disjunctiveQueries as &$disjunctiveQuery) {
-            $disjunctiveQuery['indexName'] = $indexName;
+            $disjunctiveQuery[self::ALGOLIA_API_INDEX_NAME] = $indexName;
             $disjunctiveQuery['query'] = $q;
             unset($disjunctiveQuery['disjunctiveFacets']);
         }
@@ -853,7 +866,7 @@ class AlgoliaHelper extends AbstractHelper
 
         // format the hits query for multipleQueries call
         $params['query'] = $q;
-        $params['indexName'] = $indexName;
+        $params[self::ALGOLIA_API_INDEX_NAME] = $indexName;
         $params['facets'] = $facets;
 
         // Put the hit query first

@@ -42,7 +42,7 @@ class MerchandisingHelper
         ];
 
         $rule = [
-            'objectID' => $this->getQueryRuleId($entityId, $entityType),
+            AlgoliaHelper::ALGOLIA_API_OBJECT_ID => $this->getQueryRuleId($entityId, $entityType),
             'description' => 'MagentoGeneratedQueryRule',
             'consequence' => [
                 'filterPromotes' => true,
@@ -93,7 +93,7 @@ class MerchandisingHelper
 
         foreach ($positions as $objectID => $position) {
             $transformedPositions[] = [
-                'objectID' => (string) $objectID,
+                AlgoliaHelper::ALGOLIA_API_OBJECT_ID => (string) $objectID,
                 'position' => $position,
             ];
         }
@@ -134,7 +134,7 @@ class MerchandisingHelper
                     unset($hit['_highlightResult']);
 
                     $newContext = $this->getQueryRuleId($entityIdTo, $entityType);
-                    $hit['objectID'] = $newContext;
+                    $hit[AlgoliaHelper::ALGOLIA_API_OBJECT_ID] = $newContext;
                     if (isset($hit['condition']['context']) && $hit['condition']['context'] == $context) {
                         $hit['condition']['context'] = $newContext;
                     }
