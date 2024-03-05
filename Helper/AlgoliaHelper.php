@@ -32,6 +32,11 @@ class AlgoliaHelper extends AbstractHelper
      */
     public const ALGOLIA_API_TASK_ID = 'taskID';
 
+    /** @var int This value should be configured based on system/full_page_cache/ttl
+     *           (which is by default 86400) and/or the configuration block TTL
+     */
+    protected const ALGOLIA_API_SECURED_KEY_TIMEOUT_SECONDS = 60 * 60 * 24; // TODO: Implement as config
+
     protected SearchClient $client;
 
     protected ConfigHelper $config;
@@ -304,19 +309,9 @@ class AlgoliaHelper extends AbstractHelper
             $params['tagFilters'] = '';
         }
 
-        return $this->generateSecuredApiKey($key, $params);
-    }
+        $params['validUntil'] = time() + self::ALGOLIA_API_SECURED_KEY_TIMEOUT_SECONDS;
 
-    public function  generateSecuredApiKey($key, $params)
-    {
-        $validUntil = time() + (3600 * 25);
-
-        $urlEncodedRestrictions = Helpers::buildQuery([
-            'validUntil' => $validUntil,
-        ]);
-
-        $content = hash_hmac('sha256', $urlEncodedRestrictions, $key).$urlEncodedRestrictions;
-        return base64_encode($content);
+        return $this->client->generateSecuredApiKey($key, $params);
     }
 
     /**
