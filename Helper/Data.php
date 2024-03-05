@@ -215,6 +215,16 @@ class Data
     }
 
     /**
+     * @param array $objects
+     * @param string $indexName
+     * @return void
+     * @throws \Exception
+     */
+    protected function saveObjects(array $objects, string $indexName): void {
+        $this->algoliaHelper->saveObjects($indexName, $objects, $this->configHelper->isPartialUpdateEnabled());
+    }
+
+    /**
      * @param $storeId
      * @return void
      * @throws \Algolia\AlgoliaSearch\Exceptions\AlgoliaException
@@ -239,7 +249,7 @@ class Data
             $attributeValues = $this->additionalSectionHelper->getAttributeValues($storeId, $section);
 
             foreach (array_chunk($attributeValues, 100) as $chunk) {
-                $this->algoliaHelper->addObjects($chunk, $indexName . '_tmp');
+                $this->saveObjects($chunk, $indexName . '_tmp');
             }
 
             $this->algoliaHelper->copyQueryRules($indexName, $indexName . '_tmp');
@@ -283,7 +293,7 @@ class Data
 
             foreach (array_chunk($pagesToIndex, 100) as $chunk) {
                 try {
-                    $this->algoliaHelper->addObjects($chunk, $toIndexName);
+                    $this->saveObjects($chunk, $toIndexName);
                 } catch (\Exception $e) {
                     $this->logger->log($e->getMessage());
                     continue;
@@ -523,7 +533,7 @@ class Data
             }
         }
         if (count($indexData) > 0) {
-            $this->algoliaHelper->addObjects($indexData, $indexName);
+            $this->saveObjects($indexData, $indexName);
         }
 
         unset($indexData);
@@ -543,7 +553,7 @@ class Data
         $indexData = $this->getCategoryRecords($storeId, $collection, $categoryIds);
         if (!empty($indexData['toIndex'])) {
             $this->logger->start('ADD/UPDATE TO ALGOLIA');
-            $this->algoliaHelper->addObjects($indexData['toIndex'], $indexName);
+            $this->saveObjects($indexData['toIndex'], $indexName);
             $this->logger->log('Product IDs: ' . implode(', ', array_keys($indexData['toIndex'])));
             $this->logger->stop('ADD/UPDATE TO ALGOLIA');
         }
@@ -764,7 +774,7 @@ class Data
         $indexData = $this->getProductsRecords($storeId, $collection, $productIds);
         if (!empty($indexData['toIndex'])) {
             $this->logger->start('ADD/UPDATE TO ALGOLIA');
-            $this->algoliaHelper->addObjects($indexData['toIndex'], $indexName);
+            $this->saveObjects($indexData['toIndex'], $indexName);
             $this->logger->log('Product IDs: ' . implode(', ', array_keys($indexData['toIndex'])));
             $this->logger->stop('ADD/UPDATE TO ALGOLIA');
         }

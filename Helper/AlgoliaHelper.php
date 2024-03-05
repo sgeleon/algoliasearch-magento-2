@@ -381,16 +381,30 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
+     * Legacy function signature to add objects to Algolia
      * @param array $objects
      * @param string $indexName
      * @return void
      * @throws \Exception
+     * @deprecated Do not use. This method has been replaced by saveObjects and may be removed in the future.
      */
-    public function addObjects(array $objects, string $indexName): void
+    public function addObjects(array $objects, string $indexName): void {
+        $this->saveObjects($indexName, $objects, $this->config->isPartialUpdateEnabled());
+    }
+
+    /**
+     * Save objects to index (upserts records)
+     * @param string $indexName
+     * @param array $objects
+     * @param bool $isPartialUpdate
+     * @return void
+     * @throws \Exception
+     */
+    public function saveObjects(string $indexName, array $objects, bool $isPartialUpdate = false): void
     {
         $this->prepareRecords($objects, $indexName);
 
-        $action = $this->config->isPartialUpdateEnabled() ? 'partialUpdateObject' : 'addObject';
+        $action = $isPartialUpdate ? 'partialUpdateObject' : 'addObject';
 
         $requests = array_values(
             array_map(
@@ -600,7 +614,7 @@ class AlgoliaHelper extends AbstractHelper
      * @return void
      * @throws \Exception
      */
-    protected function prepareRecords(array $objects, string $indexName)
+    protected function prepareRecords(array $objects, string $indexName): void
     {
         $currentCET = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
         $currentCET = $currentCET->format('Y-m-d H:i:s');
