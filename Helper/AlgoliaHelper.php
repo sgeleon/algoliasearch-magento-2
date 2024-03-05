@@ -48,9 +48,9 @@ class AlgoliaHelper extends AbstractHelper
     /** @var string[] */
     protected array $nonCastableAttributes = ['sku', 'name', 'description', 'query'];
 
-    protected static string $lastUsedIndexName;
+    protected static ?string $lastUsedIndexName;
 
-    protected static string $lastTaskId;
+    protected static ?int $lastTaskId;
 
     /**
      * @param Context $context
@@ -240,7 +240,7 @@ class AlgoliaHelper extends AbstractHelper
     public function deleteIndex(string $indexName): void
     {
         $this->checkClient(__FUNCTION__);
-        $res = $this->client->clearObjects($indexName);
+        $res = $this->client->deleteIndex($indexName);
 
         self::setLastOperationInfo($indexName, $res);
     }
@@ -593,18 +593,27 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $lastUsedIndexName
-     * @param $lastTaskId
+     * @param string|null $lastUsedIndexName
+     * @param int|null $lastTaskId
      * @return void
-     * @throws AlgoliaException
+     * @throws \Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException|AlgoliaException
      */
-    public function waitLastTask($lastUsedIndexName = null, $lastTaskId = null)
+    public function waitLastTask(string $lastUsedIndexName = null, int $lastTaskId = null): void
     {
+        $this->checkClient(__FUNCTION__);
+
+        if ($lastUsedIndexName === null && isset(self::$lastUsedIndexName)) {
+            $lastUsedIndexName = self::$lastUsedIndexName;
+        }
+
+        if ($lastTaskId === null && isset(self::$lastTaskId)) {
+            $lastTaskId = self::$lastTaskId;
+        }
+
         if (!$lastUsedIndexName || !$lastTaskId) {
             return;
         }
 
-        $this->checkClient(__FUNCTION__);
         $this->client->waitForTask($lastUsedIndexName, $lastTaskId);
     }
 

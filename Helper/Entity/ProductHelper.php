@@ -1365,12 +1365,14 @@ class ProductHelper
     }
 
     /**
-     * @param $indexName
-     * @param $replicas
-     * @param $setReplicasTaskId
+     * @param string $indexName
+     * @param array $replicas
+     * @param int $setReplicasTaskId
      * @return void
+     * @throws AlgoliaException
+     * @throws \Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException
      */
-    protected function deleteUnusedReplicas($indexName, $replicas, $setReplicasTaskId)
+    protected function deleteUnusedReplicas(string $indexName, array $replicas, int $setReplicasTaskId): void
     {
         $indicesToDelete = [];
 
