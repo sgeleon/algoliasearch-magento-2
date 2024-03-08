@@ -5,6 +5,7 @@ namespace Algolia\AlgoliaSearch\Helper;
 use Algolia\AlgoliaSearch\Api\SearchClient;
 use Algolia\AlgoliaSearch\Configuration\SearchConfig;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
+use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Response\AbstractResponse;
 use Algolia\AlgoliaSearch\Response\BatchIndexingResponse;
 use Algolia\AlgoliaSearch\Response\MultiResponse;
@@ -507,7 +508,7 @@ class AlgoliaHelper extends AbstractHelper
      * @param $toIndexName
      * @return void
      */
-    public function copySynonyms($fromIndexName, $toIndexName)
+    public function copySynonymsOld($fromIndexName, $toIndexName)
     {
         $synonymsToSet = [];
 
@@ -540,8 +541,30 @@ class AlgoliaHelper extends AbstractHelper
     /**
      * @param string $fromIndexName
      * @param string $toIndexName
-     *
-     * @throws \Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException
+     * @return void
+     * @throws AlgoliaException
+     * @throws ExceededRetriesException
+     */
+    public function copySynonyms(string $fromIndexName, string $toIndexName): void
+    {
+        $response = $this->client->operationIndex(
+            $fromIndexName,
+            [
+                'operation' => 'copy',
+                'destination' => $toIndexName,
+                'scope' => ['synonyms']
+            ]
+        );
+        self::setLastOperationInfo($fromIndexName, $response);
+        $this->waitLastTask();
+    }
+
+    /**
+     * @param string $fromIndexName
+     * @param string $toIndexName
+     * @return void
+     * @throws AlgoliaException
+     * @throws ExceededRetriesException
      */
     public function copyQueryRules(string $fromIndexName, string $toIndexName): void
     {
@@ -553,9 +576,8 @@ class AlgoliaHelper extends AbstractHelper
                 'scope' => ['rules']
             ]
         );
-        $this->client->waitForTask($toIndexName, $response[self::ALGOLIA_API_TASK_ID]);
-
-        self::setLastOperationInfo($toIndexName, $response);
+        self::setLastOperationInfo($fromIndexName, $response);
+        $this->waitLastTask();
     }
 
     /**
@@ -593,7 +615,7 @@ class AlgoliaHelper extends AbstractHelper
      * @param string|null $lastUsedIndexName
      * @param int|null $lastTaskId
      * @return void
-     * @throws \Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException|AlgoliaException
+     * @throws ExceededRetriesException|AlgoliaException
      */
     public function waitLastTask(string $lastUsedIndexName = null, int $lastTaskId = null): void
     {
