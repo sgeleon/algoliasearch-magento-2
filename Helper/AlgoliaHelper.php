@@ -10,7 +10,6 @@ use Algolia\AlgoliaSearch\Response\AbstractResponse;
 use Algolia\AlgoliaSearch\Response\BatchIndexingResponse;
 use Algolia\AlgoliaSearch\Response\MultiResponse;
 use Algolia\AlgoliaSearch\Support\AlgoliaAgent;
-use Algolia\AlgoliaSearch\Support\Helpers;
 use Magento\Framework\App\Helper\AbstractHelper;
 use Magento\Framework\App\Helper\Context;
 use Magento\Framework\App\RequestInterface;
@@ -278,32 +277,30 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $tmpIndexName
-     * @param $indexName
+     * @param string $fromIndexName
+     * @param string $toIndexName
      * @return void
      * @throws AlgoliaException
      */
-    public function moveIndex($tmpIndexName, $indexName)
+    public function moveIndex(string $fromIndexName, string $toIndexName): void
     {
         $this->checkClient(__FUNCTION__);
         $response = $this->client->operationIndex(
-            $tmpIndexName,
+            $fromIndexName,
             [
-                'operation' => 'move', // 'move'
-                'destination' => $indexName
+                'operation'   => 'move',
+                'destination' => $toIndexName
             ]
         );
-        $this->client->waitForTask($indexName, $response[self::ALGOLIA_API_TASK_ID]);
-
-        self::setLastOperationInfo($indexName, $response);
+        self::setLastOperationInfo($fromIndexName, $response);
     }
 
     /**
-     * @param $key
-     * @param $params
+     * @param string $key
+     * @param array $params
      * @return string
      */
-    public function generateSearchSecuredApiKey($key, $params = [])
+    public function generateSearchSecuredApiKey(string $key, array $params = []): string
     {
         // This is to handle a difference between API client v1 and v2.
         if (! isset($params['tagFilters'])) {
@@ -459,83 +456,12 @@ class AlgoliaHelper extends AbstractHelper
      * @param $indexName
      * @param $synonyms
      * @return void
+     * @throws AlgoliaException
+     * @deprecated Managing synonyms from Magento is no longer supported. Use the Algolia dashboard instead.
      */
     public function setSynonyms($indexName, $synonyms)
     {
-        $index = $this->getIndex($indexName);
-
-        /**
-         * Placeholders and alternative corrections are handled directly in Algolia dashboard.
-         * To keep it working, we need to merge it before setting synonyms to Algolia indices.
-         */
-        $hitsPerPage = 100;
-        $page = 0;
-        do {
-            $complexSynonyms = $index->searchSynonyms(
-                '',
-                [
-                    'type'          => ['altCorrection1', 'altCorrection2', 'placeholder'],
-                    'page'          => $page,
-                    'hitsPerPage'   => $hitsPerPage,
-                ]
-            );
-
-            foreach ($complexSynonyms['hits'] as $hit) {
-                unset($hit['_highlightResult']);
-
-                $synonyms[] = $hit;
-            }
-
-            $page++;
-        } while (($page * $hitsPerPage) < $complexSynonyms['nbHits']);
-
-        if (!$synonyms) {
-            $res = $index->clearSynonyms([
-                'forwardToReplicas' => true,
-            ]);
-        } else {
-            $res = $index->saveSynonyms($synonyms, [
-                'forwardToReplicas'         => true,
-                'replaceExistingSynonyms'   => true,
-            ]);
-        }
-
-        self::setLastOperationInfo($indexName, $res);
-    }
-
-    /**
-     * @param $fromIndexName
-     * @param $toIndexName
-     * @return void
-     */
-    public function copySynonymsOld($fromIndexName, $toIndexName)
-    {
-        $synonymsToSet = [];
-
-        $hitsPerPage = 100;
-        $page = 0;
-        do {
-            $fetchedSynonyms = $this->client->searchSynonyms($fromIndexName, [
-                'page' => $page,
-                'hitsPerPage' => $hitsPerPage,
-            ]);
-
-            foreach ($fetchedSynonyms['hits'] as $hit) {
-                unset($hit['_highlightResult']);
-
-                $synonymsToSet[] = $hit;
-            }
-
-            $page++;
-        } while (($page * $hitsPerPage) < $fetchedSynonyms['nbHits']);
-
-        if (!$synonymsToSet) {
-            $res = $this->client->clearSynonyms($toIndexName, true);
-        } else {
-            $res = $this->client->saveSynonyms($toIndexName, $synonymsToSet, true, true);
-        }
-
-        self::setLastOperationInfo($toIndexName, $res);
+        throw new AlgoliaException("This method is no longer supported for PHP client v4!");
     }
 
     /**
@@ -547,16 +473,16 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function copySynonyms(string $fromIndexName, string $toIndexName): void
     {
+        $this->checkClient(__FUNCTION__);
         $response = $this->client->operationIndex(
             $fromIndexName,
             [
-                'operation' => 'copy',
+                'operation'   => 'copy',
                 'destination' => $toIndexName,
-                'scope' => ['synonyms']
+                'scope'       => ['synonyms']
             ]
         );
         self::setLastOperationInfo($fromIndexName, $response);
-        $this->waitLastTask();
     }
 
     /**
@@ -568,16 +494,16 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function copyQueryRules(string $fromIndexName, string $toIndexName): void
     {
+        $this->checkClient(__FUNCTION__);
         $response = $this->client->operationIndex(
             $fromIndexName,
             [
-                'operation' => 'copy',
+                'operation'   => 'copy',
                 'destination' => $toIndexName,
-                'scope' => ['rules']
+                'scope'       => ['rules']
             ]
         );
         self::setLastOperationInfo($fromIndexName, $response);
-        $this->waitLastTask();
     }
 
     /**

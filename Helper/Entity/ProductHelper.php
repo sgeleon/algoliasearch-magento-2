@@ -403,14 +403,16 @@ class ProductHelper
     }
 
     /**
-     * @param $indexName
-     * @param $indexNameTmp
-     * @param $storeId
-     * @param $saveToTmpIndicesToo
+     * @param string $indexName
+     * @param string $indexNameTmp
+     * @param int $storeId
+     * @param bool $saveToTmpIndicesToo
      * @return void
      * @throws AlgoliaException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function setSettings($indexName, $indexNameTmp, $storeId, $saveToTmpIndicesToo = false)
+    public function setSettings(string $indexName, string $indexNameTmp, int $storeId, bool $saveToTmpIndicesToo = false): void
     {
         $searchableAttributes = $this->getSearchableAttributes($storeId);
         $customRanking = $this->getCustomRanking($storeId);
@@ -519,8 +521,9 @@ class ProductHelper
         if ($saveToTmpIndicesToo === true) {
             try {
                 $this->algoliaHelper->copySynonyms($indexName, $indexNameTmp);
+                $this->algoliaHelper->waitLastTask();
                 $this->logger->log('
-                    Copying synonyms from production index to TMP one to not erase them with the index move.
+                    Copying synonyms from production index to "' . $indexNameTmp . '" to not erase them with the index move.
                 ');
             } catch (AlgoliaException $e) {
                 $this->logger->error('Error encountered while copying synonyms: ' . $e->getMessage());
@@ -528,8 +531,9 @@ class ProductHelper
 
             try {
                 $this->algoliaHelper->copyQueryRules($indexName, $indexNameTmp);
+                $this->algoliaHelper->waitLastTask();
                 $this->logger->log('
-                    Copying query rules to "' . $indexNameTmp . '" to not to erase them with the index move.
+                    Copying query rules from production index to "' . $indexNameTmp . '" to not erase them with the index move.
                 ');
             } catch (AlgoliaException $e) {
                 if ($e->getCode() !== 404) {
