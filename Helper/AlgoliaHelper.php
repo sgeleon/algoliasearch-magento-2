@@ -538,17 +538,19 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $fromIndexName
-     * @param $toIndexName
+     * @param string $fromIndexName
+     * @param string $toIndexName
      *
+     * @throws \Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException
      */
-    public function copyQueryRules($fromIndexName, $toIndexName)
+    public function copyQueryRules(string $fromIndexName, string $toIndexName): void
     {
         $response = $this->client->operationIndex(
             $fromIndexName,
             [
                 'operation' => 'copy',
-                'destination' => $toIndexName
+                'destination' => $toIndexName,
+                'scope' => ['rules']
             ]
         );
         $this->client->waitForTask($toIndexName, $response[self::ALGOLIA_API_TASK_ID]);
