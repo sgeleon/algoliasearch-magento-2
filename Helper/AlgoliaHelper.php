@@ -431,26 +431,31 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $rule
-     * @param $indexName
-     * @param $forwardToReplicas
+     * @param array<string, mixed> $rule
+     * @param string $indexName
+     * @param bool $forwardToReplicas
      * @return void
      */
-    public function saveRule($rule, $indexName, $forwardToReplicas = false)
+    public function saveRule(array $rule, string $indexName, bool $forwardToReplicas = false): void
     {
-        $res = $this->client->saveRule($indexName, $rule, $forwardToReplicas);
+        $res = $this->client->saveRule(
+            $indexName,
+            $rule[AlgoliaHelper::ALGOLIA_API_OBJECT_ID],
+            $rule,
+            $forwardToReplicas
+        );
 
         self::setLastOperationInfo($indexName, $res);
     }
 
 
     /**
-     * @param $indexName
-     * @param $objectID
-     * @param $forwardToReplicas
+     * @param string $indexName
+     * @param string $objectID
+     * @param bool $forwardToReplicas
      * @return void
      */
-    public function deleteRule($indexName, $objectID, $forwardToReplicas = false)
+    public function deleteRule(string $indexName, string $objectID, bool $forwardToReplicas = false): void
     {
         $res = $this->client->deleteRule($indexName, $objectID, $forwardToReplicas);
 

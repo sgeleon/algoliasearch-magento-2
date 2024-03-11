@@ -26,7 +26,22 @@ class MerchandisingHelper
         $this->algoliaHelper = $algoliaHelper;
     }
 
-    public function saveQueryRule($storeId, $entityId, $rawPositions, $entityType, $query = null, $banner = null)
+    /**
+     * @param int $storeId
+     * @param int $entityId
+     * @param array $rawPositions
+     * @param string $entityType
+     * @param string|null $query
+     * @param string|null $banner
+     * @return void
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function saveQueryRule(int    $storeId,
+                                  int    $entityId,
+                                  array  $rawPositions,
+                                  string $entityType,
+                                  string $query = null,
+                                  string $banner = null): void
     {
         if ($this->coreHelper->isIndexingEnabled($storeId) === false) {
             return;
@@ -73,7 +88,14 @@ class MerchandisingHelper
         $this->algoliaHelper->saveRule($rule, $productsIndexName);
     }
 
-    public function deleteQueryRule($storeId, $entityId, $entityType)
+    /**
+     * @param int $storeId
+     * @param int $entityId
+     * @param string $entityType
+     * @return void
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     */
+    public function deleteQueryRule(int $storeId, int $entityId, string $entityType): void
     {
         if ($this->coreHelper->isIndexingEnabled($storeId) === false) {
             return;
@@ -102,14 +124,14 @@ class MerchandisingHelper
     }
 
     /**
-     * @param $storeId
+     * @param int $storeId
      * @param $entityIdFrom
      * @param $entityIdTo
      * @param $entityType
      *
-     * @throws AlgoliaException
+     * @throws AlgoliaException|\Magento\Framework\Exception\NoSuchEntityException
      */
-    public function copyQueryRules($storeId, $entityIdFrom, $entityIdTo, $entityType)
+    public function copyQueryRules(int $storeId, $entityIdFrom, $entityIdTo, $entityType): void
     {
         $productsIndexName = $this->coreHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
         $client = $this->algoliaHelper->getClient();
@@ -163,7 +185,12 @@ class MerchandisingHelper
         }
     }
 
-    private function getQueryRuleId($entityId, $entityType)
+    /**
+     * @param int $entityId
+     * @param string $entityType
+     * @return string
+     */
+    private function getQueryRuleId(int $entityId, string $entityType): string
     {
         return 'magento-' . $entityType . '-' . $entityId;
     }

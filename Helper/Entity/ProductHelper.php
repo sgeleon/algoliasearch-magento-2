@@ -215,7 +215,7 @@ class ProductHelper
     /**
      * @return string
      */
-    public function getIndexNameSuffix()
+    public function getIndexNameSuffix(): string
     {
         return '_products';
     }

@@ -932,23 +932,23 @@ class Data
     }
 
     /**
-     * @param $indexSuffix
-     * @param $storeId
-     * @param $tmp
+     * @param string $indexSuffix
+     * @param int|null $storeId
+     * @param bool $tmp
      * @return string
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function getIndexName($indexSuffix, $storeId = null, $tmp = false)
+    public function getIndexName(string $indexSuffix, int $storeId = null, bool $tmp = false): string
     {
         return $this->getBaseIndexName($storeId) . $indexSuffix . ($tmp ? '_tmp' : '');
     }
 
     /**
-     * @param $storeId
+     * @param int|null $storeId
      * @return string
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function getBaseIndexName($storeId = null)
+    public function getBaseIndexName(int $storeId = null): string
     {
         return $this->configHelper->getIndexPrefix($storeId) . $this->storeManager->getStore($storeId)->getCode();
     }
