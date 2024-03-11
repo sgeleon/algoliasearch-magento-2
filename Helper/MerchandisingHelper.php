@@ -121,7 +121,7 @@ class MerchandisingHelper
             $page = 0;
             do {
                 $fetchedQueryRules = $client->searchRules($productsIndexName, [
-                    'context' => 'magento_filters',
+                    'context' => $context,
                     'page' => $page,
                     'hitsPerPage' => $hitsPerPage,
                 ]);

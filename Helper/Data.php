@@ -4,6 +4,7 @@ namespace Algolia\AlgoliaSearch\Helper;
 
 use Algolia\AlgoliaSearch\Exception\CategoryReindexingException;
 use Algolia\AlgoliaSearch\Exception\ProductReindexingException;
+use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\Entity\AdditionalSectionHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\CategoryHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\PageHelper;
@@ -159,10 +160,11 @@ class Data
      * @param int $storeId
      * @param array|null $searchParams
      * @param string|null $targetedIndex
+     * @internal This method is currently unstable and should not be used. It may be revisited ar fixed in a future version.
      *
      * @return array
      */
-    public function getSearchResult($query, $storeId, $searchParams = null, $targetedIndex = null)
+    public function getSearchResult($query, $storeId, $searchParams = null, $targetedIndex = null): array
     {
         $indexName = $targetedIndex !== null ?
             $targetedIndex :
@@ -227,7 +229,7 @@ class Data
     /**
      * @param $storeId
      * @return void
-     * @throws \Algolia\AlgoliaSearch\Exceptions\AlgoliaException
+     * @throws AlgoliaException
      */
     public function rebuildStoreAdditionalSectionsIndex($storeId)
     {
@@ -263,7 +265,7 @@ class Data
      * @param $storeId
      * @param array|null $pageIds
      * @return void
-     * @throws \Algolia\AlgoliaSearch\Exceptions\AlgoliaException
+     * @throws AlgoliaException
      */
     public function rebuildStorePageIndex($storeId, array $pageIds = null)
     {
@@ -903,8 +905,9 @@ class Data
      * @param $storeId
      * @return void
      * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws AlgoliaException
      */
-    public function deleteInactiveProducts($storeId)
+    public function deleteInactiveProducts($storeId): void
     {
         $indexName = $this->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
         $client = $this->algoliaHelper->getClient();
@@ -974,8 +977,9 @@ class Data
      * @param $objectIds
      * @param $indexName
      * @return void
+     * @throws AlgoliaException
      */
-    protected function deleteInactiveIds($storeId, $objectIds, $indexName)
+    protected function deleteInactiveIds($storeId, $objectIds, $indexName): void
     {
         $collection = $this->productHelper->getProductCollectionQuery($storeId, $objectIds);
         $dbIds = $collection->getAllIds();

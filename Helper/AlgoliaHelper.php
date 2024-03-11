@@ -149,26 +149,31 @@ class AlgoliaHelper extends AbstractHelper
      * @param $indexName
      * @param $q
      * @param $params
-     * @return mixed|null
+     * @return array<string, mixed>
      * @throws AlgoliaException
+     * @internal This method is currently unstable and should not be used. It may be revisited ar fixed in a future version.
      */
-    public function query(sring $indexName, string $q, $params)
+    public function query(string $indexName, string $q, array $params): array
     {
         $this->checkClient(__FUNCTION__);
 
-        if (isset($params['disjunctiveFacets'])) {
-            return $this->searchWithDisjunctiveFaceting($indexName, $q, $params);
-        }
-        $searchResults = $this->client->search([
-            'requests' => [
-                [
-                    self::ALGOLIA_API_INDEX_NAME => $indexName,
-                    'query'     => $q
-                ],
-            ],
-        ], $params);
+        // TODO: Revisit - not compatible with PHP v4
+        // if (isset($params['disjunctiveFacets'])) {
+        //    return $this->searchWithDisjunctiveFaceting($indexName, $q, $params);
+        //}
 
-        return $searchResults;
+        $params = array_merge(
+            [
+                self::ALGOLIA_API_INDEX_NAME => $indexName,
+                'query' => $q
+            ],
+            $params
+        );
+
+        // TODO: Validate return value for integration tests
+        return $this->client->search([
+            'requests' => [ $params ]
+        ]);
     }
 
     /**
@@ -459,7 +464,7 @@ class AlgoliaHelper extends AbstractHelper
      * @throws AlgoliaException
      * @deprecated Managing synonyms from Magento is no longer supported. Use the Algolia dashboard instead.
      */
-    public function setSynonyms($indexName, $synonyms)
+    public function setSynonyms($indexName, $synonyms): void
     {
         throw new AlgoliaException("This method is no longer supported for PHP client v4!");
     }
@@ -511,7 +516,7 @@ class AlgoliaHelper extends AbstractHelper
      * @return void
      * @throws AlgoliaException
      */
-    protected function checkClient($methodName)
+    protected function checkClient($methodName): void
     {
         if (isset($this->client)) {
             return;
@@ -527,10 +532,10 @@ class AlgoliaHelper extends AbstractHelper
     }
 
     /**
-     * @param $indexName
+     * @param string $indexName
      * @return void
      */
-    public function clearIndex($indexName)
+    public function clearIndex(string $indexName): void
     {
         $res = $this->client->clearObjects($indexName);
 
@@ -618,7 +623,7 @@ class AlgoliaHelper extends AbstractHelper
     /**
      * @return int
      */
-    protected function getMaxRecordSize()
+    protected function getMaxRecordSize(): int
     {
         if (!$this->maxRecordSize) {
             $this->maxRecordSize = $this->config->getMaxRecordSizeLimit();
@@ -779,15 +784,15 @@ class AlgoliaHelper extends AbstractHelper
     /**
      * @return string
      */
-    public function getLastIndexName()
+    public function getLastIndexName(): string
     {
         return self::$lastUsedIndexName;
     }
 
     /**
-     * @return string
+     * @return int
      */
-    public function getLastTaskId()
+    public function getLastTaskId(): int
     {
         return self::$lastTaskId;
     }
@@ -797,7 +802,7 @@ class AlgoliaHelper extends AbstractHelper
      *
      * @return int
      */
-    protected function calculateObjectSize($object)
+    protected function calculateObjectSize($object): int
     {
         return mb_strlen(json_encode($object));
     }
@@ -807,9 +812,14 @@ class AlgoliaHelper extends AbstractHelper
      * @param $q
      * @param $params
      * @return mixed|null
+     * @throws AlgoliaException
+     * @internal This method is currently unstable and should not be used. It may be revisited ar fixed in a future version.
      */
     protected function searchWithDisjunctiveFaceting($indexName, $q, $params)
     {
+        throw new AlgoliaException("This function is not currently supported on PHP connector v4");
+
+        // TODO: Revisit this implementation for backend render
         if (! is_array($params['disjunctiveFacets']) || count($params['disjunctiveFacets']) <= 0) {
             throw new \InvalidArgumentException('disjunctiveFacets needs to be an non empty array');
         }
@@ -832,7 +842,7 @@ class AlgoliaHelper extends AbstractHelper
         }
 
         // Merge facets and disjunctiveFacets for the hits query
-        $facets = isset($params['facets']) ? $params['facets'] : [];
+        $facets = $params['facets'] ?? [];
         $facets = array_merge($facets, $params['disjunctiveFacets']);
         unset($params['disjunctiveFacets']);
 
