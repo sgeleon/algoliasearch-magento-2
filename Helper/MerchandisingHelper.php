@@ -109,7 +109,11 @@ class MerchandisingHelper
         $this->algoliaHelper->deleteRule($productsIndexName, $ruleId);
     }
 
-    private function transformPositions($positions)
+    /**
+     * @param array $positions
+     * @return array
+     */
+    private function transformPositions(array $positions): array
     {
         $transformedPositions = [];
 
@@ -125,13 +129,13 @@ class MerchandisingHelper
 
     /**
      * @param int $storeId
-     * @param $entityIdFrom
-     * @param $entityIdTo
-     * @param $entityType
-     *
+     * @param int $entityIdFrom
+     * @param int $entityIdTo
+     * @param string $entityType
+     * @return void
      * @throws AlgoliaException|\Magento\Framework\Exception\NoSuchEntityException
      */
-    public function copyQueryRules(int $storeId, $entityIdFrom, $entityIdTo, $entityType): void
+    public function copyQueryRules(int $storeId, int $entityIdFrom, int $entityIdTo, string $entityType): void
     {
         $productsIndexName = $this->coreHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
         $client = $this->algoliaHelper->getClient();
