@@ -155,7 +155,7 @@ class InsightsHelper
      */
     public function setUserToken(Customer $customer)
     {
-        $userToken = base64_encode('customer-' . $customer->getEmail() . '-' . $customer->getId());
+        $userToken = base64_encode('customer-' . $customer->getId());
         $userToken = 'aa-' . preg_replace('/[^A-Za-z0-9\-]/', '', $userToken);
         $userToken = mb_substr($userToken, 0, 64); // character limit
 
