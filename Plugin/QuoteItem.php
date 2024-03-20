@@ -39,7 +39,7 @@ class QuoteItem
     ) {
         $product = $item->getProduct();
         if ($this->configHelper->isClickConversionAnalyticsEnabled($product->getStoreId())
-            && $this->configHelper->getConversionAnalyticsMode($product->getStoreId()) === 'place_order'
+            && $this->configHelper->getConversionAnalyticsMode($product->getStoreId()) === InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE
         ) {
             $orderItem->setData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM, $item->getData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM));
         }

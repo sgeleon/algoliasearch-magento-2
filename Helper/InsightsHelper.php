@@ -2,11 +2,11 @@
 
 namespace Algolia\AlgoliaSearch\Helper;
 
+use Algolia\AlgoliaSearch\Api\Insights\EventsInterface;
+use Algolia\AlgoliaSearch\Api\Insights\EventsInterfaceFactory;
 use Algolia\AlgoliaSearch\Api\InsightsClient;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\Configuration\PersonalizationHelper;
-use Algolia\AlgoliaSearch\Api\Insights\EventsInterface;
-use Algolia\AlgoliaSearch\Api\Insights\EventsInterfaceFactory;
 use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
@@ -22,6 +22,12 @@ class InsightsHelper
 
     /** @var string */
     public const QUOTE_ITEM_QUERY_PARAM = 'algoliasearch_query_param';
+
+    public const CONVERSION_ANALYTICS_MODE_DISABLE = 'disable';
+    public const CONVERSION_ANALYTICS_MODE_ALL = 'all';
+    // Legacy options - retain in case future granularity is needed
+    public const CONVERSION_ANALYTICS_MODE_CART = 'add_to_cart';
+    public const CONVERSION_ANALYTICS_MODE_PURCHASE = 'place_order';
 
     /** @var InsightsClient|null */
     protected ?InsightsClient $insightsClient = null;
@@ -136,7 +142,7 @@ class InsightsHelper
         return ($this->personalizationHelper->isPersoEnabled($storeId)
                 && $this->personalizationHelper->isOrderPlacedTracked($storeId))
             || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
-                && $this->configHelper->getConversionAnalyticsMode($storeId) === 'place_order');
+                && $this->configHelper->getConversionAnalyticsMode($storeId) === InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE);
     }
 
     /**
@@ -149,7 +155,7 @@ class InsightsHelper
         return ($this->personalizationHelper->isPersoEnabled($storeId)
                 && $this->personalizationHelper->isCartAddTracked($storeId))
             || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
-                && $this->configHelper->getConversionAnalyticsMode($storeId) === 'add_to_cart');
+                && $this->configHelper->getConversionAnalyticsMode($storeId) === self::CONVERSION_ANALYTICS_MODE_CART);
     }
 
     /**

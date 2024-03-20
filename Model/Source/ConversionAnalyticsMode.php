@@ -2,16 +2,17 @@
 
 namespace Algolia\AlgoliaSearch\Model\Source;
 
-use Magento\Framework\Option\ArrayInterface;
+use Algolia\AlgoliaSearch\Helper\InsightsHelper;
+use Magento\Framework\Data\OptionSourceInterface;
 
-class ConversionAnalyticsMode implements ArrayInterface
+class ConversionAnalyticsMode implements OptionSourceInterface
 {
-    public function toOptionArray()
+    public function toOptionArray(): array
     {
         return [
-            ['value' => 'disabled',     'label' => __('[Disabled]')],
-            ['value' => 'add_to_cart',  'label' => __('Track "Add to cart" action as conversion')],
-            ['value' => 'place_order',  'label' => __('Track "Place Order" action as conversion')],
+            ['value' => InsightsHelper::CONVERSION_ANALYTICS_MODE_DISABLE, 'label' => __('[Disabled]')],
+            ['value' => InsightsHelper::CONVERSION_ANALYTICS_MODE_CART, 'label' => __('Track "Add to cart" action as conversion')],
+            ['value' => InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE, 'label' => __('Track "Place Order" action as conversion')],
         ];
     }
 }

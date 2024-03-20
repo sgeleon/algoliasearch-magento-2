@@ -16,24 +16,8 @@ use Psr\Log\LoggerInterface;
 
 class CheckoutCartProductAddAfter implements ObserverInterface
 {
-
-    /** @var Data */
-    protected $dataHelper;
-
-    /** @var InsightsHelper */
-    protected $insightsHelper;
-
-    /** @var LoggerInterface */
-    protected $logger;
-
-    /** @var ConfigHelper  */
-    protected $configHelper;
-
-    /** @var PersonalizationHelper */
-    protected $personalizationHelper;
-
-    /** @var SessionManagerInterface */
-    protected $coreSession;
+    protected ConfigHelper $configHelper;
+    protected PersonalizationHelper $personalizationHelper;
 
     /**
      * @param Data $dataHelper
@@ -42,17 +26,29 @@ class CheckoutCartProductAddAfter implements ObserverInterface
      * @param LoggerInterface $logger
      */
     public function __construct(
-        Data $dataHelper,
-        InsightsHelper $insightsHelper,
-        SessionManagerInterface $coreSession,
-        LoggerInterface $logger
+        protected Data $dataHelper,
+        protected InsightsHelper $insightsHelper,
+        protected SessionManagerInterface $coreSession,
+        protected LoggerInterface $logger
     ) {
-        $this->dataHelper = $dataHelper;
-        $this->insightsHelper = $insightsHelper;
-        $this->logger = $logger;
-        $this->coreSession = $coreSession;
         $this->configHelper = $this->insightsHelper->getConfigHelper();
         $this->personalizationHelper = $this->insightsHelper->getPersonalizationHelper();
+    }
+
+    protected function addQueryIdToQuoteItems(Product $product, Item $quoteItem, string $queryId): void
+    {
+        if ($product->getTypeId() == "grouped") {
+            $groupProducts = $product->getTypeInstance()->getAssociatedProducts($product);
+            foreach ($quoteItem->getQuote()->getAllItems() as $item) {
+                foreach ($groupProducts as $groupProduct) {
+                    if ($groupProduct->getId() == $item->getProductId()) {
+                        $item->setData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM, $queryId);
+                    }
+                }
+            }
+        } else {
+            $quoteItem->setData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM, $queryId);
+        }
     }
 
     /**
@@ -67,31 +63,26 @@ class CheckoutCartProductAddAfter implements ObserverInterface
         $product = $observer->getEvent()->getProduct();
         $storeId = $quoteItem->getStoreId();
 
-        if (!$this->insightsHelper->isAddedToCartTracked($storeId) && !$this->insightsHelper->isOrderPlacedTracked($storeId) || !$this->insightsHelper->getUserAllowedSavedCookie()) {
+        if (!$this->insightsHelper->isAddedToCartTracked($storeId)
+            && !$this->insightsHelper->isOrderPlacedTracked($storeId)
+            || !$this->insightsHelper->getUserAllowedSavedCookie()) {
             return;
         }
 
+        $eventsModel = $this->insightsHelper->getEventsModel();
+
         $userClient = $this->insightsHelper->getUserInsightsClient();
         $queryId = $this->coreSession->getQueryId();
+
+
         /** Adding algolia_query_param to the items to track the conversion when product is added to the cart */
-        if ($this->configHelper->isClickConversionAnalyticsEnabled($storeId) && $queryId) {
+        if ($queryId) {
             $conversionAnalyticsMode = $this->configHelper->getConversionAnalyticsMode($storeId);
             switch ($conversionAnalyticsMode) {
-                case 'place_order':
-                    if ($product->getTypeId() == "grouped") {
-                        $groupProducts = $product->getTypeInstance()->getAssociatedProducts($product);
-                        foreach ($quoteItem->getQuote()->getAllItems() as $item) {
-                            foreach ($groupProducts as $groupProduct) {
-                                if ($groupProduct->getId() == $item->getProductId()) {
-                                    $item->setData('algoliasearch_query_param', $queryId);
-                                }
-                            }
-                        }
-                    } else {
-                        $quoteItem->setData('algoliasearch_query_param', $queryId);
-                    }
+                case InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE:
+                    $this->addQueryIdToQuoteItems($product, $quoteItem, $queryId);
                     break;
-                case 'add_to_cart':
+                case InsightsHelper::CONVERSION_ANALYTICS_MODE_CART:
                     try {
                         $userClient->convertedObjectIDsAfterSearch(
                             __('Added to Cart'),
@@ -104,8 +95,7 @@ class CheckoutCartProductAddAfter implements ObserverInterface
                     }
             }
         }
-        /** Tracking the events for add to cart when personalization is enabled */
-        if ($this->personalizationHelper->isPersoEnabled($storeId) && $this->personalizationHelper->isCartAddTracked($storeId) && (!$this->configHelper->isClickConversionAnalyticsEnabled($storeId) || $this->configHelper->getConversionAnalyticsMode($storeId) != 'add_to_cart')) {
+        else {
             try {
                 $userClient->convertedObjectIDs(
                     __('Added to Cart'),

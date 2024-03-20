@@ -72,7 +72,7 @@ class CheckoutOnepageControllerSuccessAction implements ObserverInterface
         $orderItems = $order->getAllVisibleItems();
 
         if ($this->configHelper->isClickConversionAnalyticsEnabled($order->getStoreId())
-            && $this->configHelper->getConversionAnalyticsMode($order->getStoreId()) === 'place_order') {
+            && $this->configHelper->getConversionAnalyticsMode($order->getStoreId()) === InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE) {
             $queryIds = [];
             /** @var Item $item */
             foreach ($orderItems as $item) {
