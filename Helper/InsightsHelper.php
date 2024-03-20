@@ -2,44 +2,32 @@
 
 namespace Algolia\AlgoliaSearch\Helper;
 
+use Algolia\AlgoliaSearch\Api\InsightsClient;
+use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\Configuration\PersonalizationHelper;
-use Algolia\AlgoliaSearch\Insights\UserInsightsClient;
-use Algolia\AlgoliaSearch\InsightsClient;
+use Algolia\AlgoliaSearch\Api\Insights\EventsInterface;
+use Algolia\AlgoliaSearch\Api\Insights\EventsInterfaceFactory;
 use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Framework\Session\SessionManagerInterface;
 use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
 use Magento\Framework\Stdlib\CookieManagerInterface;
 
 class InsightsHelper
 {
+    /** @var string  */
     public const ALGOLIA_ANON_USER_TOKEN_COOKIE_NAME = '_ALGOLIA';
 
+    /** @var string  */
     public const ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME = 'aa-search';
 
-    /** @var ConfigHelper */
-    private $configHelper;
+    /** @var string */
+    public const QUOTE_ITEM_QUERY_PARAM = 'algoliasearch_query_param';
 
-    /** @var PersonalizationHelper */
-    private $personalizationHelper;
+    /** @var InsightsClient|null */
+    protected ?InsightsClient $insightsClient = null;
 
-    /** @var SessionManagerInterface */
-    private $sessionManager;
-    
-    /** @var CookieManagerInterface */
-    private $cookieManager;
-
-    /** @var CookieMetadataFactory */
-    private $cookieMetadataFactory;
-
-    /** @var InsightsClient */
-    private $insightsClient;
-
-    /** @var UserInsightsClient */
-    private $userInsightsClient;
-
-    /** @var CustomerSession */
-    private $customerSession;
+    /** @var EventsInterface|null  */
+    protected ?EventsInterface $eventsModel = null;
 
     /**
      * InsightsHelper constructor.
@@ -49,37 +37,32 @@ class InsightsHelper
      * @param CookieManagerInterface $cookieManager
      * @param CookieMetadataFactory $cookieMetadataFactory
      * @param CustomerSession $customerSession
+     * @param EventsInterfaceFactory $eventsFactory
      */
     public function __construct(
-        ConfigHelper $configHelper,
-        PersonalizationHelper $personalizationHelper,
-        SessionManagerInterface $sessionManager,
-        CookieManagerInterface $cookieManager,
-        CookieMetadataFactory $cookieMetadataFactory,
-        CustomerSession $customerSession
-    ) {
-        $this->configHelper = $configHelper;
-        $this->personalizationHelper = $personalizationHelper;
-        $this->sessionManager = $sessionManager;
-        $this->cookieManager = $cookieManager;
-        $this->cookieMetadataFactory = $cookieMetadataFactory;
-        $this->customerSession = $customerSession;
-    }
+        private readonly ConfigHelper           $configHelper,
+        private readonly PersonalizationHelper  $personalizationHelper,
+        private readonly CookieManagerInterface $cookieManager,
+        private readonly CookieMetadataFactory  $cookieMetadataFactory,
+        private readonly CustomerSession        $customerSession,
+        private readonly EventsInterfaceFactory $eventsFactory
+    ) { }
 
-    public function getPersonalizationHelper()
+    public function getPersonalizationHelper(): PersonalizationHelper
     {
         return $this->personalizationHelper;
     }
 
-    public function getConfigHelper()
+    public function getConfigHelper(): ConfigHelper
     {
         return $this->configHelper;
     }
 
     /**
+     * @internal Intended for internal use only - visibility may change at a future time
      * @return InsightsClient
      */
-    public function getInsightsClient()
+    public function getInsightsClient(): InsightsClient
     {
         if (!$this->insightsClient) {
             $this->insightsClient = InsightsClient::create(
@@ -92,68 +75,38 @@ class InsightsHelper
     }
 
     /**
-     * @return UserInsightsClient
+     * @return EventsInterface
      */
-    public function getUserInsightsClient()
+    public function getEventsModel(): EventsInterface
     {
-        if (!$this->userInsightsClient) {
-            $this->userInsightsClient = new UserInsightsClient($this->getInsightsClient(), $this->getUserToken());
+        if (!$this->eventsModel) {
+            $this->eventsModel = $this->eventsFactory->create([
+                'insightsClient'         => $this->getInsightsClient(),
+                'userToken'              => $this->getAnonymousUserToken(),
+                'authenticatedUserToken' => $this->getAuthenticatedUserToken()
+            ]);
         }
-
-        return $this->userInsightsClient;
+        return $this->eventsModel;
     }
 
-    /**
-     * @param null $storeId
-     *
-     * @return bool
-     */
-    public function isOrderPlacedTracked($storeId = null)
+    public function getAnonymousUserToken(): string
     {
-        return ($this->personalizationHelper->isPersoEnabled($storeId)
-                && $this->personalizationHelper->isOrderPlacedTracked($storeId))
-            || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
-                && $this->configHelper->getConversionAnalyticsMode($storeId) === 'place_order');
+        return $this->cookieManager->getCookie(self::ALGOLIA_ANON_USER_TOKEN_COOKIE_NAME);
     }
 
-    /**
-     * @param null $storeId
-     *
-     * @return bool
-     */
-    public function isAddedToCartTracked($storeId = null)
-    {
-        return ($this->personalizationHelper->isPersoEnabled($storeId)
-                && $this->personalizationHelper->isCartAddTracked($storeId))
-            || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
-                && $this->configHelper->getConversionAnalyticsMode($storeId) === 'add_to_cart');
-    }
-
-    /**
-     * @return string|null
-     */
-    private function getUserToken()
+    public function getAuthenticatedUserToken(): string
     {
         $userToken = $this->cookieManager->getCookie(self::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME);
         if (!$userToken) {
             if ($this->customerSession->isLoggedIn()) {
                 // set logged in user
-                $userToken = $this->setUserToken($this->customerSession->getCustomer());
-            } else {
-                //return anonymous user
-                $userToken = $this->cookieManager->getCookie(self::ALGOLIA_ANON_USER_TOKEN_COOKIE_NAME);
+                $userToken = $this->setAuthenticatedUserToken($this->customerSession->getCustomer());
             }
         }
-
-        return $userToken;
+        return $userToken ?? "";
     }
 
-    /**
-     * @param Customer $customer
-     *
-     * @return string
-     */
-    public function setUserToken(Customer $customer)
+    protected function setAuthenticatedUserToken(Customer $customer): string|null
     {
         $userToken = base64_encode('customer-' . $customer->getId());
         $userToken = 'aa-' . preg_replace('/[^A-Za-z0-9\-]/', '', $userToken);
@@ -167,17 +120,54 @@ class InsightsHelper
                 ->setSecure(false);
             $this->cookieManager->setPublicCookie(self::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME, $userToken, $metaData);
         } catch (\Exception $e) {
-            // return anonymous
-            $userToken = $this->cookieManager->getCookie(self::ALGOLIA_ANON_USER_TOKEN_COOKIE_NAME);
+            $userToken = "";
         }
 
         return $userToken;
     }
 
     /**
-     * @return string|null
+     * @param int|null $storeId
+     *
+     * @return bool
      */
-    public function getUserAllowedSavedCookie() {
-        return $this->configHelper->isCookieRestrictionModeEnabled() ? !!$this->cookieManager->getCookie($this->configHelper->getDefaultConsentCookieName()) : true;
+    public function isOrderPlacedTracked(int $storeId = null): bool
+    {
+        return ($this->personalizationHelper->isPersoEnabled($storeId)
+                && $this->personalizationHelper->isOrderPlacedTracked($storeId))
+            || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
+                && $this->configHelper->getConversionAnalyticsMode($storeId) === 'place_order');
+    }
+
+    /**
+     * @param int|null $storeId
+     *
+     * @return bool
+     */
+    public function isAddedToCartTracked(int $storeId = null): bool
+    {
+        return ($this->personalizationHelper->isPersoEnabled($storeId)
+                && $this->personalizationHelper->isCartAddTracked($storeId))
+            || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
+                && $this->configHelper->getConversionAnalyticsMode($storeId) === 'add_to_cart');
+    }
+
+    /**
+     * @param Customer $customer
+     * @throws AlgoliaException
+     * @internal This method is no longer compatible with PHP connector v4. Do not use.
+     */
+    public function setUserToken(Customer $customer)
+    {
+        throw new AlgoliaException("This method is no longer compatible with PHP connector v4.");
+    }
+
+    /**
+     * @return bool
+     */
+    public function getUserAllowedSavedCookie(): bool
+    {
+        return !$this->configHelper->isCookieRestrictionModeEnabled()
+            || !!$this->cookieManager->getCookie($this->configHelper->getDefaultConsentCookieName());
     }
 }

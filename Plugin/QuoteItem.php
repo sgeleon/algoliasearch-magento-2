@@ -3,6 +3,7 @@
 namespace Algolia\AlgoliaSearch\Plugin;
 
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Helper\InsightsHelper;
 use Magento\Quote\Model\Quote\Item\AbstractItem;
 use Magento\Quote\Model\Quote\Item\ToOrderItem;
 use Magento\Sales\Api\Data\OrderItemInterface;
@@ -40,7 +41,7 @@ class QuoteItem
         if ($this->configHelper->isClickConversionAnalyticsEnabled($product->getStoreId())
             && $this->configHelper->getConversionAnalyticsMode($product->getStoreId()) === 'place_order'
         ) {
-            $orderItem->setData('algoliasearch_query_param', $item->getData('algoliasearch_query_param'));
+            $orderItem->setData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM, $item->getData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM));
         }
 
         return $orderItem;

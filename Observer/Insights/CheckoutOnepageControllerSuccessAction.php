@@ -76,8 +76,8 @@ class CheckoutOnepageControllerSuccessAction implements ObserverInterface
             $queryIds = [];
             /** @var Item $item */
             foreach ($orderItems as $item) {
-                if ($item->hasData('algoliasearch_query_param')) {
-                    $queryId = $item->getData('algoliasearch_query_param');
+                if ($item->hasData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM)) {
+                    $queryId = $item->getData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM);
                     $queryIds[$queryId][] = $item->getProductId();
                 }
             }
