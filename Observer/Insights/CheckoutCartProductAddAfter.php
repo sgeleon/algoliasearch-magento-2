@@ -79,28 +79,15 @@ class CheckoutCartProductAddAfter implements ObserverInterface
         }
 
         if ($this->insightsHelper->isAddedToCartTracked($storeId)) {
-            if ($queryId) {
-                try {
-                    $eventsModel->convertedObjectIDsAfterSearch(
-                        __('Added to Cart'),
-                        $this->dataHelper->getIndexName('_products', $storeId),
-                        [$product->getId()],
-                        $queryId
-                    );
-                } catch (Exception $e) {
-                    $this->logger->critical($e);
-                }
-            }
-            else {
-                try {
-                    $eventsModel->convertedObjectIDs(
-                        __('Added to Cart'),
-                        $this->dataHelper->getIndexName('_products', $storeId),
-                        [$product->getId()]
-                    );
-                } catch (Exception $e) {
-                    $this->logger->critical($e);
-                }
+            try {
+                $eventsModel->convertAddToCart(
+                    __('Added to Cart'),
+                    $this->dataHelper->getIndexName('_products', $storeId),
+                    $quoteItem,
+                    $queryId
+                );
+            } catch (Exception $e) {
+                $this->logger->critical($e);
             }
         }
     }

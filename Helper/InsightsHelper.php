@@ -11,6 +11,7 @@ use Magento\Customer\Model\Customer;
 use Magento\Customer\Model\Session as CustomerSession;
 use Magento\Framework\Stdlib\Cookie\CookieMetadataFactory;
 use Magento\Framework\Stdlib\CookieManagerInterface;
+use Magento\Store\Model\StoreManagerInterface;
 
 class InsightsHelper
 {
@@ -51,7 +52,8 @@ class InsightsHelper
         private readonly CookieManagerInterface $cookieManager,
         private readonly CookieMetadataFactory  $cookieMetadataFactory,
         private readonly CustomerSession        $customerSession,
-        private readonly EventsInterfaceFactory $eventsFactory
+        private readonly EventsInterfaceFactory $eventsFactory,
+        private readonly StoreManagerInterface  $storeManager
     ) { }
 
     public function getPersonalizationHelper(): PersonalizationHelper
@@ -89,7 +91,8 @@ class InsightsHelper
             $this->eventsModel = $this->eventsFactory->create([
                 'client'                 => $this->getInsightsClient(),
                 'userToken'              => $this->getAnonymousUserToken(),
-                'authenticatedUserToken' => $this->getAuthenticatedUserToken()
+                'authenticatedUserToken' => $this->getAuthenticatedUserToken(),
+                'storeManager'           => $this->storeManager
             ]);
         }
         return $this->eventsModel;
