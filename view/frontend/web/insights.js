@@ -14,14 +14,16 @@ define([
         hasAddedParameters: false,
         useCookie         : false,
 
-        track: function (algoliaConfig, partial = false) {
+        useCookie() {
+            return !this.config.cookieConfiguration.cookieRestrictionModeEnabled
+                || !!getCookie(this.config.cookieConfiguration.consentCookieName);
+        },
+
+        track(algoliaConfig) {
             this.config = algoliaConfig;
             this.defaultIndexName = algoliaConfig.indexName + '_products';
-            this.useCookie = this.config.cookieConfiguration
-                .cookieRestrictionModeEnabled
-                ? !!getCookie(this.config.cookieConfiguration.consentCookieName)
-                : true;
-            if (this.isTracking || this.useCookie === false) {
+            
+            if (this.isTracking) {
                 return;
             }
 
@@ -29,7 +31,7 @@ define([
                 algoliaConfig.ccAnalytics.enabled ||
                 algoliaConfig.personalization.enabled
             ) {
-                this.initializeAnalytics(partial);
+                this.initializeAnalytics();
                 this.addSearchParameters();
                 this.bindData();
                 this.bindEvents();
@@ -38,38 +40,24 @@ define([
             }
         },
 
-        initializeAnalytics: function (partial = false) {
-            let useCookie = this.config.cookieConfiguration
-                .cookieRestrictionModeEnabled
-                ? !!getCookie(this.config.cookieConfiguration.consentCookieName)
-                : true;
-            if (partial) {
-                algoliaAnalytics.init({
-                    appId         : this.config.applicationId,
-                    apiKey        : this.config.apiKey,
-                    partial       : true,
-                    useCookie     : useCookie,
-                    cookieDuration: Number(
-                        this.config.cookieConfiguration.cookieDuration
-                    ),
-                });
-            } else {
-                algoliaAnalytics.init({
-                    appId         : this.config.applicationId,
-                    apiKey        : this.config.apiKey,
-                    useCookie     : useCookie,
-                    cookieDuration: Number(
-                        this.config.cookieConfiguration.cookieDuration
-                    ),
-                });
-            }
+        initializeAnalytics(partial = false) {
+            algoliaAnalytics.init({
+                appId         : this.config.applicationId,
+                apiKey        : this.config.apiKey,
+                useCookie     : this.useCookie(),
+                cookieDuration: Number(
+                    this.config.cookieConfiguration.cookieDuration
+                ),
+                partial
+            });
 
-            var userAgent =
+            const userAgent =
                 'insights-js-in-magento (' + this.config.extensionVersion + ')';
             algoliaAnalytics.addAlgoliaAgent(userAgent);
 
-            var userToken = getCookie('aa-search');
-            var unsetAuthenticationToken = getCookie('unset_authentication_token');
+            // TODO: Reevaluate need for unset cookie
+            const userToken = getCookie('aa-search');
+            const unsetAuthenticationToken = getCookie('unset_authentication_token');
             if (userToken && userToken !== '') {
                 algoliaAnalytics.setAuthenticatedUserToken(userToken);
             } else if (unsetAuthenticationToken && unsetAuthenticationToken !== '') {
@@ -78,7 +66,7 @@ define([
             }
         },
 
-        addSearchParameters: function () {
+        addSearchParameters() {
             if (this.hasAddedParameters) {
                 return;
             }
@@ -86,6 +74,7 @@ define([
             algolia.registerHook(
                 'beforeWidgetInitialization',
                 function (allWidgetConfiguration) {
+                
                     allWidgetConfiguration.configure =
                         allWidgetConfiguration.configure || {};
                     if (algoliaConfig.ccAnalytics.enabled) {
@@ -120,7 +109,7 @@ define([
         },
 
         bindData: function () {
-            var persoConfig = this.config.personalization;
+            const persoConfig = this.config.personalization;
 
             if (
                 persoConfig.enabled &&
@@ -131,7 +120,7 @@ define([
                     element
                 ) {
                     if ($(element).find('[data-role="priceBox"]').length) {
-                        var objectId = $(element)
+                        const objectId = $(element)
                             .find('[data-role="priceBox"]')
                             .data('product-id');
                         $(element).attr('data-objectid', objectId);
@@ -140,16 +129,17 @@ define([
             }
         },
 
-        bindEvents: function () {
+        bindEvents() {
             this.bindClickedEvents();
             this.bindViewedEvents();
 
             algolia.triggerHooks('afterInsightsBindEvents', this);
         },
 
-        bindClickedEvents: function () {
+        bindClickedEvents() {
             var self = this;
 
+            // TODO: Switch to insights plugin
             $(function ($) {
                 $(self.config.autocomplete.selector).on(
                     'autocomplete:selected',
@@ -249,7 +239,7 @@ define([
             }
         },
 
-        getClickedEventBySelector: function (selector) {
+        getClickedEventBySelector(selector) {
             var events = this.config.personalization.clickedEvents,
                 keys = Object.keys(events);
 
@@ -262,7 +252,7 @@ define([
             return {};
         },
 
-        bindViewedEvents: function () {
+        bindViewedEvents() {
             var self = this;
 
             // viewed event is exclusive to personalization
@@ -290,14 +280,14 @@ define([
             }
         },
 
-        buildEventData: function (
+        buildEventData(
             eventName,
             objectId,
             indexName,
             position = null,
             queryId = null
         ) {
-            var eventData = {
+            const eventData = {
                 eventName: eventName,
                 objectIDs: [objectId + ''],
                 index    : indexName,
@@ -314,7 +304,7 @@ define([
             return eventData;
         },
 
-        trackClick: function (eventData) {
+        trackClick(eventData) {
             if (eventData.queryID) {
                 algoliaAnalytics.clickedObjectIDsAfterSearch(eventData);
             } else {
@@ -322,8 +312,8 @@ define([
             }
         },
 
-        trackFilterClick: function (filters) {
-            var eventData = {
+        trackFilterClick(filters) {
+            const eventData = {
                 index    : this.defaultIndexName,
                 eventName: this.config.personalization.filterClicked.eventName,
                 filters  : filters,
@@ -332,31 +322,35 @@ define([
             algoliaAnalytics.clickedFilters(eventData);
         },
 
-        trackView: function (eventData) {
+        trackView(eventData) {
             algoliaAnalytics.viewedObjectIDs(eventData);
         },
 
-        trackConversion: function (eventData) {
+        trackConversion(eventData) {
             if (eventData.queryID) {
                 algoliaAnalytics.convertedObjectIDsAfterSearch(eventData);
             } else {
                 algoliaAnalytics.convertedObjectIDs(eventData);
             }
         },
+
+        bindConsentButtonClick(algoliaConfig) {
+            $(document).on(
+                'click',
+                algoliaConfig.cookieConfiguration.cookieAllowButtonSelector,
+                (event) => {
+                    event.preventDefault();
+                    algoliaInsights.initializeAnalytics(algoliaConfig, true);
+                }
+            );
+        }
     };
 
     algoliaInsights.addSearchParameters();
 
     $(function ($) {
         if (window.algoliaConfig) {
-            $(document).on(
-                'click',
-                algoliaConfig.cookieConfiguration.cookieAllowButtonSelector,
-                function (event) {
-                    event.preventDefault();
-                    algoliaInsights.track(algoliaConfig, true);
-                }
-            );
+            algoliaInsights.bindConsentButtonClick(algoliaConfig);
             algoliaInsights.track(algoliaConfig);
         }
     });

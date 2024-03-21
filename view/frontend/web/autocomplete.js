@@ -662,6 +662,7 @@ define([
     );
 
     //Autocomplete insight click conversion
+    // TODO: Switch to insights plugin
     if (algoliaConfig.ccAnalytics.enabled) {
         $(document).on('click', '.algoliasearch-autocomplete-hit', function () {
             const $this = $(this);
