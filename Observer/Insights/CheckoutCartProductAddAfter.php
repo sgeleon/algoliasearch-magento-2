@@ -53,7 +53,7 @@ class CheckoutCartProductAddAfter implements ObserverInterface
 
     /**
      * @param Observer $observer
-     * ['quote_item' => $result, 'product' => $product]
+     * ['quote_item' => $quoteItem, 'product' => $product]
      */
     public function execute(Observer $observer)
     {
