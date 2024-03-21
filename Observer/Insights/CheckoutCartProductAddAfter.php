@@ -71,39 +71,36 @@ class CheckoutCartProductAddAfter implements ObserverInterface
 
         $eventsModel = $this->insightsHelper->getEventsModel();
 
-        $userClient = $this->insightsHelper->getUserInsightsClient();
         $queryId = $this->coreSession->getQueryId();
 
-
         /** Adding algolia_query_param to the items to track the conversion when product is added to the cart */
-        if ($queryId) {
-            $conversionAnalyticsMode = $this->configHelper->getConversionAnalyticsMode($storeId);
-            switch ($conversionAnalyticsMode) {
-                case InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE:
-                    $this->addQueryIdToQuoteItems($product, $quoteItem, $queryId);
-                    break;
-                case InsightsHelper::CONVERSION_ANALYTICS_MODE_CART:
-                    try {
-                        $userClient->convertedObjectIDsAfterSearch(
-                            __('Added to Cart'),
-                            $this->dataHelper->getIndexName('_products', $storeId),
-                            [$product->getId()],
-                            $queryId
-                        );
-                    } catch (Exception $e) {
-                        $this->logger->critical($e);
-                    }
-            }
+        if ($this->insightsHelper->isOrderPlacedTracked($storeId) && $queryId) {
+            $this->addQueryIdToQuoteItems($product, $quoteItem, $queryId);
         }
-        else {
-            try {
-                $userClient->convertedObjectIDs(
-                    __('Added to Cart'),
-                    $this->dataHelper->getIndexName('_products', $storeId),
-                    [$product->getId()]
-                );
-            } catch (Exception $e) {
-                $this->logger->critical($e);
+
+        if ($this->insightsHelper->isAddedToCartTracked($storeId)) {
+            if ($queryId) {
+                try {
+                    $eventsModel->convertedObjectIDsAfterSearch(
+                        __('Added to Cart'),
+                        $this->dataHelper->getIndexName('_products', $storeId),
+                        [$product->getId()],
+                        $queryId
+                    );
+                } catch (Exception $e) {
+                    $this->logger->critical($e);
+                }
+            }
+            else {
+                try {
+                    $eventsModel->convertedObjectIDs(
+                        __('Added to Cart'),
+                        $this->dataHelper->getIndexName('_products', $storeId),
+                        [$product->getId()]
+                    );
+                } catch (Exception $e) {
+                    $this->logger->critical($e);
+                }
             }
         }
     }

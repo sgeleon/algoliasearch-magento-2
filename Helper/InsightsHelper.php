@@ -87,7 +87,7 @@ class InsightsHelper
     {
         if (!$this->eventsModel) {
             $this->eventsModel = $this->eventsFactory->create([
-                'insightsClient'         => $this->getInsightsClient(),
+                'client'                 => $this->getInsightsClient(),
                 'userToken'              => $this->getAnonymousUserToken(),
                 'authenticatedUserToken' => $this->getAuthenticatedUserToken()
             ]);
@@ -142,7 +142,7 @@ class InsightsHelper
         return ($this->personalizationHelper->isPersoEnabled($storeId)
                 && $this->personalizationHelper->isOrderPlacedTracked($storeId))
             || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
-                && $this->configHelper->getConversionAnalyticsMode($storeId) === InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE);
+                && in_array($this->configHelper->getConversionAnalyticsMode($storeId), [InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE, InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL]));
     }
 
     /**
@@ -155,7 +155,7 @@ class InsightsHelper
         return ($this->personalizationHelper->isPersoEnabled($storeId)
                 && $this->personalizationHelper->isCartAddTracked($storeId))
             || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
-                && $this->configHelper->getConversionAnalyticsMode($storeId) === self::CONVERSION_ANALYTICS_MODE_CART);
+                && in_array($this->configHelper->getConversionAnalyticsMode($storeId), [InsightsHelper::CONVERSION_ANALYTICS_MODE_CART, InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL]));
     }
 
     /**
