@@ -22,7 +22,7 @@ define([
         track(algoliaConfig) {
             this.config = algoliaConfig;
             this.defaultIndexName = algoliaConfig.indexName + '_products';
-            
+
             if (this.isTracking) {
                 return;
             }
@@ -56,7 +56,7 @@ define([
             algoliaAnalytics.addAlgoliaAgent(userAgent);
 
             // TODO: Reevaluate need for unset cookie
-            const userToken = getCookie('aa-search');
+            const userToken = getCookie(algoliaConfig.cookieConfiguration.customerTokenCookie);
             const unsetAuthenticationToken = getCookie('unset_authentication_token');
             if (userToken && userToken !== '') {
                 algoliaAnalytics.setAuthenticatedUserToken(userToken);
@@ -74,7 +74,7 @@ define([
             algolia.registerHook(
                 'beforeWidgetInitialization',
                 function (allWidgetConfiguration) {
-                
+
                     allWidgetConfiguration.configure =
                         allWidgetConfiguration.configure || {};
                     if (algoliaConfig.ccAnalytics.enabled) {

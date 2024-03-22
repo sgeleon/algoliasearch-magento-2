@@ -17,9 +17,8 @@ class InsightsHelper
 {
     /** @var string  */
     public const ALGOLIA_ANON_USER_TOKEN_COOKIE_NAME = '_ALGOLIA';
-
     /** @var string  */
-    public const ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME = 'aa-search';
+    public const ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME = '_ALGOLIA_MAGENTO_AUTH';
 
     /** @var string */
     public const QUOTE_ITEM_QUERY_PARAM = 'algoliasearch_query_param';
@@ -115,7 +114,12 @@ class InsightsHelper
         return $userToken ?? "";
     }
 
-    protected function setAuthenticatedUserToken(Customer $customer): string|null
+    /**
+     * For a Magento customer, generated an authentication token to be used for personalization and insights
+     * @param Customer $customer
+     * @return string|null The user token that was generated for the customer, null if unable to create
+     */
+    public function setAuthenticatedUserToken(Customer $customer): string|null
     {
         $userToken = base64_encode('customer-' . $customer->getId());
         $userToken = 'aa-' . preg_replace('/[^A-Za-z0-9\-]/', '', $userToken);
@@ -129,7 +133,8 @@ class InsightsHelper
                 ->setSecure(false);
             $this->cookieManager->setPublicCookie(self::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME, $userToken, $metaData);
         } catch (\Exception $e) {
-            $userToken = "";
+
+            $userToken = null;
         }
 
         return $userToken;
@@ -163,12 +168,11 @@ class InsightsHelper
 
     /**
      * @param Customer $customer
-     * @throws AlgoliaException
-     * @internal This method is no longer compatible with PHP connector v4. Do not use.
+     * @deprecated This function has been supplanted by setAuthenticatedUserToken for clarity of intent and may be removed in a future release.
      */
-    public function setUserToken(Customer $customer)
+    public function setUserToken(Customer $customer): string|null
     {
-        throw new AlgoliaException("This method is no longer compatible with PHP connector v4.");
+        return $this->setAuthenticatedUserToken($customer);
     }
 
     /**
