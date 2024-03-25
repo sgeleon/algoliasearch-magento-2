@@ -8,6 +8,7 @@ use Algolia\AlgoliaSearch\Helper\InsightsHelper;
 use Exception;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item;
@@ -16,6 +17,12 @@ use Psr\Log\LoggerInterface;
 
 class CheckoutOnepageControllerSuccessAction implements ObserverInterface
 {
+    /** @var string  */
+    public const PLACE_ORDER_EVENT_NAME = 'Placed order';
+
+    /** @var string  */
+    protected const NO_QUERY_ID_KEY = '__NO_QUERY_ID__';
+
     /**
      * @param Data $dataHelper
      * @param InsightsHelper $insightsHelper
@@ -44,69 +51,67 @@ class CheckoutOnepageControllerSuccessAction implements ObserverInterface
             $order = $this->orderFactory->create()->loadByIncrementId($orderId);
         }
 
+
         if (!$order || !$this->insightsHelper->isOrderPlacedTracked($order->getStoreId())) {
             return;
         }
 
+        $indexName = "";
+        try {
+            $this->dataHelper->getIndexName('_products', $order->getStoreId()),
+        } catch (NoSuchEntityException $e) {
+            $this->logger->error("No store found for order: ", $e->getMessage());
+            return;
+        }
+
         $eventsModel = $this->insightsHelper->getEventsModel();
-        $orderItems = $order->getAllVisibleItems();
+        $itemsByQueryId = $this->getItemsByQueryId($order);
 
-        if ($this->insightsHelper->isOrderPlacedTracked($order->getStoreId())) {
-            $queryIds = [];
-            /** @var Item $item */
-            foreach ($orderItems as $item) {
-                if ($item->hasData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM)) {
-                    $queryId = $item->getData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM);
-                    $queryIds[$queryId][] = $item->getProductId();
-                }
-            }
+        if (count($itemsByQueryId)) {
+            foreach ($itemsByQueryId as $queryId => $items) {
 
-            if (count($queryIds) > 0) {
-                foreach ($queryIds as $queryId => $productIds) {
-
-                    // Event can't process more than 20 objects
-                    $productIds = array_slice($productIds, 0, 20);
-
-                    try {
-                        $eventsModel->convertedObjectIDsAfterSearch(
-                            __('Placed Order'),
-                            $this->dataHelper->getIndexName('_products', $order->getStoreId()),
-                            array_unique($productIds),
-                            $queryId
-                        );
-                    } catch (AlgoliaException $e) {
-                        $this->logger->critical("Algolia events model misconfiguration: " . $e->getMessage());
-                        continue;
-                    } catch (NoSuchEntityException $e) {
-                        $this->logger->error("No store found for order: ", $e->getMessage());
-                        continue;
-                    }
-
-                }
-            }
-        } else {
-            $productIds = [];
-            /** @var Item $item */
-            foreach ($orderItems as $item) {
-                $productIds[] = $item->getProductId();
-
-                // Event can't process more than 20 objects
-                if (count($productIds) > 20) {
+                try {
+                    $eventsModel->convertPurchase(
+                        __(self::PLACE_ORDER_EVENT_NAME),
+                        $indexName,
+                        $items,
+                        $queryId !== self::NO_QUERY_ID_KEY ? $queryId : null
+                    );
+                } catch (AlgoliaException $e) {
+                    $this->logger->critical("Unable to send events due to Algolia events model misconfiguration: " . $e->getMessage());
                     break;
+                } catch (LocalizedException $e) {
+                    $this->logger->error("Failed sending event: " . $e->getMessage());
+                    continue;
                 }
-            }
 
-            try {
-                $eventsModel->convertedObjectIDs(
-                    __('Placed Order'),
-                    $this->dataHelper->getIndexName('_products', $order->getStoreId()),
-                    array_unique($productIds)
-                );
-            } catch (Exception $e) {
-                $this->logger->critical($e->getMessage());
             }
         }
 
-        return $this;
+    }
+
+    /**
+     * For a given Magento Order return an array of Items grouped by query ID.
+     * If no query ID is found group this under self::NO_QUERY_ID_KEY
+     * (while `null` could be used this may lead to unexpected behavior)
+     * @param Order $order
+     * @return array<string, array<Item[]>
+     * NOTE: Items are not deduplicated so that aggregate revenue can be calculated by events model as needed
+     */
+    protected function getItemsByQueryId(Order $order): array
+    {
+        $itemsByQueryId = [];
+        /** @var Item $item */
+        foreach ($order->getAllVisibleItems() as $item) {
+            if ($item->hasData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM)) {
+                $queryId = $item->getData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM);
+                $itemsByQueryId[$queryId][] = $item;
+            }
+            else {
+                $itemsByQueryId[self::NO_QUERY_ID_KEY][] = $item;
+            }
+        }
+
+        return $itemsByQueryId;
     }
 }
