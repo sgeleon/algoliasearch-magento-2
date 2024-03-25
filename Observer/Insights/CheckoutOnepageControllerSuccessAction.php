@@ -2,12 +2,13 @@
 
 namespace Algolia\AlgoliaSearch\Observer\Insights;
 
-use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\Data;
 use Algolia\AlgoliaSearch\Helper\InsightsHelper;
 use Exception;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item;
 use Magento\Sales\Model\OrderFactory;
@@ -15,21 +16,6 @@ use Psr\Log\LoggerInterface;
 
 class CheckoutOnepageControllerSuccessAction implements ObserverInterface
 {
-    /** @var Data */
-    protected $dataHelper;
-
-    /** @var InsightsHelper */
-    protected $insightsHelper;
-
-    /** @var OrderFactory */
-    protected $orderFactory;
-
-    /** @var LoggerInterface */
-    protected $logger;
-
-    /** @var ConfigHelper  */
-    protected $configHelper;
-
     /**
      * @param Data $dataHelper
      * @param InsightsHelper $insightsHelper
@@ -37,24 +23,18 @@ class CheckoutOnepageControllerSuccessAction implements ObserverInterface
      * @param LoggerInterface $logger
      */
     public function __construct(
-        Data $dataHelper,
-        InsightsHelper $insightsHelper,
-        OrderFactory $orderFactory,
-        LoggerInterface $logger
-    ) {
-        $this->dataHelper = $dataHelper;
-        $this->insightsHelper = $insightsHelper;
-        $this->orderFactory = $orderFactory;
-        $this->logger = $logger;
-        $this->configHelper = $this->insightsHelper->getConfigHelper();
-    }
+        protected Data $dataHelper,
+        protected InsightsHelper $insightsHelper,
+        protected OrderFactory $orderFactory,
+        protected LoggerInterface $logger
+    ) {}
 
     /**
      * @param Observer $observer
      *
-     * @return $this
+     * @return void
      */
-    public function execute(Observer $observer)
+    public function execute(Observer $observer): void
     {
         /** @var Order $order */
         $order = $observer->getEvent()->getOrder();
@@ -65,14 +45,13 @@ class CheckoutOnepageControllerSuccessAction implements ObserverInterface
         }
 
         if (!$order || !$this->insightsHelper->isOrderPlacedTracked($order->getStoreId())) {
-            return $this;
+            return;
         }
 
-        $userClient = $this->insightsHelper->getUserInsightsClient();
+        $eventsModel = $this->insightsHelper->getEventsModel();
         $orderItems = $order->getAllVisibleItems();
 
-        if ($this->configHelper->isClickConversionAnalyticsEnabled($order->getStoreId())
-            && $this->configHelper->getConversionAnalyticsMode($order->getStoreId()) === InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE) {
+        if ($this->insightsHelper->isOrderPlacedTracked($order->getStoreId())) {
             $queryIds = [];
             /** @var Item $item */
             foreach ($orderItems as $item) {
@@ -89,16 +68,20 @@ class CheckoutOnepageControllerSuccessAction implements ObserverInterface
                     $productIds = array_slice($productIds, 0, 20);
 
                     try {
-                        $userClient->convertedObjectIDsAfterSearch(
+                        $eventsModel->convertedObjectIDsAfterSearch(
                             __('Placed Order'),
                             $this->dataHelper->getIndexName('_products', $order->getStoreId()),
                             array_unique($productIds),
                             $queryId
                         );
-                    } catch (Exception $e) {
-                        $this->logger->critical($e);
-                        continue; // skip item
+                    } catch (AlgoliaException $e) {
+                        $this->logger->critical("Algolia events model misconfiguration: " . $e->getMessage());
+                        continue;
+                    } catch (NoSuchEntityException $e) {
+                        $this->logger->error("No store found for order: ", $e->getMessage());
+                        continue;
                     }
+
                 }
             }
         } else {
@@ -114,13 +97,13 @@ class CheckoutOnepageControllerSuccessAction implements ObserverInterface
             }
 
             try {
-                $userClient->convertedObjectIDs(
+                $eventsModel->convertedObjectIDs(
                     __('Placed Order'),
                     $this->dataHelper->getIndexName('_products', $order->getStoreId()),
                     array_unique($productIds)
                 );
             } catch (Exception $e) {
-                $this->logger->critical($e);
+                $this->logger->critical($e->getMessage());
             }
         }
 
