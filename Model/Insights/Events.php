@@ -137,7 +137,7 @@ class Events implements EventsInterface
             self::EVENT_KEY_OBJECT_IDS  => [$item->getProduct()->getId()],
             self::EVENT_KEY_OBJECT_DATA => [[
                 'price'    => $item->getPrice(),
-                //'discount' => $item->getDiscountAmount(),
+                'discount' => $item->getProduct()->getPrice() - $item->getPrice(),
                 'quantity' => (int) $item->getData('qty_to_add')
             ]],
             self::EVENT_KEY_CURRENCY    => $this->getCurrentCurrency()
@@ -239,9 +239,9 @@ class Events implements EventsInterface
     {
         return array_map(function($item) {
             return [
-                'price' => $item->getPrice(),
-                'quantity' => $item->getQty(),
-                // 'discount' => 0
+                'price'    => $item->getPrice(),
+                'discount' => $item->getProduct()->getPrice() - $item->getPrice(),
+                'quantity' => $item->getQty()
             ];
         }, $items);
     }
