@@ -5,16 +5,14 @@ namespace Algolia\AlgoliaSearch\Setup\Patch\Data;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Configuration\ConfigChecker;
 use Algolia\AlgoliaSearch\Helper\InsightsHelper;
+use Magento\Framework\App\Config\ConfigResource\ConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
-use Magento\Framework\Setup\Patch\PatchRevertableInterface;
-use Magento\Framework\App\Config\ConfigResource\ConfigInterface;
-use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
-class MigrateConversionAnalyticsModePatch implements DataPatchInterface, PatchRevertableInterface
+class MigrateConversionAnalyticsModePatch implements DataPatchInterface
 {
     public function __construct(
         protected ModuleDataSetupInterface $moduleDataSetup,
@@ -32,31 +30,7 @@ class MigrateConversionAnalyticsModePatch implements DataPatchInterface, PatchRe
     {
         $this->moduleDataSetup->getConnection()->startSetup();
 
-        // First update all the possible subconfigurations
-        /** @var \Magento\Store\Api\Data\WebsiteInterface $website */
-        foreach ($this->storeManager->getWebsites() as $website) {
-            if ($this->configChecker->isSettingAppliedForScopeAndCode(
-                ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
-                ScopeInterface::SCOPE_WEBSITES,
-                $website->getCode()
-            )) {
-                $this->migrateSetting(ScopeInterface::SCOPE_WEBSITES, $website->getCode());
-            }
-        }
-
-        /** @var \Magento\Store\Api\Data\StoreInterface $store */
-        foreach ($this->storeManager->getStores() as $store) {
-            if ($this->configChecker->isSettingAppliedForScopeAndCode(
-                ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
-                ScopeInterface::SCOPE_STORES,
-                $store->getCode()
-            )) {
-                $this->migrateSetting(ScopeInterface::SCOPE_STORES, $store->getCode());
-            }
-        }
-
-        // Update the default configuration last so that initial "setting applied" comparisons work as expected
-        $this->migrateSetting();
+        $this->configChecker->checkAndApplyAllScopes(ConfigHelper::CC_CONVERSION_ANALYTICS_MODE, [$this, 'migrateSetting']);
 
         $this->moduleDataSetup->getConnection()->endSetup();
     }
@@ -67,8 +41,8 @@ class MigrateConversionAnalyticsModePatch implements DataPatchInterface, PatchRe
         if (in_array(
             $value,
             [
-                InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE,
-                InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL
+                InsightsHelper::CONVERSION_ANALYTICS_MODE_CART,
+                InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE
             ]
         )) {
            $this->configWriter->save(
@@ -76,14 +50,6 @@ class MigrateConversionAnalyticsModePatch implements DataPatchInterface, PatchRe
                InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL,
                $scope);
         }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function revert()
-    {
-        // TODO: Implement revert() method.
     }
 
     /**
