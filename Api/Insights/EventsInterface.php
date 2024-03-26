@@ -6,6 +6,7 @@ use Algolia\AlgoliaSearch\Api\InsightsClient;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\Quote\Item;
+use Magento\Sales\Model\Order;
 
 interface EventsInterface
 {
@@ -31,6 +32,10 @@ interface EventsInterface
     /** @var int  */
     public const MAX_OBJECT_IDS_PER_EVENT = 20;
 
+    // https://www.algolia.com/doc/rest-api/insights/#events-endpoints
+    /** @var int */
+    public const MAX_EVENTS_PER_REQUEST = 1000;
+
     public function setInsightsClient(InsightsClient $client): EventsInterface;
 
     public function setAuthenticatedUserToken(string $token): EventsInterface;
@@ -51,9 +56,9 @@ interface EventsInterface
     public function convertedObjectIDsAfterSearch(
         string $eventName,
         string $indexName,
-        array $objectIDs,
+        array  $objectIDs,
         string $queryID,
-        array $requestOptions = []
+        array  $requestOptions = []
     ): array;
 
     /**
@@ -67,39 +72,57 @@ interface EventsInterface
     public function convertedObjectIDs(
         string $eventName,
         string $indexName,
-        array $objectIDs,
-        array $requestOptions = []
+        array  $objectIDs,
+        array  $requestOptions = []
     ): array;
 
     /**
+     * Track conversion for add to cart operation
      * @param string $eventName
      * @param string $indexName
      * @param Item $item
-     * @param string|null $queryID API response
-     * @return array<string, mixed>
+     * @param string|null $queryID specify if conversion is result of a search
+     * @return array<string, mixed> API response
      * @throws AlgoliaException
      * @throws LocalizedException
      */
     public function convertAddToCart(
         string $eventName,
         string $indexName,
-        Item $item,
+        Item   $item,
         string $queryID = null
     ): array;
 
     /**
+     * Track purchase conversion for all items on an order in as few batches as possible
      * @param string $eventName
      * @param string $indexName
-     * @param Item[] $items
-     * @param string|null $queryID
-     * @return array<string, mixed> API response
+     * @param Order $order
+     * @return array<array<string, mixed>> An array of API responses for all batches processed
      * @throws AlgoliaException
      * @throws LocalizedException
      */
     public function convertPurchase(
         string $eventName,
         string $indexName,
-        array $items,
+        Order  $order
+    ): array;
+
+    /**
+     * Track purchase conversion event for an arbitrary group of items
+     * @param string $eventName
+     * @param string $indexName
+     * @param Order\Item[] $items
+     * @param string|null $queryID
+     * @return array<string, mixed> API response
+     * @throws AlgoliaException
+     * @throws LocalizedException
+     */
+    public function convertPurchaseForItems(
+        string $eventName,
+        string $indexName,
+        array  $items,
         string $queryID = null
     ): array;
+
 }

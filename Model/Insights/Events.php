@@ -5,14 +5,17 @@ namespace Algolia\AlgoliaSearch\Model\Insights;
 use Algolia\AlgoliaSearch\Api\Insights\EventsInterface;
 use Algolia\AlgoliaSearch\Api\InsightsClient;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
+use Algolia\AlgoliaSearch\Helper\InsightsHelper;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\Quote\Item;
+use Magento\Sales\Model\Order;
+use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Store\Model\StoreManagerInterface;
 
 class Events implements EventsInterface
 {
-    /** @var array<int, float> */
-    protected array $revenueByOrder = [];
+    /** @var string  */
+    protected const NO_QUERY_ID_KEY = '__NO_QUERY_ID__';
 
     public function __construct(
         protected ?InsightsClient        $client = null,
@@ -23,19 +26,19 @@ class Events implements EventsInterface
 
     public function setInsightsClient(InsightsClient $client): EventsInterface
     {
-        $this->insightsClient = $client;
-        return $this;
-    }
-
-    public function setAuthenticatedUserToken(string $token): EventsInterface
-    {
-        $this->authenticatedUserToken = $token;
+        $this->client = $client;
         return $this;
     }
 
     public function setAnonymousUserToken(string $token): EventsInterface
     {
         $this->userToken = $token;
+        return $this;
+    }
+
+    public function setAuthenticatedUserToken(string $token): EventsInterface
+    {
+        $this->authenticatedUserToken = $token;
         return $this;
     }
 
@@ -84,24 +87,33 @@ class Events implements EventsInterface
         return $this->converted(['objectIDs' => $objectIDs], $eventName, $indexName, $requestOptions);
     }
 
-    private function converted($event, $eventName, $indexName, $requestOptions): array
+    private function convertedBatch(array $eventsBatch, string $eventName, string $indexName, array $requestOptions = []): array
     {
-        $event = array_merge($event, [
-            'eventType' => 'conversion',
-            'eventName' => $eventName,
-            'index'     => $indexName,
-        ]);
-
-        return $this->sendEvent($event, $requestOptions);
+        return $this->pushEvents(
+            ['events' => $this->decorateEvents($eventsBatch, $eventName, $indexName)],
+            $requestOptions
+        );
     }
 
-    private function sendEvent($event, $requestOptions = []): array
+    private function converted(array $event, string $eventName, string $indexName, array $requestOptions = []): array
     {
-        $event['userToken'] = $this->userToken;
-        if ($this->authenticatedUserToken) {
-            $event['authenticatedUserToken'] = $this->authenticatedUserToken;
-        }
-        return $this->client->pushEvents([ 'events' => [$event] ], $requestOptions);
+        return $this->convertedBatch([$event], $eventName, $indexName, $requestOptions);
+    }
+
+    private function decorateEvents(array $events, string $eventName, string $indexName): array
+    {
+        return array_map(function(array $event) use ($eventName, $indexName)  {
+            if ($this->authenticatedUserToken) {
+                $event['authenticatedUserToken'] = $this->authenticatedUserToken;
+            }
+
+            return array_merge($event, [
+                'eventType' => 'conversion',
+                'eventName' => $eventName,
+                'index'     => $indexName,
+                'userToken' => $this->userToken
+            ]);
+        }, $events);
     }
 
     /**
@@ -141,7 +153,7 @@ class Events implements EventsInterface
     /**
      * @inheritDoc
      */
-    public function convertPurchase(string $eventName, string $indexName, array $items, string $queryID = null): array
+    public function convertPurchaseForItems(string $eventName, string $indexName, array $items, string $queryID = null): array
     {
         $this->checkDependencies();
 
@@ -160,6 +172,40 @@ class Events implements EventsInterface
         }
 
         return $this->converted($event, $eventName, $indexName, []);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function convertPurchase(string $eventName, string $indexName, Order $order): array
+    {
+        $this->checkDependencies();
+
+        $itemsByQueryId = $this->getItemsByQueryId($order);
+        $eventBatch = [];
+
+        foreach ($itemsByQueryId as $queryId => $items) {
+            $objectData = $this->getObjectDataForPurchase($items);
+            $event = [
+                self::EVENT_KEY_SUBTYPE     => self::EVENT_SUBTYPE_PURCHASE,
+                self::EVENT_KEY_OBJECT_IDS  => $this->restrictMaxObjectsPerEvent($this->getObjectIdsForPurchase($items)),
+                self::EVENT_KEY_OBJECT_DATA => $this->restrictMaxObjectsPerEvent($objectData),
+                self::EVENT_KEY_CURRENCY    => $this->getCurrentCurrency(),
+                self::EVENT_KEY_VALUE       => $this->getTotalRevenueForEvent($objectData)
+            ];
+
+            if ($queryId !== self::NO_QUERY_ID_KEY) {
+                $event[self::EVENT_KEY_QUERY_ID] = $queryId;
+            }
+            $eventBatch[] = $event;
+        }
+
+        $resp = [];
+        foreach (array_chunk($eventBatch, self::MAX_EVENTS_PER_REQUEST) as $chunk) {
+            $resp[] = $this->convertedBatch($chunk, $eventName, $indexName);
+        }
+
+        return $resp;
     }
 
     protected function restrictMaxObjectsPerEvent(array $items): array
@@ -186,7 +232,7 @@ class Events implements EventsInterface
      * Note that we must preserve redundancies because Magenot indexes at the parent configurable level
      * and different prices can result on variants for the same Algolia `objectID`
      *
-     * @param Item[] $items
+     * @param OrderItem[] $items
      * @return array<array<string, mixed>>
      */
     protected function getObjectDataForPurchase(array $items): array
@@ -201,7 +247,7 @@ class Events implements EventsInterface
     }
 
     /**
-     * @param Item[] $items
+     * @param OrderItem[] $items
      * @return int[]
      */
     protected function getObjectIdsForPurchase(array $items): array
@@ -209,5 +255,31 @@ class Events implements EventsInterface
         return array_map(function($item) {
             return $item->getProduct()->getId();
         }, $items);
+    }
+
+
+    /**
+     * For a given Magento Order return an array of Items grouped by query ID.
+     * If no query ID is found group this under self::NO_QUERY_ID_KEY
+     * (while `null` could be used this may lead to unexpected behavior)
+     * @param Order $order
+     * @return array<string, array<OrderItem[]>
+     * NOTE: Items are not deduplicated so that aggregate revenue can be calculated by events model as needed
+     */
+    protected function getItemsByQueryId(Order $order): array
+    {
+        $itemsByQueryId = [];
+        /** @var OrderItem $item */
+        foreach ($order->getAllVisibleItems() as $item) {
+            if ($item->hasData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM)) {
+                $queryId = $item->getData(InsightsHelper::QUOTE_ITEM_QUERY_PARAM);
+                $itemsByQueryId[$queryId][] = $item;
+            }
+            else {
+                $itemsByQueryId[self::NO_QUERY_ID_KEY][] = $item;
+            }
+        }
+
+        return $itemsByQueryId;
     }
 }
