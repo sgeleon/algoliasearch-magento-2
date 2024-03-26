@@ -164,6 +164,16 @@ class InsightsHelper
 
     /**
      * @param int|null $storeId
+     * @return bool
+     */
+    public function isInsightsEnabled(int $storeId = null): bool
+    {
+        return $this->configHelper->isClickConversionAnalyticsEnabled($storeId)
+            || $this->personalizationHelper->isPersoEnabled($storeId);
+    }
+
+    /**
+     * @param int|null $storeId
      *
      * @return bool
      */

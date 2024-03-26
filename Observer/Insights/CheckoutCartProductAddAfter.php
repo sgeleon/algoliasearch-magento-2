@@ -63,8 +63,11 @@ class CheckoutCartProductAddAfter implements ObserverInterface
         $product = $observer->getEvent()->getProduct();
         $storeId = $quoteItem->getStoreId();
 
-        if (!$this->insightsHelper->isAddedToCartTracked($storeId)
-            && !$this->insightsHelper->isOrderPlacedTracked($storeId)
+        $isAddToCartTracked = $this->insightsHelper->isAddedToCartTracked($storeId);
+        $isOrderPlacedTracked = $this->insightsHelper->isOrderPlacedTracked($storeId);
+
+        if (!$isAddToCartTracked
+            && !$isOrderPlacedTracked
             || !$this->insightsHelper->getUserAllowedSavedCookie()) {
             return;
         }
@@ -74,11 +77,11 @@ class CheckoutCartProductAddAfter implements ObserverInterface
         $queryId = $this->coreSession->getQueryId();
 
         /** Adding algolia_query_param to the items to track the conversion when product is added to the cart */
-        if ($this->insightsHelper->isOrderPlacedTracked($storeId) && $queryId) {
+        if ($isOrderPlacedTracked && $queryId) {
             $this->addQueryIdToQuoteItems($product, $quoteItem, $queryId);
         }
 
-        if ($this->insightsHelper->isAddedToCartTracked($storeId)) {
+        if ($isAddToCartTracked) {
             try {
                 $eventsModel->convertAddToCart(
                     __('Added to Cart'),
@@ -87,7 +90,7 @@ class CheckoutCartProductAddAfter implements ObserverInterface
                     $queryId
                 );
             } catch (Exception $e) {
-                $this->logger->critical($e);
+                $this->logger->critical("Error tracking conversion for add to cart event: " . $e->getMessage());
             }
         }
     }

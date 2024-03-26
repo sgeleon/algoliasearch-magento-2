@@ -25,7 +25,7 @@ class CustomerLogin implements ObserverInterface
         /** @var Customer $customer */
         $customer = $observer->getEvent()->getCustomer();
 
-        if ($this->insightsHelper->getConfigHelper()->isClickConversionAnalyticsEnabled($customer->getStoreId()) || $this->insightsHelper->getPersonalizationHelper()->isPersoEnabled($customer->getStoreId())) {
+        if ($this->insightsHelper->isInsightsEnabled($customer->getStoreId())) {
             $this->insightsHelper->setAuthenticatedUserToken($customer);
         }
     }

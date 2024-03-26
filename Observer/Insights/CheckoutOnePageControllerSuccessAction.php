@@ -13,7 +13,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\OrderFactory;
 use Psr\Log\LoggerInterface;
 
-class CheckoutOnepageControllerSuccessAction implements ObserverInterface
+class CheckoutOnePageControllerSuccessAction implements ObserverInterface
 {
     /** @var string  */
     public const PLACE_ORDER_EVENT_NAME = 'Placed order';
@@ -46,14 +46,13 @@ class CheckoutOnepageControllerSuccessAction implements ObserverInterface
             $order = $this->orderFactory->create()->loadByIncrementId($orderId);
         }
 
-
         if (!$order || !$this->insightsHelper->isOrderPlacedTracked($order->getStoreId())) {
             return;
         }
 
         $indexName = "";
         try {
-            $this->dataHelper->getIndexName('_products', $order->getStoreId()),
+            $this->dataHelper->getIndexName('_products', $order->getStoreId());
         } catch (NoSuchEntityException $e) {
             $this->logger->error("No store found for order: " . $e->getMessage());
             return;

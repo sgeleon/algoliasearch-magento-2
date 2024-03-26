@@ -21,7 +21,7 @@
         <observer name="algoliasearch_insights_add_to_cart_event" instance="Algolia\AlgoliaSearch\Observer\Insights\CheckoutCartProductAddAfter" />
     </event>
     <event name="checkout_onepage_controller_success_action">
-        <observer name="algoliasearch_insights_place_order_event" instance="Algolia\AlgoliaSearch\Observer\Insights\CheckoutOnepageControllerSuccessAction" />
+        <observer name="algoliasearch_insights_place_order_event" instance="Algolia\AlgoliaSearch\Observer\Insights\CheckoutOnePageControllerSuccessAction" />
     </event>
     <event name="catalog_controller_category_init_after">
         <observer name="algoliasearch_current_category" instance="Algolia\AlgoliaSearch\Observer\RegisterCurrentCategoryObserver"/>
