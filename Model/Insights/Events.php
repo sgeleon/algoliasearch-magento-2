@@ -89,7 +89,7 @@ class Events implements EventsInterface
 
     private function convertedBatch(array $eventsBatch, string $eventName, string $indexName, array $requestOptions = []): array
     {
-        return $this->pushEvents(
+        return $this->client->pushEvents(
             ['events' => $this->decorateEvents($eventsBatch, $eventName, $indexName)],
             $requestOptions
         );
