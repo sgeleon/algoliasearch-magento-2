@@ -27,11 +27,9 @@ class PersonalizationHelper extends \Magento\Framework\App\Helper\AbstractHelper
     public const CART_ADD_SELECTOR = 'algoliasearch_personalization/personalization_group/personalization_conversion_events_group/conversion_cart_add_selector';
     public const ORDER_PLACED = 'algoliasearch_personalization/personalization_group/personalization_conversion_events_group/conversion_order_placed';
 
-    /** @var ScopeConfigInterface */
-    private $configInterface;
+    private ScopeConfigInterface $configInterface;
 
-    /** @var ConfigResourceInterface */
-    private $configResourceInterface;
+    private ConfigResourceInterface $configResourceInterface;
 
     /**
      * @param \Magento\Framework\App\Helper\Context $context
@@ -63,7 +61,7 @@ class PersonalizationHelper extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return void
      */
-    public function disablePerso(int $storeId = null): bool
+    public function disablePerso(int $storeId = null): void
     {
         $this->configResourceInterface->saveConfig(self::IS_PERSO_ENABLED, 0, 'default', 0);
     }
@@ -93,7 +91,7 @@ class PersonalizationHelper extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return string
      */
-    public function getProductClickedSelector(int $storeId = null): bool
+    public function getProductClickedSelector(int $storeId = null): string
     {
         return $this->configInterface->getValue(self::PRODUCT_CLICKED_SELECTOR, ScopeInterface::SCOPE_STORE, $storeId);
     }
@@ -123,7 +121,7 @@ class PersonalizationHelper extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return string
      */
-    public function getWishlistAddSelector(int $storeId = null): bool
+    public function getWishlistAddSelector(int $storeId = null): string
     {
         return $this->configInterface->getValue(self::WISHLIST_ADD_SELECTOR, ScopeInterface::SCOPE_STORE, $storeId);
     }
@@ -143,7 +141,7 @@ class PersonalizationHelper extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return string
      */
-    public function getProductRecommendedSelector(int $storeId = null): bool
+    public function getProductRecommendedSelector(int $storeId = null): string
     {
         return $this->configInterface->getValue(self::PRODUCT_RECOMMENDED_SELECTOR, ScopeInterface::SCOPE_STORE, $storeId);
     }
@@ -163,7 +161,7 @@ class PersonalizationHelper extends \Magento\Framework\App\Helper\AbstractHelper
      *
      * @return string
      */
-    public function getCartAddSelector(int $storeId = null): bool
+    public function getCartAddSelector(int $storeId = null): string
     {
         return $this->configInterface->getValue(self::CART_ADD_SELECTOR, ScopeInterface::SCOPE_STORE, $storeId);
     }
@@ -182,7 +180,7 @@ class PersonalizationHelper extends \Magento\Framework\App\Helper\AbstractHelper
      * @return string|null
      * @internal Algolia user tokens can now be anonymous or authenticated. This function should no longer be used.
      */
-    public function getUserToken()
+    public function getUserToken(): ?string
     {
         return $this->_request->getCookie(InsightsHelper::ALGOLIA_ANON_USER_TOKEN_COOKIE_NAME);
     }
