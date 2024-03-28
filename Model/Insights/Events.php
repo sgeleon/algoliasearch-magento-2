@@ -208,6 +208,16 @@ class Events implements EventsInterface
         return $resp;
     }
 
+    /**
+     * There is a limit to the number of objects that can be attached to a single event.
+     * That limit * (MAX_OBJECT_IDS_PER_EVENT) is applied but the total value for the event
+     * should still take into account the truncated items.
+     *
+     * TODO: Implement chunking if this is a common use case
+     * 
+     * @param array $items
+     * @return array
+     */
     protected function restrictMaxObjectsPerEvent(array $items): array
     {
         return array_slice($items, 0, self::MAX_OBJECT_IDS_PER_EVENT);

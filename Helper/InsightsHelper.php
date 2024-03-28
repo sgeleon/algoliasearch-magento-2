@@ -48,6 +48,8 @@ class InsightsHelper
      * @param CookieMetadataFactory $cookieMetadataFactory
      * @param CustomerSession $customerSession
      * @param EventsInterfaceFactory $eventsFactory
+     * @param StoreManagerInterface $storeManager
+     * @param Logger $logger
      */
     public function __construct(
         private readonly ConfigHelper           $configHelper,
@@ -173,33 +175,71 @@ class InsightsHelper
     }
 
     /**
+     * A general check - should any kind of tracking be applied to the "place order" operation?
      * @param int|null $storeId
      *
      * @return bool
      */
     public function isOrderPlacedTracked(int $storeId = null): bool
     {
-        return ($this->personalizationHelper->isPersoEnabled($storeId)
-                && $this->personalizationHelper->isOrderPlacedTracked($storeId))
-            || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
-                && in_array($this->configHelper->getConversionAnalyticsMode($storeId), [InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE, InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL]));
+        return $this->personalizationHelper->isPersoEnabled($storeId)
+            && $this->personalizationHelper->isOrderPlacedTracked($storeId)
+            || $this->isConversionTrackedPlaceOrder($storeId);
     }
 
     /**
+     * Conversion tracking is not the same as perso tracking!
+     * Conversions must track usage of the queryID
+     *
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isConversionTrackedPlaceOrder(int $storeId = null): bool
+    {
+        return $this->configHelper->isClickConversionAnalyticsEnabled($storeId)
+            && in_array($this->configHelper->getConversionAnalyticsMode($storeId),
+                [
+                    InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE,
+                    InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL
+                ]
+            );
+    }
+
+    /**
+     * A general check - should any kind of tracking be applied to the "add to cart" operation?
+     *
      * @param int|null $storeId
      *
      * @return bool
      */
     public function isAddedToCartTracked(int $storeId = null): bool
     {
-        return ($this->personalizationHelper->isPersoEnabled($storeId)
-                && $this->personalizationHelper->isCartAddTracked($storeId))
-            || ($this->configHelper->isClickConversionAnalyticsEnabled($storeId)
-                && in_array($this->configHelper->getConversionAnalyticsMode($storeId), [InsightsHelper::CONVERSION_ANALYTICS_MODE_CART, InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL]));
+        return $this->personalizationHelper->isPersoEnabled($storeId)
+            && $this->personalizationHelper->isCartAddTracked($storeId)
+            || $this->isConversionTrackedAddToCart($storeId);
+    }
+
+    /**
+     * Conversion tracking is not the same as perso tracking!
+     * Conversions must track usage of the queryID
+     *
+     * @param int|null $storeId
+     * @return bool
+     */
+    public function isConversionTrackedAddToCart(int $storeId = null): bool
+    {
+        return $this->configHelper->isClickConversionAnalyticsEnabled($storeId)
+            && in_array($this->configHelper->getConversionAnalyticsMode($storeId),
+                [
+                    InsightsHelper::CONVERSION_ANALYTICS_MODE_CART,
+                    InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL
+                ]
+            );
     }
 
     /**
      * @param Customer $customer
+     * @return string|null
      * @deprecated This function has been supplanted by setAuthenticatedUserToken for clarity of intent and may be removed in a future release.
      */
     public function setUserToken(Customer $customer): string|null
@@ -208,6 +248,7 @@ class InsightsHelper
     }
 
     /**
+     * Indicates whether we have user consent to use cookies
      * @return bool
      */
     public function getUserAllowedSavedCookie(): bool
