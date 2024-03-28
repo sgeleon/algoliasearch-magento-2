@@ -14,9 +14,6 @@
     <event name="wishlist_product_add_after">
         <observer name="algoliasearch_insights_add_to_wishlist_event" instance="Algolia\AlgoliaSearch\Observer\Insights\WishlistProductAddAfter" />
     </event>
-    <event name="checkout_cart_product_add_before">
-        <observer name="algoliasearch_analytics_add_request_queryid_to_product" instance="Algolia\AlgoliaSearch\Observer\Insights\CheckoutCartProductAddBefore" />
-    </event>
     <event name="checkout_cart_product_add_after">
         <observer name="algoliasearch_insights_add_to_cart_event" instance="Algolia\AlgoliaSearch\Observer\Insights\CheckoutCartProductAddAfter" />
     </event>

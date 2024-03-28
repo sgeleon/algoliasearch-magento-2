@@ -2,15 +2,16 @@
 
 namespace Algolia\AlgoliaSearch\Observer\Insights;
 
+use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Configuration\PersonalizationHelper;
 use Algolia\AlgoliaSearch\Helper\Data;
 use Algolia\AlgoliaSearch\Helper\InsightsHelper;
-use Exception;
 use Magento\Catalog\Model\Product;
+use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
-use Magento\Framework\Session\SessionManagerInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\Quote\Item;
 use Psr\Log\LoggerInterface;
 
@@ -22,13 +23,13 @@ class CheckoutCartProductAddAfter implements ObserverInterface
     /**
      * @param Data $dataHelper
      * @param InsightsHelper $insightsHelper
-     * @param SessionManagerInterface $coreSession
+     * @param RequestInterface $request
      * @param LoggerInterface $logger
      */
     public function __construct(
         protected Data $dataHelper,
         protected InsightsHelper $insightsHelper,
-        protected SessionManagerInterface $coreSession,
+        protected RequestInterface $request,
         protected LoggerInterface $logger
     ) {
         $this->configHelper = $this->insightsHelper->getConfigHelper();
@@ -55,12 +56,12 @@ class CheckoutCartProductAddAfter implements ObserverInterface
      * @param Observer $observer
      * ['quote_item' => $quoteItem, 'product' => $product]
      */
-    public function execute(Observer $observer)
+    public function execute(Observer $observer): void
     {
         /** @var Item $quoteItem */
-        $quoteItem = $observer->getEvent()->getQuoteItem();
+        $quoteItem = $observer->getEvent()->getData('quote_item');
         /** @var Product $product */
-        $product = $observer->getEvent()->getProduct();
+        $product = $observer->getEvent()->getData('product');
         $storeId = $quoteItem->getStoreId();
 
         $isAddToCartTracked = $this->insightsHelper->isAddedToCartTracked($storeId);
@@ -74,7 +75,7 @@ class CheckoutCartProductAddAfter implements ObserverInterface
 
         $eventsModel = $this->insightsHelper->getEventsModel();
 
-        $queryId = $this->coreSession->getQueryId();
+        $queryId = $this->request->getParam('queryID');
 
         /** Adding algolia_query_param to the items to track the conversion when product is added to the cart */
         if ($isOrderPlacedTracked && $queryId) {
@@ -89,8 +90,10 @@ class CheckoutCartProductAddAfter implements ObserverInterface
                     $quoteItem,
                     $queryId
                 );
-            } catch (Exception $e) {
-                $this->logger->critical("Error tracking conversion for add to cart event: " . $e->getMessage());
+            } catch (AlgoliaException $e) {
+                $this->logger->critical("Unable to send add to cart event due to Algolia events model misconfiguration: " . $e->getMessage());
+            } catch (LocalizedException $e) {
+                $this->logger->error("Error tracking conversion for add to cart event: " . $e->getMessage());
             }
         }
     }

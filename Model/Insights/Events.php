@@ -71,8 +71,8 @@ class Events implements EventsInterface
         $this->checkDependencies();
 
         $event = [
-            'objectIDs' => $objectIDs,
-            'queryID'   => $queryID,
+            self::EVENT_KEY_OBJECT_IDS => $objectIDs,
+            self::EVENT_KEY_QUERY_ID   => $queryID,
         ];
 
         return $this->converted($event, $eventName, $indexName, $requestOptions);
