@@ -42,7 +42,7 @@ class Events implements EventsInterface
         return $this;
     }
 
-    public function setStoreManager(string $storeManager): EventsInterface
+    public function setStoreManager(StoreManagerInterface $storeManager): EventsInterface
     {
         $this->storeManager = $storeManager;
         return $this;
@@ -229,7 +229,7 @@ class Events implements EventsInterface
 
     /**
      * Extract Item into event object data.
-     * Note that we must preserve redundancies because Magenot indexes at the parent configurable level
+     * Note that we must preserve redundancies because Magento indexes at the parent configurable level
      * and different prices can result on variants for the same Algolia `objectID`
      *
      * @param OrderItem[] $items
@@ -239,9 +239,9 @@ class Events implements EventsInterface
     {
         return array_map(function($item) {
             return [
-                'price'    => $item->getPrice(),
-                'discount' => $item->getProduct()->getPrice() - $item->getPrice(),
-                'quantity' => $item->getQty()
+                'price'    => floatval($item->getPrice()),
+                'discount' => floatval($item->getProduct()->getPrice()) - floatval($item->getPrice()),
+                'quantity' => intval($item->getQtyOrdered())
             ];
         }, $items);
     }

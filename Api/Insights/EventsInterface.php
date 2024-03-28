@@ -7,6 +7,7 @@ use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Quote\Model\Quote\Item;
 use Magento\Sales\Model\Order;
+use Magento\Store\Model\StoreManagerInterface;
 
 interface EventsInterface
 {
@@ -42,7 +43,7 @@ interface EventsInterface
 
     public function setAnonymousUserToken(string $token): EventsInterface;
 
-    public function setStoreManager(string $storeManager): EventsInterface;
+    public function setStoreManager(StoreManagerInterface $storeManager): EventsInterface;
 
     /**
      * @param string $eventName

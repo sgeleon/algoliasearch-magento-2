@@ -52,7 +52,7 @@ class CheckoutOnePageControllerSuccessAction implements ObserverInterface
 
         $indexName = "";
         try {
-            $this->dataHelper->getIndexName('_products', $order->getStoreId());
+            $indexName = $this->dataHelper->getIndexName('_products', $order->getStoreId());
         } catch (NoSuchEntityException $e) {
             $this->logger->error("No store found for order: " . $e->getMessage());
             return;
