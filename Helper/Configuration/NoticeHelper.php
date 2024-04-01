@@ -44,7 +44,7 @@ class NoticeHelper extends \Magento\Framework\App\Helper\AbstractHelper
         'getClickAnalyticsNotice',
         'getPersonalizationNotice',
         'getRecommendNotice',
-	'getCookieConfigurationNotice',
+        'getCookieConfigurationNotice',
     ];
 
     /** @var array[] */
@@ -157,23 +157,33 @@ class NoticeHelper extends \Magento\Framework\App\Helper\AbstractHelper
         ];
     }
 
-    protected function getVersionNotice()
+    protected function getVersionNotice(): void
     {
+        $currentVersion = $this->configHelper->getExtensionVersion();
         $newVersion = $this->getNewVersionNotification();
-        if ($newVersion === null) {
+        if (!$currentVersion && !$newVersion) {
             return;
         }
 
-        $noticeTitle = 'Algolia Extension update';
-        $noticeContent = 'You are using old version of Algolia extension. Latest version of the extension is v <b>' . $newVersion['version'] . '</b><br />
+        $notice = [
+            'selector' => '.entry-edit',
+            'method' => 'before'
+        ];
+
+        if ($newVersion) {
+            $noticeTitle = 'Algolia extension update';
+            $noticeContent = 'You are using an old version of Algolia extension. Latest version of the extension is v <b>' . $newVersion['version'] . '</b><br />
 							It is highly recommended to update your version to avoid any unexpected issues and to get new features.<br />
 							See details on our <a target="_blank" href="' . $newVersion['url'] . '">Github repository</a>.';
+            $notice['message'] = $this->formatNotice($noticeTitle, $noticeContent);
+        }
+        else {
+            $noticeTitle = 'Algolia extension version';
+            $noticeContent = "You are using version <strong>$currentVersion</strong> of the Algolia Magento integration.";
+            $notice['message'] = $this->formatNotice($noticeTitle, $noticeContent, 'icon-bulb');
+        }
 
-        $this->notices[] = [
-            'selector' => '.entry-edit',
-            'method' => 'before',
-            'message' => $this->formatNotice($noticeTitle, $noticeContent),
-        ];
+        $this->notices[] = $notice;
     }
 
     protected function getClickAnalyticsNotice()
@@ -208,7 +218,7 @@ class NoticeHelper extends \Magento\Framework\App\Helper\AbstractHelper
             'message' => $noticeContent,
         ];
     }
-	
+
    protected function getCookieConfigurationNotice()
    {
         $noticeContent = '';
