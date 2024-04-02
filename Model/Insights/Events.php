@@ -136,9 +136,9 @@ class Events implements EventsInterface
             self::EVENT_KEY_SUBTYPE     => self::EVENT_SUBTYPE_CART,
             self::EVENT_KEY_OBJECT_IDS  => [$item->getProduct()->getId()],
             self::EVENT_KEY_OBJECT_DATA => [[
-                'price'    => $item->getPrice(),
-                'discount' => $item->getProduct()->getPrice() - $item->getPrice(),
-                'quantity' => (int) $item->getData('qty_to_add')
+                'price'    => floatval($item->getPrice()),
+                'discount' => $this->getItemDiscount($item),
+                'quantity' => intval($item->getData('qty_to_add'))
             ]],
             self::EVENT_KEY_CURRENCY    => $this->getCurrentCurrency()
         ];
@@ -213,8 +213,8 @@ class Events implements EventsInterface
      * That limit * (MAX_OBJECT_IDS_PER_EVENT) is applied but the total value for the event
      * should still take into account the truncated items.
      *
-     * TODO: Implement chunking if this is a common use case
-     * 
+     * TODO: Implement chunking if exceeding the limit is a common use case
+     *
      * @param array $items
      * @return array
      */
@@ -237,6 +237,16 @@ class Events implements EventsInterface
         });
     }
 
+
+    /**
+     * @param Item|OrderItem $item
+     * @return float
+     */
+    private function getItemDiscount(Item|OrderItem $item): float
+    {
+        return floatval($item->getProduct()->getPrice()) - floatval($item->getPrice());
+    }
+
     /**
      * Extract Item into event object data.
      * Note that we must preserve redundancies because Magento indexes at the parent configurable level
@@ -250,7 +260,7 @@ class Events implements EventsInterface
         return array_map(function($item) {
             return [
                 'price'    => floatval($item->getPrice()),
-                'discount' => floatval($item->getProduct()->getPrice()) - floatval($item->getPrice()),
+                'discount' => $this->getItemDiscount($item),
                 'quantity' => intval($item->getQtyOrdered())
             ];
         }, $items);
