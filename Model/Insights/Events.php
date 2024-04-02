@@ -132,15 +132,19 @@ class Events implements EventsInterface
     {
         $this->checkDependencies();
 
+        $price = floatval($item->getPrice());
+        $qty = intval($item->getData('qty_to_add'));
+
         $event = [
             self::EVENT_KEY_SUBTYPE     => self::EVENT_SUBTYPE_CART,
             self::EVENT_KEY_OBJECT_IDS  => [$item->getProduct()->getId()],
             self::EVENT_KEY_OBJECT_DATA => [[
-                'price'    => floatval($item->getPrice()),
+                'price'    => $price,
                 'discount' => $this->getItemDiscount($item),
-                'quantity' => intval($item->getData('qty_to_add'))
+                'quantity' => $qty
             ]],
-            self::EVENT_KEY_CURRENCY    => $this->getCurrentCurrency()
+            self::EVENT_KEY_CURRENCY    => $this->getCurrentCurrency(),
+            self::EVENT_KEY_VALUE       => $price * $qty
         ];
 
         if ($queryID) {
