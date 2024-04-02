@@ -35,9 +35,15 @@ class MigrateConversionAnalyticsModePatch implements DataPatchInterface
         $this->moduleDataSetup->getConnection()->endSetup();
     }
 
-    public function migrateSetting(string $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, string $scopeCode = null): void
+    /**
+     * Pass as a callback to ConfigChecker to ensure that all scopes are checked
+     * @param string $scope
+     * @param int $scopeId
+     * @return void
+     */
+    public function migrateSetting(string $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, int $scopeId = 0): void
     {
-        $value = $this->scopeConfig->getValue(ConfigHelper::CC_CONVERSION_ANALYTICS_MODE, $scope);
+        $value = $this->scopeConfig->getValue(ConfigHelper::CC_CONVERSION_ANALYTICS_MODE, $scope, $scopeId);
         if (in_array(
             $value,
             [
@@ -45,10 +51,11 @@ class MigrateConversionAnalyticsModePatch implements DataPatchInterface
                 InsightsHelper::CONVERSION_ANALYTICS_MODE_PURCHASE
             ]
         )) {
-           $this->configWriter->save(
-               ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
-               InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL,
-               $scope);
+            $this->configWriter->save(
+                ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
+                InsightsHelper::CONVERSION_ANALYTICS_MODE_ALL,
+                $scope,
+                $scopeId);
         }
     }
 

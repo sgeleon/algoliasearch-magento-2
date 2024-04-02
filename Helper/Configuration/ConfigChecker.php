@@ -27,7 +27,7 @@ class ConfigChecker
      *
      * @param string $path
      * @param callable $callback Callback to execute for a given config scope
-     *                           Signature: function(string $scope, string $scopeCode = null)
+     *                           Signature: function(string $scope, int $scopeId = 0)
      * @param bool $includeDefault Update the default (global) scope as well (defaults to true)
      *
      * @return void
@@ -39,9 +39,9 @@ class ConfigChecker
             if ($this->isSettingAppliedForScopeAndCode(
                 ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
                 ScopeInterface::SCOPE_WEBSITES,
-                $website->getCode()
+                $website->getId()
             )) {
-                $callback(ScopeInterface::SCOPE_WEBSITES, $website->getCode());
+                $callback(ScopeInterface::SCOPE_WEBSITES, $website->getId());
             }
         }
 
@@ -50,9 +50,9 @@ class ConfigChecker
             if ($this->isSettingAppliedForScopeAndCode(
                 ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
                 ScopeInterface::SCOPE_STORES,
-                $store->getCode()
+                $store->getId()
             )) {
-                $callback(ScopeInterface::SCOPE_STORES, $store->getCode());
+                $callback(ScopeInterface::SCOPE_STORES, $store->getId());
             }
         }
 
