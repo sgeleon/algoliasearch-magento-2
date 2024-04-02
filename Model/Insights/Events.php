@@ -140,7 +140,7 @@ class Events implements EventsInterface
             self::EVENT_KEY_OBJECT_IDS  => [$item->getProduct()->getId()],
             self::EVENT_KEY_OBJECT_DATA => [[
                 'price'    => $price,
-                'discount' => $this->getItemDiscount($item),
+                'discount' => $this->getQuoteItemDiscount($item),
                 'quantity' => $qty
             ]],
             self::EVENT_KEY_CURRENCY    => $this->getCurrentCurrency(),
@@ -241,14 +241,22 @@ class Events implements EventsInterface
         });
     }
 
-
     /**
-     * @param Item|OrderItem $item
+     * @param Item $item
      * @return float
      */
-    private function getItemDiscount(Item|OrderItem $item): float
+    private function getQuoteItemDiscount(Item $item): float
     {
         return floatval($item->getProduct()->getPrice()) - floatval($item->getPrice());
+    }
+
+    /**
+     * @param OrderItem $item
+     * @return float
+     */
+    private function getOrderItemDiscount(OrderItem $item): float
+    {
+        return floatval($item->getOriginalPrice()) - floatval($item->getPrice());
     }
 
     /**
@@ -264,7 +272,7 @@ class Events implements EventsInterface
         return array_map(function($item) {
             return [
                 'price'    => floatval($item->getPrice()),
-                'discount' => $this->getItemDiscount($item),
+                'discount' => $this->getOrderItemDiscount($item),
                 'quantity' => intval($item->getQtyOrdered())
             ];
         }, $items);
