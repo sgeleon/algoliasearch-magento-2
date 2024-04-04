@@ -266,9 +266,28 @@ class Events implements EventsInterface
      * @param OrderItem $item
      * @return float
      */
+    protected function getOrderItemSalePrice(OrderItem $item): float
+    {
+        return floatval($item->getPrice()) - $this->getOrderItemCartDiscount($item);
+    }
+
+    /**
+     * @param OrderItem $item
+     * @return float
+     */
+    protected function getOrderItemCartDiscount(OrderItem $item): float
+    {
+        return floatval($item->getDiscountAmount()) / intval($item->getQtyOrdered());
+    }
+
+    /**
+     * @param OrderItem $item
+     * @return float
+     */
     protected function getOrderItemDiscount(OrderItem $item): float
     {
-        return floatval($item->getOriginalPrice()) - floatval($item->getPrice());
+        $itemDiscount = floatval($item->getOriginalPrice()) - floatval($item->getPrice());
+        return $itemDiscount + $this->getOrderItemCartDiscount($item);
     }
 
     /**
@@ -283,7 +302,7 @@ class Events implements EventsInterface
     {
         return array_map(function($item) {
             return [
-                'price'    => floatval($item->getPrice()),
+                'price'    => $this->getOrderItemSalePrice($item),
                 'discount' => $this->getOrderItemDiscount($item),
                 'quantity' => intval($item->getQtyOrdered())
             ];
