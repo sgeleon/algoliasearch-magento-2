@@ -132,7 +132,7 @@ class Events implements EventsInterface
     {
         $this->checkDependencies();
 
-        $price = floatval($item->getPrice());
+        $price = $this->getQuoteItemSalePrice($item);
         $qty = intval($item->getData('qty_to_add'));
 
         $event = [
@@ -242,19 +242,31 @@ class Events implements EventsInterface
     }
 
     /**
+     * Price / final price does not return applied customer group pricing
+     * so check base price first which returns the desired value.
+     *
      * @param Item $item
      * @return float
      */
-    private function getQuoteItemDiscount(Item $item): float
+    protected function getQuoteItemSalePrice(Item $item): float
     {
-        return floatval($item->getProduct()->getPrice()) - floatval($item->getPrice());
+        return floatval($item->getData('base_price') ?? $item->getPrice());
+    }
+
+    /**
+     * @param Item $item
+     * @return float
+     */
+    protected function getQuoteItemDiscount(Item $item): float
+    {
+        return floatval($item->getProduct()->getPrice()) - $this->getQuoteItemSalePrice($item);
     }
 
     /**
      * @param OrderItem $item
      * @return float
      */
-    private function getOrderItemDiscount(OrderItem $item): float
+    protected function getOrderItemDiscount(OrderItem $item): float
     {
         return floatval($item->getOriginalPrice()) - floatval($item->getPrice());
     }
