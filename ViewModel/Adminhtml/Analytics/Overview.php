@@ -154,6 +154,16 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
         return $this->analyticsHelper->getConversionRate($this->getAnalyticsParams());
     }
 
+    public function getConversionRateAddToCart()
+    {
+        return $this->analyticsHelper->getConversionRateAddToCart($this->getAnalyticsParams());
+    }
+
+    public function getConversionRatePlaceOrder()
+    {
+        return $this->analyticsHelper->getConversionRatePlaceOrder($this->getAnalyticsParams());
+    }
+
     public function getConversionRateByDates()
     {
         return $this->analyticsHelper->getConversionRateByDates($this->getAnalyticsParams());

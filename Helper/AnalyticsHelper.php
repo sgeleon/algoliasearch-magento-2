@@ -5,14 +5,15 @@ namespace Algolia\AlgoliaSearch\Helper;
 use Algolia\AlgoliaSearch\Api\AnalyticsClient;
 use Algolia\AlgoliaSearch\Configuration\AnalyticsConfig;
 use Algolia\AlgoliaSearch\DataProvider\Analytics\IndexEntityDataProvider;
-use Algolia\AlgoliaSearch\RequestOptions\RequestOptionsFactory;
 
 class AnalyticsHelper
 {
-    public const ANALYTICS_SEARCH_PATH = '2/searches';
-    public const ANALYTICS_HITS_PATH = '2/hits';
-    public const ANALYTICS_FILTER_PATH = '2/filters';
-    public const ANALYTICS_CLICKS_PATH = '2/clicks';
+    public const ANALYTICS_API_PATH_PREFIX      = '2/';
+    public const ANALYTICS_SEARCH_PATH          = self::ANALYTICS_API_PATH_PREFIX . 'searches';
+    public const ANALYTICS_HITS_PATH            = self::ANALYTICS_API_PATH_PREFIX . 'hits';
+    public const ANALYTICS_FILTER_PATH          = self::ANALYTICS_API_PATH_PREFIX . 'filters';
+    public const ANALYTICS_CLICKS_PATH          = self::ANALYTICS_API_PATH_PREFIX . 'clicks';
+    public const ANALYTICS_CONVERSION_RATE_PATH = self::ANALYTICS_API_PATH_PREFIX . 'conversions';
 
     /** @var AlgoliaHelper */
     private $algoliaHelper;
@@ -33,6 +34,8 @@ class AnalyticsHelper
     private $clickPositions;
     private $clickThroughs;
     private $conversions;
+    private $conversionsAddToCart;
+    private $conversionsPlaceOrder;
 
     private $clientData;
 
@@ -65,12 +68,13 @@ class AnalyticsHelper
      * @param string $region
      */
     public function __construct(
-        AlgoliaHelper $algoliaHelper,
-        ConfigHelper $configHelper,
+        AlgoliaHelper           $algoliaHelper,
+        ConfigHelper            $configHelper,
         IndexEntityDataProvider $entityHelper,
-        Logger $logger,
-        string $region = 'us'
-    ) {
+        Logger                  $logger,
+        string                  $region = 'us'
+    )
+    {
         $this->algoliaHelper = $algoliaHelper;
         $this->configHelper = $configHelper;
 
@@ -108,9 +112,9 @@ class AnalyticsHelper
     public function getAnalyticsIndices(int $storeId): array
     {
         return [
-            'products' => $this->entityHelper->getIndexNameByEntity('products', $storeId),
+            'products'   => $this->entityHelper->getIndexNameByEntity('products', $storeId),
             'categories' => $this->entityHelper->getIndexNameByEntity('categories', $storeId),
-            'pages' => $this->entityHelper->getIndexNameByEntity('pages', $storeId),
+            'pages'      => $this->entityHelper->getIndexNameByEntity('pages', $storeId),
         ];
     }
 
@@ -225,7 +229,7 @@ class AnalyticsHelper
     public function getUsers(array $params): array
     {
         if (!isset($this->users)) {
-            $this->users = $this->safeFetch('/2/users/count', $params);
+            $this->users = $this->safeFetch(self::ANALYTICS_API_PATH_PREFIX . 'users/count', $params);
         }
 
         return $this->users;
@@ -361,14 +365,49 @@ class AnalyticsHelper
     public function getConversionRate(array $params): array
     {
         if (!isset($this->conversions)) {
-            $this->conversions = $this->safeFetch(
-                '/2/conversions/conversionRate',
-                $params,
-                array_fill_keys(['rate', 'trackedSearchCount'], null)
-            );
+            $this->conversions = $this->getConversionRateCalc($params);
         }
 
         return $this->conversions;
+    }
+
+    /**
+     * @param array $params
+     * @return array<string, mixed>
+     */
+    public function getConversionRateAddToCart(array $params): array
+    {
+        if (!isset($this->conversionsAddToCart)) {
+            $this->conversionsAddToCart = $this->getConversionRateCalc($params, 'addToCartRate');
+        }
+
+        return $this->conversionsAddToCart;
+    }
+
+    /**
+     * @param array $params
+     * @return array<string, mixed>
+     */
+    public function getConversionRatePlaceOrder(array $params): array
+    {
+        if (!isset($this->conversionsPlaceOrder)) {
+            $this->conversionsPlaceOrder = $this->getConversionRateCalc($params, 'purchaseRate');
+        }
+
+        return $this->conversionsPlaceOrder;
+    }
+
+    /**
+     * @param array $params
+     * @return array<string, mixed>
+     */
+    private function getConversionRateCalc(array $params, $path = 'conversionRate'): array
+    {
+        return $this->conversions = $this->safeFetch(
+            self::ANALYTICS_CONVERSION_RATE_PATH . '/' . $path,
+            $params,
+            array_fill_keys(['rate', 'trackedSearchCount'], null)
+        );
     }
 
     public function getConversionRateByDates(array $params)
@@ -385,11 +424,7 @@ class AnalyticsHelper
 
     public function isClickAnalyticsEnabled()
     {
-        if (!$this->configHelper->isClickConversionAnalyticsEnabled()) {
-            return false;
-        }
-
-        return true;
+        return $this->configHelper->isClickConversionAnalyticsEnabled();
     }
 
     /**
