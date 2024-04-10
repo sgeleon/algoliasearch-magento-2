@@ -7,6 +7,7 @@ use Algolia\AlgoliaSearch\Helper\AnalyticsHelper;
 use Algolia\AlgoliaSearch\ViewModel\Adminhtml\BackendView;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Locale\ResolverInterface;
 use Magento\Store\Api\Data\StoreInterface;
 
 class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterface
@@ -17,15 +18,6 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
 
     public const DEFAULT_RETENTION_DAYS = 90;
 
-    /** @var BackendView */
-    private $backendView;
-
-    /** @var AnalyticsHelper */
-    private $analyticsHelper;
-
-    /** @var IndexEntityDataProvider */
-    private $indexEntityDataProvider;
-
     /** @var array */
     private $analyticsParams = [];
 
@@ -33,6 +25,7 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
      * @param BackendView $backendView
      * @param AnalyticsHelper $analyticsHelper
      * @param IndexEntityDataProvider $indexEntityDataProvider
+     * @param ResolverInterface $localeResolver
      */
     public function __construct(
         protected BackendView             $backendView,
@@ -49,9 +42,13 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
         return $this->backendView;
     }
 
-    public function getTimeZone()
+    /**
+     * @return string
+     * @throws NoSuchEntityException
+     */
+    public function getTimeZone(): string
     {
-        return $this->backendView->getDateTime()->getConfigTimezone(
+        return (string) $this->backendView->getDateTime()->getConfigTimezone(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
             $this->getStore()->getId()
         );
@@ -76,7 +73,7 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
      *
      * @return array
      */
-    public function getAnalyticsParams($additional = [])
+    public function getAnalyticsParams(array $additional = []): array
     {
         if (empty($this->analyticsParams)) {
             $params = ['index' => $this->getIndexName()];
@@ -332,7 +329,7 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
      *
      * @return bool
      */
-    public function checkIsValidDateRange()
+    public function checkIsValidDateRange(): bool
     {
         if ($formData = $this->getBackendView()->getBackendSession()->getAlgoliaAnalyticsFormData()) {
             if (!empty($formData['from'])) {
