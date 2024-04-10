@@ -7,6 +7,7 @@ use Algolia\AlgoliaSearch\Helper\AnalyticsHelper;
 use Algolia\AlgoliaSearch\ViewModel\Adminhtml\BackendView;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Locale\ResolverInterface;
 use Magento\Store\Api\Data\StoreInterface;
 
 class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterface
@@ -17,15 +18,6 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
 
     public const DEFAULT_RETENTION_DAYS = 90;
 
-    /** @var BackendView */
-    private $backendView;
-
-    /** @var AnalyticsHelper */
-    private $analyticsHelper;
-
-    /** @var IndexEntityDataProvider */
-    private $indexEntityDataProvider;
-
     /** @var array */
     private $analyticsParams = [];
 
@@ -35,16 +27,14 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
      * @param BackendView $backendView
      * @param AnalyticsHelper $analyticsHelper
      * @param IndexEntityDataProvider $indexEntityDataProvider
+     * @param ResolverInterface $localeResolver
      */
     public function __construct(
-        BackendView $backendView,
-        AnalyticsHelper $analyticsHelper,
-        IndexEntityDataProvider $indexEntityDataProvider
-    ) {
-        $this->backendView = $backendView;
-        $this->analyticsHelper = $analyticsHelper;
-        $this->indexEntityDataProvider = $indexEntityDataProvider;
-    }
+        protected BackendView             $backendView,
+        protected AnalyticsHelper         $analyticsHelper,
+        protected IndexEntityDataProvider $indexEntityDataProvider,
+        protected ResolverInterface       $localeResolver
+    ) { }
 
     /**
      * @return BackendView
@@ -54,9 +44,13 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
         return $this->backendView;
     }
 
-    public function getTimeZone()
+    /**
+     * @return string
+     * @throws NoSuchEntityException
+     */
+    public function getTimeZone(): string
     {
-        return $this->backendView->getDateTime()->getConfigTimezone(
+        return (string) $this->backendView->getDateTime()->getConfigTimezone(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
             $this->getStore()->getId()
         );
@@ -81,18 +75,18 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
      *
      * @return array
      */
-    public function getAnalyticsParams($additional = [])
+    public function getAnalyticsParams(array $additional = []): array
     {
         if (empty($this->analyticsParams)) {
             $params = ['index' => $this->getIndexName()];
             if ($formData = $this->getBackendView()->getBackendSession()->getAlgoliaAnalyticsFormData()) {
                 $dateTime = $this->getBackendView()->getDateTime();
-                $timeZone = $this->getTimeZone();
+                $locale = $this->localeResolver->getLocale();
                 if (isset($formData['from']) && $formData['from'] !== '') {
-                    $params['startDate'] = $dateTime->date($formData['from'], $timeZone, true, false)->format('Y-m-d');
+                    $params['startDate'] = $dateTime->date($formData['from'], $locale, true, false)->format('Y-m-d');
                 }
                 if (isset($formData['to']) && $formData['to'] !== '') {
-                    $params['endDate'] = $dateTime->date($formData['to'], $timeZone, true, false)->format('Y-m-d');
+                    $params['endDate'] = $dateTime->date($formData['to'], $locale, true, false)->format('Y-m-d');
                 }
             }
 
@@ -316,14 +310,14 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
      *
      * @return bool
      */
-    public function checkIsValidDateRange()
+    public function checkIsValidDateRange(): bool
     {
         if ($formData = $this->getBackendView()->getBackendSession()->getAlgoliaAnalyticsFormData()) {
             if (isset($formData['from']) && !empty($formData['from'])) {
                 $dateTime = $this->getBackendView()->getDateTime();
-                $timeZone = $this->getTimeZone();
-                $startDate = $dateTime->date($formData['from'], $timeZone, true, false);
-                $diff = date_diff($startDate, $dateTime->date(null, $timeZone, true, null));
+                $locale = $this->localeResolver->getLocale();
+                $startDate = $dateTime->date($formData['from'], $locale, true, false);
+                $diff = date_diff($startDate, $dateTime->date(null, $locale, true, null));
 
                 if ($diff->days > $this->getAnalyticRetentionDays()) {
                     return false;
