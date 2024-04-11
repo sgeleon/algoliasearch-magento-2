@@ -30,21 +30,16 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
     private $analyticsParams = [];
 
     /**
-     * Index constructor.
-     *
      * @param BackendView $backendView
      * @param AnalyticsHelper $analyticsHelper
      * @param IndexEntityDataProvider $indexEntityDataProvider
      */
     public function __construct(
-        BackendView $backendView,
-        AnalyticsHelper $analyticsHelper,
-        IndexEntityDataProvider $indexEntityDataProvider
-    ) {
-        $this->backendView = $backendView;
-        $this->analyticsHelper = $analyticsHelper;
-        $this->indexEntityDataProvider = $indexEntityDataProvider;
-    }
+        protected BackendView             $backendView,
+        protected AnalyticsHelper         $analyticsHelper,
+        protected IndexEntityDataProvider $indexEntityDataProvider,
+        protected ResolverInterface       $localeResolver
+    ) { }
 
     /**
      * @return BackendView
@@ -86,13 +81,11 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
         if (empty($this->analyticsParams)) {
             $params = ['index' => $this->getIndexName()];
             if ($formData = $this->getBackendView()->getBackendSession()->getAlgoliaAnalyticsFormData()) {
-                $dateTime = $this->getBackendView()->getDateTime();
-                $timeZone = $this->getTimeZone();
-                if (isset($formData['from']) && $formData['from'] !== '') {
-                    $params['startDate'] = $dateTime->date($formData['from'], $timeZone, true, false)->format('Y-m-d');
+                if (!empty($formData['from'])) {
+                    $params['startDate'] = $this->formatFormSubmittedDate($formData['from']);
                 }
-                if (isset($formData['to']) && $formData['to'] !== '') {
-                    $params['endDate'] = $dateTime->date($formData['to'], $timeZone, true, false)->format('Y-m-d');
+                if (!empty($formData['to'])) {
+                    $params['endDate'] =  $this->formatFormSubmittedDate($formData['to']);
                 }
             }
 
@@ -100,6 +93,39 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
         }
 
         return array_merge($this->analyticsParams, $additional);
+    }
+
+    /**
+     * @param string $dateString
+     * @return string
+     * @throws NoSuchEntityException
+     */
+    protected function formatFormSubmittedDate(string $dateString): string
+    {
+        $timezone = $this->getTimeZone();
+        $dateTime = $this->parseFormSubmittedDate($dateString, $timezone);
+        return $dateTime->format(AnalyticsHelper::DATE_FORMAT_API);
+    }
+
+    /**
+     * @param string|null $dateString
+     * @param string|null $timezone
+     * @return \DateTime
+     * @throws NoSuchEntityException
+     */
+    protected function parseFormSubmittedDate(string $dateString = null, string $timezone = null): \DateTime
+    {
+        if (empty($timezone)) {
+            $timezone = $this->getTimeZone();
+        }
+
+        if (empty($dateString)) {
+            return new \DateTime('now', new \DateTimeZone($timezone));
+        }
+
+        $dateFormatter = $this->analyticsHelper->getAnalyticsDatePickerFormatter($timezone);
+        $parsedDate = $dateFormatter->parse($dateString);
+        return (new \DateTime('now', new \DateTimeZone($timezone)))->setTimestamp($parsedDate);
     }
 
     public function getTotalCountOfSearches()
@@ -309,11 +335,12 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
     public function checkIsValidDateRange()
     {
         if ($formData = $this->getBackendView()->getBackendSession()->getAlgoliaAnalyticsFormData()) {
-            if (isset($formData['from']) && !empty($formData['from'])) {
-                $dateTime = $this->getBackendView()->getDateTime();
-                $timeZone = $this->getTimeZone();
-                $startDate = $dateTime->date($formData['from'], $timeZone, true, false);
-                $diff = date_diff($startDate, $dateTime->date(null, $timeZone, true, null));
+            if (!empty($formData['from'])) {
+                $timezone = $this->getTimeZone();
+
+                $startDate = $this->parseFormSubmittedDate($formData['from'], $timezone);
+                $now = $this->parseFormSubmittedDate(null, $timezone);
+                $diff = date_diff($startDate, $now);
 
                 if ($diff->days > $this->getAnalyticRetentionDays()) {
                     return false;
