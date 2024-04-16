@@ -37,7 +37,7 @@ class AlgoliaHelper extends AbstractHelper
      */
     protected const ALGOLIA_API_SECURED_KEY_TIMEOUT_SECONDS = 60 * 60 * 24; // TODO: Implement as config
 
-    protected SearchClient $client;
+    protected ?SearchClient $client = null;
 
     protected ConfigHelper $config;
 
@@ -83,12 +83,14 @@ class AlgoliaHelper extends AbstractHelper
             $this->config->getNonCastableAttributes()
         );
 
-        $clientName = $this->client->getClientConfig()->getClientName();
+        $clientName = $this->client?->getClientConfig()?->getClientName();
 
-        AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento2 integration', $this->config->getExtensionVersion());
-        AlgoliaAgent::addAlgoliaAgent($clientName, 'PHP', phpversion());
-        AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento', $this->config->getMagentoVersion());
-        AlgoliaAgent::addAlgoliaAgent($clientName, 'Edition', $this->config->getMagentoEdition());
+        if ($clientName) {
+            AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento2 integration', $this->config->getExtensionVersion());
+            AlgoliaAgent::addAlgoliaAgent($clientName, 'PHP', phpversion());
+            AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento', $this->config->getMagentoVersion());
+            AlgoliaAgent::addAlgoliaAgent($clientName, 'Edition', $this->config->getMagentoEdition());
+        }
     }
 
     /**
@@ -542,6 +544,8 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function clearIndex(string $indexName): void
     {
+        $this->checkClient(__FUNCTION__);
+
         $res = $this->client->clearObjects($indexName);
 
         self::setLastOperationInfo($indexName, $res);
