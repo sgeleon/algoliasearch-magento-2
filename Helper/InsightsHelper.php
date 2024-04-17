@@ -21,8 +21,12 @@ class InsightsHelper
     public const ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME = '_ALGOLIA_MAGENTO_AUTH';
     /** @var string */
     public const ALGOLIA_CUSTOMER_USER_TOKEN_PREFIX = 'aa-';
+    /**
+     * Up to 129 chars per https://www.algolia.com/doc/rest-api/insights/#method-param-usertoken
+     * But capping at legacy 64 chars for backward compat
+     */
     /** @var int */
-    public const ALGOLIA_USER_TOKEN_MAX_LENGTH = 129;
+    public const ALGOLIA_USER_TOKEN_MAX_LENGTH = 64;
 
     /** @var string */
     public const QUOTE_ITEM_QUERY_PARAM = 'algoliasearch_query_param';
