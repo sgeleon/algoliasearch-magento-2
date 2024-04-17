@@ -78,6 +78,9 @@ define([
 
             if (algoliaConfig.personalization.enabled) {
                 params.enablePersonalization = true;
+            }
+
+            if (algoliaConfig.ccAnalytics.enabled || algoliaConfig.personalization.enabled) {
                 params.userToken = this.determineUserToken();
             }
 
