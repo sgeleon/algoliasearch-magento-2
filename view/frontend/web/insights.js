@@ -79,7 +79,7 @@ define(
                         allWidgetConfiguration.configure.clickAnalytics = true;
                     }
 
-                    if (algoliaConfig.personalization.enabled) {
+                    if (algoliaConfig.ccAnalytics.enabled || algoliaConfig.personalization.enabled) {
                         allWidgetConfiguration.configure.enablePersonalization = true;
                         allWidgetConfiguration.configure.userToken = algoliaAnalytics.getUserToken();
                     }
