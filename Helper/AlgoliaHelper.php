@@ -582,7 +582,7 @@ class AlgoliaHelper extends AbstractHelper
      * @return void
      * @throws \Exception
      */
-    protected function prepareRecords(array $objects, string $indexName): void
+    protected function prepareRecords(array &$objects, string $indexName): void
     {
         $currentCET = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
         $currentCET = $currentCET->format('Y-m-d H:i:s');
