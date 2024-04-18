@@ -160,9 +160,10 @@ class Data
      * @param int $storeId
      * @param array|null $searchParams
      * @param string|null $targetedIndex
+     * @return array
+     * @throws AlgoliaException
      * @internal This method is currently unstable and should not be used. It may be revisited ar fixed in a future version.
      *
-     * @return array
      */
     public function getSearchResult($query, $storeId, $searchParams = null, $targetedIndex = null): array
     {
@@ -196,7 +197,8 @@ class Data
             $params = array_merge($params, $searchParams);
         }
 
-        $answer = $this->algoliaHelper->query($indexName, $query, $params);
+        $response = $this->algoliaHelper->query($indexName, $query, $params);
+        $answer = reset($response['results']);
 
         $data = [];
 
