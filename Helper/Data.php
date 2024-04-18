@@ -919,7 +919,8 @@ class Data
             'query'                => '',
             'attributesToRetrieve' => [AlgoliaHelper::ALGOLIA_API_OBJECT_ID],
         ];
-        foreach ($client->browseObjects($indexName, $browseOptions) as $hit) {
+        $hits = $client->browseObjects($indexName, $browseOptions);
+        foreach ($hits as $hit) {
             $objectIds[] = $hit[AlgoliaHelper::ALGOLIA_API_OBJECT_ID];
             $counter++;
             if ($counter === 1000) {
