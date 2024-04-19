@@ -321,17 +321,18 @@ class AlgoliaHelper extends AbstractHelper
 
     /**
      * @param $indexName
-     * @return void
+     * @return array<string, mixed>
      * @throws \Exception
      */
-    public function getSettings($indexName)
+    public function getSettings(string $indexName): array
     {
         try {
             return $this->client->getSettings($indexName);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             if ($e->getCode() !== 404) {
                 throw $e;
             }
+            return [];
         }
     }
 
