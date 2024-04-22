@@ -3,6 +3,7 @@
 namespace Algolia\AlgoliaSearch\Block;
 
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Helper\InsightsHelper;
 use Magento\Framework\App\Request\Http;
 use Magento\Framework\Data\CollectionDataSourceInterface;
 use Magento\Framework\DataObject;
@@ -289,6 +290,7 @@ class Configuration extends Algolia implements CollectionDataSourceInterface
                 'logo' => $this->getViewFileUrl('Algolia_AlgoliaSearch::images/algolia-logo-blue.svg'),
             ],
             'cookieConfiguration' => [
+                'customerTokenCookie' => InsightsHelper::ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME,
                 'consentCookieName' => $config->getDefaultConsentCookieName(),
                 'cookieAllowButtonSelector' => $config->getAllowCookieButtonSelector(),
                 'cookieRestrictionModeEnabled' => $config->isCookieRestrictionModeEnabled(),

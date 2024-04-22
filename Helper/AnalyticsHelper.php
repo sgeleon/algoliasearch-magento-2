@@ -5,26 +5,18 @@ namespace Algolia\AlgoliaSearch\Helper;
 use Algolia\AlgoliaSearch\Api\AnalyticsClient;
 use Algolia\AlgoliaSearch\Configuration\AnalyticsConfig;
 use Algolia\AlgoliaSearch\DataProvider\Analytics\IndexEntityDataProvider;
-use Algolia\AlgoliaSearch\RequestOptions\RequestOptionsFactory;
+use Magento\Framework\Locale\ResolverInterface;
 
 class AnalyticsHelper
 {
-    public const ANALYTICS_SEARCH_PATH = '/2/searches';
-    public const ANALYTICS_HITS_PATH = '/2/hits';
-    public const ANALYTICS_FILTER_PATH = '/2/filters';
-    public const ANALYTICS_CLICKS_PATH = '/2/clicks';
-
-    /** @var AlgoliaHelper */
-    private $algoliaHelper;
-
-    /** @var ConfigHelper */
-    private $configHelper;
-
-    /** @var IndexEntityDataProvider */
-    private $entityHelper;
-
-    /** @var Logger */
-    private $logger;
+    public const ANALYTICS_API_PATH_PREFIX      = '2/';
+    public const ANALYTICS_SEARCH_PATH          = self::ANALYTICS_API_PATH_PREFIX . 'searches';
+    public const ANALYTICS_HITS_PATH            = self::ANALYTICS_API_PATH_PREFIX . 'hits';
+    public const ANALYTICS_FILTER_PATH          = self::ANALYTICS_API_PATH_PREFIX . 'filters';
+    public const ANALYTICS_CLICKS_PATH          = self::ANALYTICS_API_PATH_PREFIX . 'clicks';
+    public const ANALYTICS_CONVERSION_RATE_PATH = self::ANALYTICS_API_PATH_PREFIX . 'conversions';
+    public const DATE_FORMAT_PICKER             = 'dd MMM yyyy';
+    public const DATE_FORMAT_API                = 'Y-m-d';
 
     private $searches;
     private $users;
@@ -33,6 +25,8 @@ class AnalyticsHelper
     private $clickPositions;
     private $clickThroughs;
     private $conversions;
+    private $conversionsAddToCart;
+    private $conversionsPlaceOrder;
 
     private $clientData;
 
@@ -58,25 +52,18 @@ class AnalyticsHelper
     protected $region;
 
     /**
-     * @param AlgoliaHelper $algoliaHelper
      * @param ConfigHelper $configHelper
      * @param IndexEntityDataProvider $entityHelper
      * @param Logger $logger
-     * @param string $region
+     * @param ResolverInterface $localeResolver
      */
     public function __construct(
-        AlgoliaHelper $algoliaHelper,
-        ConfigHelper $configHelper,
-        IndexEntityDataProvider $entityHelper,
-        Logger $logger,
-        string $region = 'us'
-    ) {
-        $this->algoliaHelper = $algoliaHelper;
-        $this->configHelper = $configHelper;
-
-        $this->entityHelper = $entityHelper;
-
-        $this->logger = $logger;
+        private ConfigHelper            $configHelper,
+        private IndexEntityDataProvider $entityHelper,
+        private Logger                  $logger,
+        private ResolverInterface       $localeResolver
+    )
+    {
         $this->region = $this->configHelper->getAnalyticsRegion();
     }
 
@@ -108,9 +95,9 @@ class AnalyticsHelper
     public function getAnalyticsIndices(int $storeId): array
     {
         return [
-            'products' => $this->entityHelper->getIndexNameByEntity('products', $storeId),
+            'products'   => $this->entityHelper->getIndexNameByEntity('products', $storeId),
             'categories' => $this->entityHelper->getIndexNameByEntity('categories', $storeId),
-            'pages' => $this->entityHelper->getIndexNameByEntity('pages', $storeId),
+            'pages'      => $this->entityHelper->getIndexNameByEntity('pages', $storeId),
         ];
     }
 
@@ -225,7 +212,7 @@ class AnalyticsHelper
     public function getUsers(array $params): array
     {
         if (!isset($this->users)) {
-            $this->users = $this->safeFetch('/2/users/count', $params);
+            $this->users = $this->safeFetch(self::ANALYTICS_API_PATH_PREFIX . 'users/count', $params);
         }
 
         return $this->users;
@@ -361,14 +348,49 @@ class AnalyticsHelper
     public function getConversionRate(array $params): array
     {
         if (!isset($this->conversions)) {
-            $this->conversions = $this->safeFetch(
-                '/2/conversions/conversionRate',
-                $params,
-                array_fill_keys(['rate', 'trackedSearchCount'], null)
-            );
+            $this->conversions = $this->getConversionRateCalc($params);
         }
 
         return $this->conversions;
+    }
+
+    /**
+     * @param array $params
+     * @return array<string, mixed>
+     */
+    public function getConversionRateAddToCart(array $params): array
+    {
+        if (!isset($this->conversionsAddToCart)) {
+            $this->conversionsAddToCart = $this->getConversionRateCalc($params, 'addToCartRate');
+        }
+
+        return $this->conversionsAddToCart;
+    }
+
+    /**
+     * @param array $params
+     * @return array<string, mixed>
+     */
+    public function getConversionRatePlaceOrder(array $params): array
+    {
+        if (!isset($this->conversionsPlaceOrder)) {
+            $this->conversionsPlaceOrder = $this->getConversionRateCalc($params, 'purchaseRate');
+        }
+
+        return $this->conversionsPlaceOrder;
+    }
+
+    /**
+     * @param array $params
+     * @return array<string, mixed>
+     */
+    private function getConversionRateCalc(array $params, $path = 'conversionRate'): array
+    {
+        return $this->conversions = $this->safeFetch(
+            self::ANALYTICS_CONVERSION_RATE_PATH . '/' . $path,
+            $params,
+            array_fill_keys(['rate', 'trackedSearchCount'], null)
+        );
     }
 
     public function getConversionRateByDates(array $params)
@@ -385,11 +407,7 @@ class AnalyticsHelper
 
     public function isClickAnalyticsEnabled()
     {
-        if (!$this->configHelper->isClickConversionAnalyticsEnabled()) {
-            return false;
-        }
-
-        return true;
+        return $this->configHelper->isClickConversionAnalyticsEnabled();
     }
 
     /**
@@ -445,4 +463,17 @@ class AnalyticsHelper
     {
         return $this->errors;
     }
+
+    /**
+     * @param string $timezone
+     * @return \IntlDateFormatter
+     */
+    public function getAnalyticsDatePickerFormatter(string $timezone): \IntlDateFormatter
+    {
+        $locale = $this->localeResolver->getLocale();
+        $dateFormatter = new \IntlDateFormatter($locale, \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $timezone);
+        $dateFormatter->setPattern(self::DATE_FORMAT_PICKER);
+        return $dateFormatter;
+    }
+
 }

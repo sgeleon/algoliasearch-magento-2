@@ -37,7 +37,7 @@ class AlgoliaHelper extends AbstractHelper
      */
     protected const ALGOLIA_API_SECURED_KEY_TIMEOUT_SECONDS = 60 * 60 * 24; // TODO: Implement as config
 
-    protected SearchClient $client;
+    protected ?SearchClient $client = null;
 
     protected ConfigHelper $config;
 
@@ -83,12 +83,14 @@ class AlgoliaHelper extends AbstractHelper
             $this->config->getNonCastableAttributes()
         );
 
-        $clientName = $this->client->getClientConfig()->getClientName();
+        $clientName = $this->client?->getClientConfig()?->getClientName();
 
-        AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento2 integration', $this->config->getExtensionVersion());
-        AlgoliaAgent::addAlgoliaAgent($clientName, 'PHP', phpversion());
-        AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento', $this->config->getMagentoVersion());
-        AlgoliaAgent::addAlgoliaAgent($clientName, 'Edition', $this->config->getMagentoEdition());
+        if ($clientName) {
+            AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento2 integration', $this->config->getExtensionVersion());
+            AlgoliaAgent::addAlgoliaAgent($clientName, 'PHP', phpversion());
+            AlgoliaAgent::addAlgoliaAgent($clientName, 'Magento', $this->config->getMagentoVersion());
+            AlgoliaAgent::addAlgoliaAgent($clientName, 'Edition', $this->config->getMagentoEdition());
+        }
     }
 
     /**
@@ -319,17 +321,18 @@ class AlgoliaHelper extends AbstractHelper
 
     /**
      * @param $indexName
-     * @return void
+     * @return array<string, mixed>
      * @throws \Exception
      */
-    public function getSettings($indexName)
+    public function getSettings(string $indexName): array
     {
         try {
             return $this->client->getSettings($indexName);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             if ($e->getCode() !== 404) {
                 throw $e;
             }
+            return [];
         }
     }
 
@@ -542,6 +545,8 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function clearIndex(string $indexName): void
     {
+        $this->checkClient(__FUNCTION__);
+
         $res = $this->client->clearObjects($indexName);
 
         self::setLastOperationInfo($indexName, $res);
@@ -578,7 +583,7 @@ class AlgoliaHelper extends AbstractHelper
      * @return void
      * @throws \Exception
      */
-    protected function prepareRecords(array $objects, string $indexName): void
+    protected function prepareRecords(array &$objects, string $indexName): void
     {
         $currentCET = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
         $currentCET = $currentCET->format('Y-m-d H:i:s');

@@ -115,7 +115,7 @@
                 <attribute type="expanded">1</attribute>
                 <comment>
                     <![CDATA[
-                         If your Magento cookie settings, specifically <b>General > Web > Default Cookie Settings > Cookie Restriction Mode</b> is set to "No," we will consider it as Implicit Cookie Consent. In this case, the useCookie will be set to True by default for all insight events. Conversely, if <b>Cookie Restriction Mode is set to 'Yes,'</b> Insight events will not be allowed without explicit cookie consent.
+                         If your Magento cookie settings, specifically <b>General > Web > Default Cookie Settings > Cookie Restriction Mode</b> is set to "No," we will consider it as Implicit Cookie Consent. In this case, <code>useCookie</code> will be set to True by default for all insight events. Conversely, if <b>Cookie Restriction Mode is set to 'Yes,'</b> Insight events will not be allowed without explicit cookie consent.
                         ]]>
                 </comment>
                 <field id="default_consent_cookie_name" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -879,7 +879,7 @@
                     <label>Enable Indexing Queue</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>
-                        <model>Algolia\AlgoliaSearch\Model\Config\Link</model>
+                        <model>Algolia\AlgoliaSearch\Model\Config\EnableQueueComment</model>
                     </comment>
                 </field>
                 <field id="number_of_job_to_run" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -921,9 +921,7 @@
                     <label>Enable Click Analytics</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
                     <comment>
-                        <![CDATA[
-                            Click Analytics is available for free! Getting direct and accurate feedback from your users about their behavior, interests, and expectations helps you measure the success of your search solution and improve customer retention.
-                        ]]>
+                        <model>Algolia\AlgoliaSearch\Model\Config\EnableClickAnalyticsComment</model>
                     </comment>
                 </field>
                 <field id="is_selector" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
@@ -938,13 +936,13 @@
                     </depends>
                 </field>
                 <field id="conversion_analytics_mode" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Conversion Analytics mode</label>
+                    <label>Enable Conversion Analytics</label>
                     <source_model>Algolia\AlgoliaSearch\Model\Source\ConversionAnalyticsMode</source_model>
                     <comment>
                         <![CDATA[
                             Conversion is tracked when a product was found and clicked in search results and then added to cart / ordered. </br></br>
 
-                            If conversion is tracked, URL parameters will be appended to your searched product links. The `queryID` parameter is required for insights to tie a conversion event to a search. For best SEO practice, we recommend you to use canonical links for your product pages. You can enable this setting by going to <strong>Stores > Configuration > Catalog > Catalog > Search Engine Optimization > Use Canonical Link Meta Tag For Products</strong>.
+                            If conversion is tracked, URL parameters will be appended to your searched product links. The <code>queryID</code> parameter is required for insights to tie a conversion event to a search. For best SEO practice, we recommend you to use canonical links for your product pages. You can enable this setting by going to <strong>Stores > Configuration > Catalog > Catalog > Search Engine Optimization > Use Canonical Link Meta Tag For Products</strong>.
                         ]]>
                     </comment>
                     <depends>
@@ -958,11 +956,11 @@
                             The element has to contain attribute <code>data-objectid</code> or a <code>productId</code> variable needs to be specified
                             in a "frontend" <code>algoliaConfig</code> variable.
                             <br><br>
-                            More selectors separated by comma (,).
+                            More selectors separated by comma (<code>,</code>).
                         ]]>
                     </comment>
                     <depends>
-                        <field id="conversion_analytics_mode">add_to_cart</field>
+                        <field id="conversion_analytics_mode" separator=",">add_to_cart,all</field>
                         <field id="enable">1</field>
                     </depends>
                 </field>
@@ -1306,7 +1304,7 @@
                         <![CDATA[
                             Useful for debugging. Algolia archives failed jobs by default. Enable this setting to archive all jobs that are processed by the indexing queue and to obtain and preserve the stack trace for jobs created.
                         ]]>
-                        <model>Algolia\AlgoliaSearch\Model\Config\Comment</model>
+                        <model>Algolia\AlgoliaSearch\Model\Config\QueueArchiveComment</model>
                     </comment>
                     <depends>
                         <field id="active">1</field>
