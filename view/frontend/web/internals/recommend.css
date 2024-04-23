@@ -1,4 +1,4 @@
-.product-img {
+.recommend-item .product-img {
     width: 180px;
 }
 .auc-Recommend-list {
@@ -6,7 +6,7 @@
     justify-content: space-evenly;
     list-style: none;
 }
-.product-name {
+.recommend-item .product-name {
     height: 50px;
     width: 110px;
     margin: 0 auto;
@@ -50,12 +50,12 @@
     flex-wrap: wrap;
     justify-content: flex-start;
 }
-.product-details .action.primary, .action-primary{
+.product-details .recommend-item .action.primary, .action-primary{
     background: #f4f4f4;
     border: 1px solid #f4f4f4;
     color: #666666;
 }
-.product-details .action.primary:hover, .action-primary:hover {
+.product-details .recommend-item .action.primary:hover, .action-primary:hover {
     border-color: #1979c3;
     background: #1979c3;
     color: #FFFFFF;
