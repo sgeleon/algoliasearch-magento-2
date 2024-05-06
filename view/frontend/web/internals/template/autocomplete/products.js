@@ -104,6 +104,7 @@ define([], function () {
             `;
         },
 
+        // TODO: Refactor to external lib
         safeHighlight: function(components, hit, attribute, strict = true) {
             const highlightResult = hit._highlightResult[attribute];
 
