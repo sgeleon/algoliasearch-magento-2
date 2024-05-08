@@ -38,7 +38,7 @@ require(
 			pageWarning += '</div>';
 
 			var pageWarningSynonyms = '<div class="algolia_dashboard_warning algolia_dashboard_warning_page">';
-			pageWarningSynonyms += '<p>Configurations related to Synonyms have been deprecated from the Magento dashboard. We advise you to configure synonyms from the Algolia dashboard.</p>';
+			pageWarningSynonyms += '<p>Configurations related to Synonyms have been removed from the Magento dashboard. We advise you to configure synonyms from the Algolia dashboard.</p>';
 			pageWarningSynonyms += '</div>';
 
 			for (var i=0; i < pageIds.length; i++) {
