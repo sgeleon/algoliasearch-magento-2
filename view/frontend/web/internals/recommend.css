@@ -61,12 +61,12 @@
     color: #FFFFFF;
 }
 @media (min-width: 768px) and (max-width: 1023px) {
-    #relatedProducts li, #frequentlyBoughtTogether li {
+    #relatedProducts li, #frequentlyBoughtTogether li, #trendItems li {
         width: 33.33333333%;
     }
 }
 @media (max-width: 767px) {
-    #relatedProducts li, #frequentlyBoughtTogether li {
+    #relatedProducts li, #frequentlyBoughtTogether li, #trendItems li {
         width: 50%;
     }
 }
