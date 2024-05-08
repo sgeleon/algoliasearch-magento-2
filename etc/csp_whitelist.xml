@@ -13,6 +13,7 @@
                 <value id="algolia" type="host">*.algolia.com</value>
                 <value id="algolia-fallback" type="host">*.algolianet.com</value>
                 <value id="algolia-insights-io" type="host">*.insights.algolia.io</value>
+                <value id="algolia-insights-io-bare" type="host">insights.algolia.io</value>
             </values>
         </policy>
     </policies>
