@@ -16,9 +16,9 @@ define([], function () {
                            data-index="${item.__autocomplete_indexName}"
                            data-queryId="${item.__autocomplete_queryID}">
                 <div class="info-without-thumb">
-                    ${components.Highlight({hit: item, attribute: 'name'})}
+                    ${this.safeHighlight(components, item, "name")}
                     <div class="details">
-                        ${components.Highlight({hit: item, attribute: 'content'})}
+                        ${this.safeHighlight(components, item, "content")}
                     </div>
                 </div>
                 <div class="algolia-clearfix"></div>
@@ -27,6 +27,19 @@ define([], function () {
 
         getFooterHtml: function () {
             return "";
+        },
+
+        safeHighlight: function(components, hit, attribute) {
+            const highlightResult = hit._highlightResult[attribute];
+
+            if (!highlightResult) return '';
+
+            try {
+                return components.Highlight({ hit, attribute });
+            } catch (e) {
+                return '';
+            }
         }
+
     };
 });
