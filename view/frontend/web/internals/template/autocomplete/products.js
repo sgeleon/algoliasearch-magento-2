@@ -22,7 +22,7 @@ define([], function () {
                            data-queryId="${item.__autocomplete_queryID}">
                 <div class="thumb"><img src="${item.thumbnail_url || ''}" alt="${item.name || ''}"/></div>
                 <div class="info">
-                    ${components.Highlight({hit: item, attribute: 'name'})}
+                    ${this.safeHighlight(components, item, "name")}
                     <div class="algoliasearch-autocomplete-category">
                         ${this.getColorHtml(item, components, html)}
                         ${this.getCategoriesHtml(item, components, html)}
@@ -43,16 +43,20 @@ define([], function () {
         // Helper methods //
         ////////////////////
 
-        getColorHtml: (item, components, html) => {
-            if (item._highlightResult.color == undefined || item._highlightResult.color.value == "") return "";
-
-            return html`<span class="color">color: ${components.Highlight({ hit: item, attribute: "color" })}</span>`;
+        getColorHtml: function(item, components, html) {
+            const highlight = this.safeHighlight(components, item, "color");
+            
+            return highlight 
+                ? html`<span class="color">color: ${highlight}</span>`
+                : "";
         },
 
-        getCategoriesHtml: (item, components, html) => {
-            if (item.categories_without_path == undefined || item.categories_without_path.length == 0) return "";
+        getCategoriesHtml: function(item, components, html) {
+            const highlight = this.safeHighlight(components, item, "categories_without_path", false);
 
-            return html`<span>in ${components.Highlight({ hit: item, attribute: "categories_without_path",})}</span>`;
+            return highlight 
+                ? html`<span>in ${highlight}</span>`
+                : "";
         },
 
         getOriginalPriceHtml: (item, html, priceGroup) => {
@@ -98,6 +102,30 @@ define([], function () {
             return html`${algoliaConfig.translations.seeIn} <span><a href="${resultDetails.allDepartmentsUrl}">${algoliaConfig.translations.allDepartments}</a></span> (${resultDetails.nbHits})
                 ${this.getFooterSearchCategoryLinks(html, resultDetails)}
             `;
+        },
+
+        // TODO: Refactor to external lib
+        safeHighlight: function(components, hit, attribute, strict = true) {
+            const highlightResult = hit._highlightResult[attribute];
+
+            if (!highlightResult) return '';
+
+            if (strict
+                &&
+                (
+                    (Array.isArray(highlightResult)) && !highlightResult.find(hit => hit.matchLevel !== 'none')
+                    ||
+                    highlightResult.value === ''
+                )
+            ) {
+                return '';
+            }
+
+            try {
+                return components.Highlight({ hit, attribute });
+            } catch (e) {
+                return '';
+            }
         }
 
     };

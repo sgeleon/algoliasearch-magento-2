@@ -15,12 +15,24 @@ define([], function () {
                             data-position="${item.position}"
                             data-index="${item.__autocomplete_indexName}"
                             data-queryId="${item.__autocomplete_queryID}">
-                ${components.Highlight({ hit: item, attribute: 'path' })} (${item.product_count})
+                ${this.safeHighlight(components, item, "path")} (${item.product_count})
             </a>`;
         },
 
         getFooterHtml: function () {
             return "";
         },
+
+        safeHighlight: function(components, hit, attribute) {
+            const highlightResult = hit._highlightResult[attribute];
+
+            if (!highlightResult) return '';
+
+            try {
+                return components.Highlight({ hit, attribute });
+            } catch (e) {
+                return '';
+            }
+        }
     };
 });
