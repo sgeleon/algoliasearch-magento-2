@@ -16,6 +16,11 @@ define(
             hasAddedParameters: false,
             useCookie:          false,
 
+            // Although events can accept both auth and anon tokens, queries can only accept a single token
+            determineUserToken() {
+                return algoliaAnalytics.getAuthenticatedUserToken() ?? algoliaAnalytics.getUserToken();
+            },
+
             track: function (algoliaConfig, partial = false) {
                 this.config = algoliaConfig;
                 this.defaultIndexName = algoliaConfig.indexName + '_products';
@@ -68,34 +73,34 @@ define(
                 }
             },
 
+            applyInsightsToSearchParams(params = {}) {
+                if (algoliaConfig.ccAnalytics.enabled) {
+                    params.clickAnalytics = true;
+                }
+
+                if (algoliaConfig.personalization.enabled) {
+                    params.enablePersonalization = true;
+                    params.userToken = this.determineUserToken();
+                }
+
+                return params;
+            },
+
             addSearchParameters: function () {
                 if (this.hasAddedParameters) {
                     return;
                 }
 
-                algolia.registerHook('beforeWidgetInitialization', function (allWidgetConfiguration) {
-                    allWidgetConfiguration.configure = allWidgetConfiguration.configure || {};
-                    if (algoliaConfig.ccAnalytics.enabled) {
-                        allWidgetConfiguration.configure.clickAnalytics = true;
-                    }
-
-                    if (algoliaConfig.personalization.enabled) {
-                        allWidgetConfiguration.configure.enablePersonalization = true;
-                        allWidgetConfiguration.configure.userToken = algoliaAnalytics.getUserToken();
-                    }
+                algolia.registerHook('beforeWidgetInitialization', (allWidgetConfiguration) => {
+                    allWidgetConfiguration.configure = algoliaInsights.applyInsightsToSearchParams(
+                        allWidgetConfiguration.configure
+                    );
 
                     return allWidgetConfiguration;
                 });
 
-                algolia.registerHook('afterAutocompleteProductSourceOptions', function (options) {
-                    if (algoliaConfig.ccAnalytics.enabled) {
-                        options.clickAnalytics = true;
-                    }
-                    if (algoliaConfig.personalization.enabled) {
-                        options.enablePersonalization = true;
-                        options.userToken = algoliaAnalytics.getUserToken();
-                    }
-                    return options;
+                algolia.registerHook('afterAutocompleteProductSourceOptions', (options) => {
+                    return algoliaInsights.applyInsightsToSearchParams(options);
                 });
 
                 this.hasAddedParameters = true;
