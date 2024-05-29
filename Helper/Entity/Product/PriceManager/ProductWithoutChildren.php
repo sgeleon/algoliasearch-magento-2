@@ -380,7 +380,7 @@ abstract class ProductWithoutChildren
                 $this->formatPrice($tierPrice[0], $currencyCode);
         }
     }
-    # TODO bookmarking getRulePrice function for a future refactor effort.
+    // TODO bookmarking getRulePrice function for a future refactor effort.
     /**
      * @param $groupId
      * @param $product
