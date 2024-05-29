@@ -7,6 +7,7 @@ use Algolia\AlgoliaSearch\Helper\AnalyticsHelper;
 use Algolia\AlgoliaSearch\ViewModel\Adminhtml\BackendView;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Locale\ResolverInterface;
 use Magento\Store\Api\Data\StoreInterface;
 
 class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterface
@@ -26,24 +27,30 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
     /** @var IndexEntityDataProvider */
     private $indexEntityDataProvider;
 
+    /** @var ResolverInterface */
+    private $localeResolver;
+
     /** @var array */
     private $analyticsParams = [];
 
     /**
-     * Index constructor.
+     *  Index constructor.
      *
      * @param BackendView $backendView
      * @param AnalyticsHelper $analyticsHelper
      * @param IndexEntityDataProvider $indexEntityDataProvider
+     * @param ResolverInterface $localeResolver
      */
     public function __construct(
         BackendView $backendView,
         AnalyticsHelper $analyticsHelper,
-        IndexEntityDataProvider $indexEntityDataProvider
+        IndexEntityDataProvider $indexEntityDataProvider,
+        ResolverInterface $localeResolver
     ) {
         $this->backendView = $backendView;
         $this->analyticsHelper = $analyticsHelper;
         $this->indexEntityDataProvider = $indexEntityDataProvider;
+        $this->localeResolver = $localeResolver;
     }
 
     /**
@@ -54,9 +61,13 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
         return $this->backendView;
     }
 
-    public function getTimeZone()
+    /**
+     * @return string
+     * @throws NoSuchEntityException
+     */
+    public function getTimeZone(): string
     {
-        return $this->backendView->getDateTime()->getConfigTimezone(
+        return (string) $this->backendView->getDateTime()->getConfigTimezone(
             \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
             $this->getStore()->getId()
         );
@@ -81,18 +92,16 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
      *
      * @return array
      */
-    public function getAnalyticsParams($additional = [])
+    public function getAnalyticsParams(array $additional = []): array
     {
         if (empty($this->analyticsParams)) {
             $params = ['index' => $this->getIndexName()];
             if ($formData = $this->getBackendView()->getBackendSession()->getAlgoliaAnalyticsFormData()) {
-                $dateTime = $this->getBackendView()->getDateTime();
-                $timeZone = $this->getTimeZone();
-                if (isset($formData['from']) && $formData['from'] !== '') {
-                    $params['startDate'] = $dateTime->date($formData['from'], $timeZone, true, false)->format('Y-m-d');
+                if (!empty($formData['from'])) {
+                    $params['startDate'] = $this->formatFormSubmittedDate($formData['from']);
                 }
-                if (isset($formData['to']) && $formData['to'] !== '') {
-                    $params['endDate'] = $dateTime->date($formData['to'], $timeZone, true, false)->format('Y-m-d');
+                if (!empty($formData['to'])) {
+                    $params['endDate'] =  $this->formatFormSubmittedDate($formData['to']);
                 }
             }
 
@@ -100,6 +109,39 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
         }
 
         return array_merge($this->analyticsParams, $additional);
+    }
+
+    /**
+     * @param string $dateString
+     * @return string
+     * @throws NoSuchEntityException
+     */
+    protected function formatFormSubmittedDate(string $dateString): string
+    {
+        $timezone = $this->getTimeZone();
+        $dateTime = $this->parseFormSubmittedDate($dateString, $timezone);
+        return $dateTime->format(AnalyticsHelper::DATE_FORMAT_API);
+    }
+
+    /**
+     * @param string|null $dateString
+     * @param string|null $timezone
+     * @return \DateTime
+     * @throws NoSuchEntityException
+     */
+    protected function parseFormSubmittedDate(string $dateString = null, string $timezone = null): \DateTime
+    {
+        if (empty($timezone)) {
+            $timezone = $this->getTimeZone();
+        }
+
+        if (empty($dateString)) {
+            return new \DateTime('now', new \DateTimeZone($timezone));
+        }
+
+        $dateFormatter = $this->analyticsHelper->getAnalyticsDatePickerFormatter($timezone);
+        $parsedDate = $dateFormatter->parse($dateString);
+        return (new \DateTime('now', new \DateTimeZone($timezone)))->setTimestamp($parsedDate);
     }
 
     public function getTotalCountOfSearches()
@@ -306,14 +348,15 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
      *
      * @return bool
      */
-    public function checkIsValidDateRange()
+    public function checkIsValidDateRange(): bool
     {
         if ($formData = $this->getBackendView()->getBackendSession()->getAlgoliaAnalyticsFormData()) {
-            if (isset($formData['from']) && !empty($formData['from'])) {
-                $dateTime = $this->getBackendView()->getDateTime();
-                $timeZone = $this->getTimeZone();
-                $startDate = $dateTime->date($formData['from'], $timeZone, true, false);
-                $diff = date_diff($startDate, $dateTime->date(null, $timeZone, true, null));
+            if (!empty($formData['from'])) {
+                $timezone = $this->getTimeZone();
+
+                $startDate = $this->parseFormSubmittedDate($formData['from'], $timezone);
+                $now = $this->parseFormSubmittedDate(null, $timezone);
+                $diff = date_diff($startDate, $now);
 
                 if ($diff->days > $this->getAnalyticRetentionDays()) {
                     return false;

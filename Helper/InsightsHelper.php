@@ -17,6 +17,13 @@ class InsightsHelper
 
     public const ALGOLIA_CUSTOMER_USER_TOKEN_COOKIE_NAME = 'aa-search';
 
+    /**
+     * Up to 129 chars per https://www.algolia.com/doc/rest-api/insights/#method-param-usertoken
+     * But capping at legacy 64 chars for backward compat
+     */
+    /** @var int */
+    public const ALGOLIA_USER_TOKEN_MAX_LENGTH = 64;
+
     /** @var ConfigHelper */
     private $configHelper;
 
@@ -25,7 +32,7 @@ class InsightsHelper
 
     /** @var SessionManagerInterface */
     private $sessionManager;
-    
+
     /** @var CookieManagerInterface */
     private $cookieManager;
 
