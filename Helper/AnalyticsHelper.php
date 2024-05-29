@@ -14,6 +14,19 @@ class AnalyticsHelper
     public const ANALYTICS_HITS_PATH = '/2/hits';
     public const ANALYTICS_FILTER_PATH = '/2/filters';
     public const ANALYTICS_CLICKS_PATH = '/2/clicks';
+
+    /** @var ConfigHelper */
+    private $configHelper;
+
+    /** @var IndexEntityDataProvider */
+    private $entityHelper;
+
+    /** @var Logger */
+    private $logger;
+
+    /** @var ResolverInterface */
+    private $localeResolver;
+
     public const DATE_FORMAT_PICKER             = 'dd MMM yyyy';
     public const DATE_FORMAT_API                = 'Y-m-d';
 
@@ -55,11 +68,15 @@ class AnalyticsHelper
      * @param ResolverInterface $localeResolver
      */
     public function __construct(
-        private ConfigHelper            $configHelper,
-        private IndexEntityDataProvider $entityHelper,
-        private Logger                  $logger,
-        private ResolverInterface       $localeResolver
+        ConfigHelper $configHelper,
+        IndexEntityDataProvider $entityHelper,
+        Logger $logger,
+        ResolverInterface $localeResolver
     ) {
+        $this->configHelper = $configHelper;
+        $this->entityHelper = $entityHelper;
+        $this->logger = $logger;
+        $this->localeResolver = $localeResolver;
         $this->region = $this->configHelper->getAnalyticsRegion();
     }
 

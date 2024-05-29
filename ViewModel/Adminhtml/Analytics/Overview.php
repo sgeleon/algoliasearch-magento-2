@@ -18,21 +18,40 @@ class Overview implements \Magento\Framework\View\Element\Block\ArgumentInterfac
 
     public const DEFAULT_RETENTION_DAYS = 90;
 
+    /** @var BackendView */
+    private $backendView;
+
+    /** @var AnalyticsHelper */
+    private $analyticsHelper;
+
+    /** @var IndexEntityDataProvider */
+    private $indexEntityDataProvider;
+
+    /** @var ResolverInterface */
+    private $localeResolver;
+
     /** @var array */
     private $analyticsParams = [];
 
     /**
+     *  Index constructor.
+     *
      * @param BackendView $backendView
      * @param AnalyticsHelper $analyticsHelper
      * @param IndexEntityDataProvider $indexEntityDataProvider
      * @param ResolverInterface $localeResolver
      */
     public function __construct(
-        protected BackendView             $backendView,
-        protected AnalyticsHelper         $analyticsHelper,
-        protected IndexEntityDataProvider $indexEntityDataProvider,
-        protected ResolverInterface       $localeResolver
-    ) { }
+        BackendView $backendView,
+        AnalyticsHelper $analyticsHelper,
+        IndexEntityDataProvider $indexEntityDataProvider,
+        ResolverInterface $localeResolver
+    ) {
+        $this->backendView = $backendView;
+        $this->analyticsHelper = $analyticsHelper;
+        $this->indexEntityDataProvider = $indexEntityDataProvider;
+        $this->localeResolver = $localeResolver;
+    }
 
     /**
      * @return BackendView
