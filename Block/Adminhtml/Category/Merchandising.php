@@ -6,15 +6,15 @@ use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Data;
 use Magento\Backend\Block\Template\Context;
 use Magento\Catalog\Model\Category;
-use Algolia\AlgoliaSearch\Registry\CurrentCategory;
+use Algolia\AlgoliaSearch\Service\GetCurrentCategoryService;
 
 class Merchandising extends \Magento\Backend\Block\Template
 {
     /** @var string */
     protected $_template = 'catalog/category/edit/merchandising.phtml';
 
-    /** @var CurrentCategory */
-    protected $currentCategory;
+    /** @var GetCurrentCategoryService */
+    protected $getCurrentCategoryService;
 
     /** @var ConfigHelper */
     private $configHelper;
@@ -27,19 +27,19 @@ class Merchandising extends \Magento\Backend\Block\Template
 
     /**
      * @param Context $context
-     * @param CurrentCategory $currentCategory
+     * @param GetCurrentCategoryService $getCurrentCategoryService
      * @param ConfigHelper $configHelper
      * @param Data $coreHelper
      * @param array $data
      */
     public function __construct(
         Context $context,
-        CurrentCategory $currentCategory,
+        GetCurrentCategoryService $getCurrentCategoryService,
         ConfigHelper $configHelper,
         Data $coreHelper,
         array $data = []
     ) {
-        $this->currentCategory = $currentCategory;
+        $this->getCurrentCategoryService = $getCurrentCategoryService;
         $this->configHelper = $configHelper;
         $this->coreHelper = $coreHelper;
         $this->storeManager = $context->getStoreManager();
@@ -50,7 +50,11 @@ class Merchandising extends \Magento\Backend\Block\Template
     /** @return Category | null */
     public function getCategory()
     {
-        return $this->currentCategory->get();
+        $categoryId = $this->getRequest()->getParam('id');
+        if (!$categoryId) {
+            return null;
+        }
+        return $this->getCurrentCategoryService->getCategory($categoryId);
     }
 
     /** @return bool */
