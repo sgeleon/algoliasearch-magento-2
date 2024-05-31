@@ -76,6 +76,10 @@
                     <title>Trending items</title>
                     <num_of_trending_items>6</num_of_trending_items>
                 </trends_item>
+                <looking_similar>
+                    <title>Looking Similar</title>
+                    <num_of_products>6</num_of_products>
+                </looking_similar>
             </recommend>
         </algoliasearch_recommend>
         <algoliasearch_advanced>
