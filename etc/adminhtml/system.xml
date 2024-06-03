@@ -854,22 +854,6 @@
                         <validate>required-entry</validate>
                         <label>Title</label>
                     </field>
-                    <field id="facet_name" translate="label comment" type="text" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Facet Name</label>
-                        <comment>
-                            <![CDATA[
-                                Please Input Valid facet attribute name EX:- color,size etc.
-                            ]]>
-                        </comment>
-                    </field>
-                    <field id="facet_value" translate="label comment" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1">
-                        <label>Facet Value</label>
-                        <comment>
-                            <![CDATA[
-                                Please Enter Valid Facet Value.
-                            ]]>
-                        </comment>
-                    </field>
                     <field id="num_of_products" translate="label comment" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1">
                         <label>Number of products to display</label>
                         <validate>required-entry validate-digits validate-greater-than-zero</validate>
