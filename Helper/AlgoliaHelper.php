@@ -356,7 +356,7 @@ class AlgoliaHelper extends AbstractHelper
         } catch (\Exception $e) {
         }
 
-        $removes = ['slaves', 'replicas'];
+        $removes = ['slaves', 'replicas', 'decompoundedAttributes'];
 
         if (isset($settings['attributesToIndex'])) {
             $settings['searchableAttributes'] = $settings['attributesToIndex'];
