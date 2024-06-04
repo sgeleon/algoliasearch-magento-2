@@ -369,6 +369,9 @@
                             The number of products displayed on the instant search results page. Default value is 9.
                         ]]>
                     </comment>
+                    <depends>
+                        <field id="is_instant_enabled">1</field>
+                    </depends>
                 </field>
                 <field id="facets" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Facets</label>
@@ -394,8 +397,11 @@
                             </div>
                         ]]>
                     </comment>
+                    <depends>
+                        <field id="is_instant_enabled">1</field>
+                    </depends>
                 </field>
-                <field id="max_values_per_facet" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="max_values_per_facet" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <validate>validate-digits</validate>
                     <label>Number of values per facet</label>
                     <comment>
@@ -403,6 +409,9 @@
                             The number of values each facet can display. Default value is 10.
                         ]]>
                     </comment>
+                    <depends>
+                        <field id="is_instant_enabled">1</field>
+                    </depends>
                 </field>
 <!--                <field id="use_virtual_replica" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">-->
 <!--                    <label>Use Virtual Replica</label>-->
@@ -417,7 +426,7 @@
 <!--                        <field id="is_instant_enabled">1</field>-->
 <!--                    </depends>-->
 <!--                </field>-->
-                <field id="sorts" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                <field id="sorts" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Sorts</label>
                     <frontend_model>Algolia\AlgoliaSearch\Model\Source\Sorts</frontend_model>
                     <backend_model>Algolia\AlgoliaSearch\Model\Backend\Sorts</backend_model>
@@ -434,6 +443,9 @@
                             -->
                         ]]>
                     </comment>
+                    <depends>
+                        <field id="is_instant_enabled">1</field>
+                    </depends>
                 </field>
                 <field id="instantsearch_searchbox" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable searchBox Widget in Instant Search Page</label>
@@ -443,6 +455,9 @@
                             The searchBox widget is used to let the user perform a text-based query. <a target="_blank" href="https://www.algolia.com/doc/api-reference/widgets/search-box/js/#about"> Know More </a>
                         ]]>
                     </comment>
+                    <depends>
+                        <field id="is_instant_enabled">1</field>
+                    </depends>
                 </field>
                 <field id="replace_categories" translate="label comment" type="select" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Replace categories page</label>
@@ -452,6 +467,9 @@
                             Do you want to replace default Magento category pages (PLPs) by an instant search results page?
                         ]]>
                     </comment>
+                    <depends>
+                        <field id="is_instant_enabled">1</field>
+                    </depends>
                 </field>
                 <field id="show_suggestions_on_no_result_page" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Show query suggestions when no results</label>
