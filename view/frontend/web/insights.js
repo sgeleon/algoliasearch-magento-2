@@ -12,7 +12,6 @@ define([
         defaultIndexName  : null,
         isTracking        : false,
         hasAddedParameters: false,
-        useCookie         : false,
 
         useCookie() {
             return !this.config.cookieConfiguration.cookieRestrictionModeEnabled
