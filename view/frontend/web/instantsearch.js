@@ -481,8 +481,6 @@ define([
                 placeholder: algoliaConfig.translations.searchFor,
                 showSubmit : false,
                 queryHook  : (inputValue, search) => {
-                    const encodedHtml =
-                        algolia.htmlspecialcharsEncode(inputValue);
                     if (
                         algoliaConfig.isSearchPage &&
                         !algoliaConfig.request.categoryId &&
@@ -491,7 +489,7 @@ define([
                         $('.page-title-wrapper span.base').html(
                             algoliaConfig.translations.searchTitle +
                             ": '" +
-                            encodedHtml +
+                            algolia.htmlspecialcharsEncode(inputValue) +
                             "'"
                         );
                     }
