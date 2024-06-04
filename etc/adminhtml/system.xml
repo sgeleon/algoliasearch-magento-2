@@ -826,6 +826,53 @@
                         </comment>
                     </field>
                 </group>
+                <group id="looking_similar" translate="label" type="text" sortOrder="0" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Looking Similar</label>
+                    <field id="is_looking_similar_enabled_on_pdp" translate="label comment" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Enable on PDP</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <comment>
+                            <![CDATA[
+                                Do you want Looking Similar Items to display inside a product detail page after main product info?
+                            ]]>
+                        </comment>
+                    </field>
+                    <field id="is_looking_similar_enabled_on_cart_page" translate="label comment" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Enable on Cart Page</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <comment>
+                            <![CDATA[
+                                Do you want Looking Similar Items to display inside a cart page after cart item info?
+                            ]]>
+                        </comment>
+                    </field>
+                    <field id="is_looking_similar_enabled" translate="label comment" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Enable Looking Similar Widgets</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                    <field id="title" translate="label comment" type="text" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <validate>required-entry</validate>
+                        <label>Title</label>
+                    </field>
+                    <field id="num_of_products" translate="label comment" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Number of products to display</label>
+                        <validate>required-entry validate-digits validate-greater-than-zero</validate>
+                        <comment>
+                            <![CDATA[
+                                How many Looking Similar Products do you want to display? Default value is 6.
+                            ]]>
+                        </comment>
+                    </field>
+                    <field id="is_addtocart_enabled" translate="label comment" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="1">
+                        <label>Enable Add To Cart Button</label>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                        <comment>
+                            <![CDATA[
+                            Do you want to display an "Add To Cart" button in Looking Similar Items?
+                            ]]>
+                        </comment>
+                    </field>
+                </group>
             </group>
         </section>
         <section id="algoliasearch_images" translate="label" type="text" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
