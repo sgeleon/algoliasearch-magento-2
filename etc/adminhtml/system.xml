@@ -404,28 +404,34 @@
                         ]]>
                     </comment>
                 </field>
-                <field id="use_virtual_replica" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Use Virtual Replica</label>
-                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Replica</backend_model>
-                    <comment>
-                        <![CDATA[
-                            Virtual Replica is only available on Premium plans <a target="_blank" href="https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/?client=php#switching-to-virtual-replica">documentation</a>
-                        ]]>
-                    </comment>
-                    <depends>
-                        <field id="is_instant_enabled">1</field>
-                    </depends>
-                </field>
+<!--                <field id="use_virtual_replica" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">-->
+<!--                    <label>Use Virtual Replica</label>-->
+<!--                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>-->
+<!--                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Replica</backend_model>-->
+<!--                    <comment>-->
+<!--                        <![CDATA[-->
+<!--                            Virtual Replica is only available on Premium plans <a target="_blank" href="https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/?client=php#switching-to-virtual-replica">documentation</a>-->
+<!--                        ]]>-->
+<!--                    </comment>-->
+<!--                    <depends>-->
+<!--                        <field id="is_instant_enabled">1</field>-->
+<!--                    </depends>-->
+<!--                </field>-->
                 <field id="sorts" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Sorts</label>
                     <frontend_model>Algolia\AlgoliaSearch\Model\Source\Sorts</frontend_model>
                     <backend_model>Algolia\AlgoliaSearch\Model\Backend\Sorts</backend_model>
                     <comment>
                         <![CDATA[
-                            Specify different sorting options you want to offer on a search results page.<br>
-                            Each sort will significantly increase the number of records you store in Algolia.<br>
-                            Read more in <a target="_blank" href="https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/?utm_source=magento&utm_medium=extension&utm_campaign=magento_2&utm_term=shop-owner&utm_content=doc-link#sorting-strategies">documentation</a>.
+                            Specify different sorting options you want to offer on a search results page and (if enabled) category pages.<br>
+                            By default, each sort is created as a full replica of your primary index which can significantly increase the number of records you store in Algolia.<br>
+                            Premium plans can utilize virtual replicas but there are differences in how these kinds of sorts behave and certain limitations apply.<br>
+                            For further details see <a target="_blank" href="https://www.algolia.com/doc/guides/managing-results/refine-results/sorting/">our documentation</a>
+                            <!--
+                            TODO: Update this documentation and provide links
+                            <a target="_blank" href="https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/?client=php#switching-to-virtual-replica">documentation</a>
+                            <a target="_blank" href="https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/?utm_source=magento&utm_medium=extension&utm_campaign=magento_2&utm_term=shop-owner&utm_content=doc-link#sorting-strategies">documentation</a>.
+                            -->
                         ]]>
                     </comment>
                 </field>
