@@ -35,14 +35,14 @@ class ConfigHelper
     public const REPLACE_CATEGORIES = 'algoliasearch_instant/instant/replace_categories';
     public const INSTANT_SELECTOR = 'algoliasearch_instant/instant/instant_selector';
     public const NUMBER_OF_PRODUCT_RESULTS = 'algoliasearch_instant/instant/number_product_results';
-    public const FACETS = 'algoliasearch_instant/instant/facets';
-    public const MAX_VALUES_PER_FACET = 'algoliasearch_instant/instant/max_values_per_facet';
-    public const SORTING_INDICES = 'algoliasearch_instant/instant/sorts';
-    public const SHOW_SUGGESTIONS_NO_RESULTS = 'algoliasearch_instant/instant/show_suggestions_on_no_result_page';
-    public const XML_ADD_TO_CART_ENABLE = 'algoliasearch_instant/instant/add_to_cart_enable';
-    public const INFINITE_SCROLL_ENABLE = 'algoliasearch_instant/instant/infinite_scroll_enable';
-    public const SEARCHBOX_ENABLE = 'algoliasearch_instant/instant/instantsearch_searchbox';
-    public const HIDE_PAGINATION = 'algoliasearch_instant/instant/hide_pagination';
+    public const FACETS = 'algoliasearch_instant/instant_facets/facets';
+    public const MAX_VALUES_PER_FACET = 'algoliasearch_instant/instant_facets/max_values_per_facet';
+    public const SORTING_INDICES = 'algoliasearch_instant/instant_sorts/sorts';
+    public const SEARCHBOX_ENABLE = 'algoliasearch_instant/instant_options/instantsearch_searchbox';
+    public const SHOW_SUGGESTIONS_NO_RESULTS = 'algoliasearch_instant/instant_options/show_suggestions_on_no_result_page';
+    public const XML_ADD_TO_CART_ENABLE = 'algoliasearch_instant/instant_options/add_to_cart_enable';
+    public const INFINITE_SCROLL_ENABLE = 'algoliasearch_instant/instant_options/infinite_scroll_enable';
+    public const HIDE_PAGINATION = 'algoliasearch_instant/instant_options/hide_pagination';
 
     public const IS_POPUP_ENABLED = 'algoliasearch_autocomplete/autocomplete/is_popup_enabled';
     public const NB_OF_PRODUCTS_SUGGESTIONS = 'algoliasearch_autocomplete/autocomplete/nb_of_products_suggestions';

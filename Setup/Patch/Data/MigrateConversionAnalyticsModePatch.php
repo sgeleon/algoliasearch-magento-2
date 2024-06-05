@@ -10,6 +10,7 @@ use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
+use Magento\Framework\Setup\Patch\PatchInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 class MigrateConversionAnalyticsModePatch implements DataPatchInterface
@@ -26,13 +27,15 @@ class MigrateConversionAnalyticsModePatch implements DataPatchInterface
     /**
      * @inheritDoc
      */
-    public function apply()
+    public function apply(): PatchInterface
     {
         $this->moduleDataSetup->getConnection()->startSetup();
 
         $this->configChecker->checkAndApplyAllScopes(ConfigHelper::CC_CONVERSION_ANALYTICS_MODE, [$this, 'migrateSetting']);
 
         $this->moduleDataSetup->getConnection()->endSetup();
+
+        return $this;
     }
 
     /**
