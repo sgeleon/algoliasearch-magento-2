@@ -1,3 +1,5 @@
+const observing = [];
+
 require(
 	[
 		'jquery',
@@ -10,8 +12,8 @@ require(
 		function addDashboardWarnings() {
 			// rows
 			var rowIds = [
-				'#row_algoliasearch_instant_instant_facets',
-				'#row_algoliasearch_instant_instant_max_values_per_facet'
+				'#row_algoliasearch_instant_instant_facets_facets',
+				'#row_algoliasearch_instant_instant_facets_max_values_per_facet'
 			];
 
 			var rowWarning = '<div class="algolia_dashboard_warning">';
@@ -51,7 +53,7 @@ require(
 			}
 		}
 
-		if ($('#algoliasearch_instant_instant_facets').length > 0) {
+		if ($('#algoliasearch_instant_instant_facets_facets').length > 0) {
 			var addButton = $('#algoliasearch_instant_instant_facets tfoot .action-add');
 			addButton.on('click', function(){
 				handleFacetQueryRules();
@@ -61,32 +63,67 @@ require(
 		}
 
 		function handleFacetQueryRules() {
-			var facets = $('#algoliasearch_instant_instant_facets tbody tr');
+			var facets = $('#algoliasearch_instant_instant_facets_facets tbody tr');
 
 			for (var i=0; i < facets.length; i++) {
-				var rowId = $(facets[i]).attr('id');
-				var searchableSelect = $('select[name="groups[instant][fields][facets][value][' + rowId + '][searchable]"]');
+				let rowId = $(facets[i]).attr('id');
+				console.log("Row ID:", rowId);
+				let searchableSelect = $('select[name="groups[instant_facets][fields][facets][value][' + rowId + '][searchable]"]');
 
 				searchableSelect.on('change', function(){
 					configQrFromSearchableSelect($(this));	
 				});
 
-				configQrFromSearchableSelect(searchableSelect);	
+				// setTimeout(() => { 
+					// console.log("Invoke on delay");
+					configQrFromSearchableSelect(searchableSelect) 
+				// }, 100);
+					
 			}
 		}
 
 		function configQrFromSearchableSelect(searchableSelect) {
 			var rowId = searchableSelect.parent().parent().attr('id');
-			var qrSelect = $('select[name="groups[instant][fields][facets][value][' + rowId + '][create_rule]"]');
+			const qrSelectId = 'select[name="groups[instant_facets][fields][facets][value][' + rowId + '][create_rule]"]';
+
+			if (!observing[qrSelectId]) {
+
+				const targetNode = document.querySelector(qrSelectId);
+				const config = { attributes: true, childList: false, subtree: false, attributeOldValue : true };
+				// Callback function to execute when mutations are observed
+				const callback = function (mutationsList, observer) {
+					console.log("MutationObserver callback triggered.");
+					console.trace();
+					for (var mutation of mutationsList) {
+						if (mutation.type === 'attributes') {
+							console.log(
+								'The ' + mutation.attributeName + ' attribute was modified: ',
+								performance.now()
+							);
+						}
+						console.log(mutation);
+					}
+				};
+				const observer = new MutationObserver(callback);
+				observer.observe(targetNode, config);
+
+				observing[qrSelectId] = true;
+			}
+			
+			// var searchableSelect = $('select[name="groups[instant_facets][fields][facets][value][' + rowId + '][searchable]"]');
+			var qrSelect = $(qrSelectId);
 			if (qrSelect.length > 0) {
 				if (searchableSelect.val() == "2") {
 					qrSelect.val('2');
 					qrSelect.attr('disabled','disabled');
+					qrSelect.attr('readonly', 'readonly');
+					console.log("Time of disabling: ", performance.now());
 				} else {
 					qrSelect.removeAttr('disabled');
+					qrSelect.removeAttr('readonly');
 				}
 			} else {
-				$('#row_algoliasearch_instant_instant_facets .algolia_block').hide();
+				$('#row_algoliasearch_instant_instant_facets_facets .algolia_block').hide();
 			}
 		}
 
