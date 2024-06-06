@@ -8,6 +8,7 @@ use Algolia\AlgoliaSearch\Exception\ProductNotVisibleException;
 use Algolia\AlgoliaSearch\Exception\ProductOutOfStockException;
 use Algolia\AlgoliaSearch\Exception\ProductReindexingException;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
+use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
@@ -31,6 +32,8 @@ use Magento\Directory\Model\Currency as CurrencyHelper;
 use Magento\Eav\Model\Config;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -460,6 +463,35 @@ class ProductHelper
         /*
          * Handle replicas
          */
+        $this->setReplicaSettings($indexName, $storeId);
+
+        if ($saveToTmpIndicesToo === true) {
+            try {
+                $this->algoliaHelper->copySynonyms($indexName, $indexNameTmp);
+                $this->algoliaHelper->waitLastTask();
+                $this->logger->log('
+                    Copying synonyms from production index to "' . $indexNameTmp . '" to not erase them with the index move.
+                ');
+            } catch (AlgoliaException $e) {
+                $this->logger->error('Error encountered while copying synonyms: ' . $e->getMessage());
+            }
+
+            try {
+                $this->algoliaHelper->copyQueryRules($indexName, $indexNameTmp);
+                $this->algoliaHelper->waitLastTask();
+                $this->logger->log('
+                    Copying query rules from production index to "' . $indexNameTmp . '" to not erase them with the index move.
+                ');
+            } catch (AlgoliaException $e) {
+                if ($e->getCode() !== 404) {
+                    throw $e;
+                }
+            }
+        }
+    }
+
+    protected function setReplicaSettings(string $indexName, int $storeId): void
+    {
         $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
         $replicas = [];
 
@@ -471,7 +503,7 @@ class ProductHelper
 
         // Managing Virtual Replica
         if ($this->configHelper->useVirtualReplica($storeId)) {
-           $replicas = $this->handleVirtualReplica($replicas);
+            $replicas = $this->handleVirtualReplica($replicas);
         }
 
         // Merge current replicas with sorting replicas to not delete A/B testing replica indices
@@ -517,30 +549,6 @@ class ProductHelper
 
         // Commented out as it doesn't delete anything now because of merging replica indices earlier
         // $this->deleteUnusedReplicas($indexName, $replicas, $setReplicasTaskId);
-
-        if ($saveToTmpIndicesToo === true) {
-            try {
-                $this->algoliaHelper->copySynonyms($indexName, $indexNameTmp);
-                $this->algoliaHelper->waitLastTask();
-                $this->logger->log('
-                    Copying synonyms from production index to "' . $indexNameTmp . '" to not erase them with the index move.
-                ');
-            } catch (AlgoliaException $e) {
-                $this->logger->error('Error encountered while copying synonyms: ' . $e->getMessage());
-            }
-
-            try {
-                $this->algoliaHelper->copyQueryRules($indexName, $indexNameTmp);
-                $this->algoliaHelper->waitLastTask();
-                $this->logger->log('
-                    Copying query rules from production index to "' . $indexNameTmp . '" to not erase them with the index move.
-                ');
-            } catch (AlgoliaException $e) {
-                if ($e->getCode() !== 404) {
-                    throw $e;
-                }
-            }
-        }
     }
 
     /**
@@ -1548,46 +1556,58 @@ class ProductHelper
     /**
      * @param $replica
      * @return array
+     * @deprecated This method has been superseded by `decorateReplicasSetting` and should no longer be used
      */
     public function handleVirtualReplica($replicas)
     {
-        $virtualReplicaArray = [];
-        foreach ($replicas as $replica) {
-            $virtualReplicaArray[] = 'virtual(' . $replica . ')';
-        }
-        return $virtualReplicaArray;
+        throw new AlgoliaException("This method is no longer supported.");
     }
 
     /**
-     * @param $indexName
-     * @param $storeId
-     * @param $sortingAttribute
+     * Return a formatted Algolia `replicas` configuration for the provided sorting indices
+     * @param mixed[] $sortingIndices Array of sorting index objects
+     * @return string[]
+     */
+    protected function decorateReplicasSetting(array $sortingIndices): array {
+        return array_map(
+            function($sort) {
+                $replica = $sort['name'];
+                return !! $sort['virtualReplica']
+                    ? "virtual($replica)"
+                    : $replica;
+            },
+            $sortingIndices
+        );
+    }
+
+    /**
+     * @param string $indexName
+     * @param int $storeId
+     * @param bool $sortingAttribute
      * @return void
      * @throws AlgoliaException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws ExceededRetriesException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     * @deprecated This function may be removed in a future release
      */
-    public function handlingReplica($indexName, $storeId, $sortingAttribute = false) {
+    public function handlingReplica(string $indexName, int $storeId, $sortingAttribute = false): void
+    {
         $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId, null, $sortingAttribute);
         if ($this->configHelper->isInstantEnabled($storeId)) {
-            $replicas = array_values(array_map(function ($sortingIndex) {
-                return $sortingIndex['name'];
-            }, $sortingIndices));
+            $newReplicas = $this->decorateReplicasSetting($sortingIndices);
 
             try {
-                $replicasFormated = $this->handleVirtualReplica($replicas);
-                $availableReplicaMatch = array_merge($replicasFormated, $replicas);
-                if ($this->configHelper->useVirtualReplica($storeId)) {
-                   $replicas = $replicasFormated;
-                }
                 $currentSettings = $this->algoliaHelper->getSettings($indexName);
-                if (is_array($currentSettings) && array_key_exists('replicas', $currentSettings)) {
-                    $replicasRequired = array_values(array_diff($currentSettings['replicas'], $availableReplicaMatch));
-                    $this->algoliaHelper->setSettings($indexName, ['replicas' => $replicasRequired]);
+                if (array_key_exists('replicas', $currentSettings)) {
+                    $oldReplicas = $currentSettings['replicas'];
+                    $replicasToDelete = array_diff($oldReplicas, $newReplicas);
+                    $this->algoliaHelper->setSettings($indexName, ['replicas' => $newReplicas]);
                     $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
                     $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
-                    if (count($availableReplicaMatch) > 0) {
-                        foreach ($availableReplicaMatch as $replicaIndex) {
-                            $this->algoliaHelper->deleteIndex($replicaIndex);
+                    if (count($replicasToDelete) > 0) {
+                        foreach ($replicasToDelete as $deletedReplica) {
+                            $this->algoliaHelper->deleteIndex($deletedReplica);
                         }
                     }
                 }
@@ -1598,6 +1618,5 @@ class ProductHelper
                 }
             }
         }
-        return true;
     }
 }
