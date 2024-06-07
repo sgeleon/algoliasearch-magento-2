@@ -207,6 +207,11 @@ class ConfigHelper
     protected $cookieHelper;
 
     /**
+     * @var mixed[]
+     */
+    protected ?array $_sortingIndices = null;
+
+    /**
      * @param Magento\Framework\App\Config\ScopeConfigInterface $configInterface
      * @param StoreManagerInterface $storeManager
      * @param Currency $currency
@@ -1013,8 +1018,18 @@ class ConfigHelper
      * @throws Magento\Framework\Exception\LocalizedException
      * @throws Magento\Framework\Exception\NoSuchEntityException
      */
-    public function getSortingIndices($originalIndexName, $storeId = null, $currentCustomerGroupId = null, $attrs = null)
+    public function getSortingIndices(
+        $originalIndexName,
+        $storeId = null,
+        $currentCustomerGroupId = null,
+        $attrs = null
+    )
     {
+        if (isset($this->_sortingIndices)) {
+            return $this->_sortingIndices;
+        }
+
+        // TODO: Remove this override - poorly conceived
         if (!$attrs){
             $attrs = $this->getSorting($storeId);
         }
@@ -1087,7 +1102,7 @@ class ConfigHelper
             }
         }
         $attrsToReturn = [];
-        if (count($attributesToAdd) > 0) {
+        if (count($attributesToAdd)) {
             foreach ($attrs as $key => $attr) {
                 if ($attr['attribute'] == 'price' && isset($attributesToAdd[$attr['sort']])) {
                     $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
@@ -1096,13 +1111,10 @@ class ConfigHelper
                 }
             }
         }
-        if (count($attrsToReturn) > 0) {
-            return $attrsToReturn;
-        }
-        if (is_array($attrs)) {
-            return $attrs;
-        }
-        return [];
+
+        $this->_sortingIndices = $attrsToReturn;
+
+        return $this->_sortingIndices;
     }
 
     /***
