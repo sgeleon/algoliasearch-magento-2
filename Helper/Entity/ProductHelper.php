@@ -40,72 +40,6 @@ use Magento\Store\Model\StoreManagerInterface;
 class ProductHelper
 {
     /**
-     * @var CollectionFactory
-     */
-    protected $productCollectionFactory;
-    /**
-     * @var GroupCollection
-     */
-    protected $groupCollection;
-    /**
-     * @var Config
-     */
-    protected $eavConfig;
-    /**
-     * @var ConfigHelper
-     */
-    protected $configHelper;
-    /**
-     * @var AlgoliaHelper
-     */
-    protected $algoliaHelper;
-    /**
-     * @var Logger
-     */
-    protected $logger;
-    /**
-     * @var StoreManagerInterface
-     */
-    protected $storeManager;
-    /**
-     * @var ManagerInterface
-     */
-    protected $eventManager;
-    /**
-     * @var Visibility
-     */
-    protected $visibility;
-    /**
-     * @var Stock
-     */
-    protected $stockHelper;
-    /**
-     * @var StockRegistryInterface
-     */
-    protected $stockRegistry;
-    /**
-     * @var CurrencyHelper
-     */
-    protected $currencyManager;
-    /**
-     * @var CategoryHelper
-     */
-    protected $categoryHelper;
-    /**
-     * @var PriceManager
-     */
-    protected $priceManager;
-    /**
-     * @var ImageHelper
-     */
-    protected $imageHelper;
-
-    /**
-     * @var Type
-     */
-    protected $productType;
-
-    /**
      * @var AbstractType[]
      */
     protected $compositeTypes;
@@ -114,11 +48,6 @@ class ProductHelper
      * @var
      */
     protected $productAttributes;
-
-    /**
-     * @var GroupExcludedWebsiteRepositoryInterface
-     */
-    protected $groupExcludedWebsiteRepository;
 
     /**
      * @var string[]
@@ -178,42 +107,24 @@ class ProductHelper
      * @param ImageHelper $imageHelper
      */
     public function __construct(
-        Config                 $eavConfig,
-        ConfigHelper           $configHelper,
-        AlgoliaHelper          $algoliaHelper,
-        Logger                 $logger,
-        StoreManagerInterface  $storeManager,
-        ManagerInterface       $eventManager,
-        Visibility             $visibility,
-        Stock                  $stockHelper,
-        StockRegistryInterface $stockRegistry,
-        CurrencyHelper $currencyManager,
-        CategoryHelper $categoryHelper,
-        PriceManager $priceManager,
-        Type $productType,
-        CollectionFactory $productCollectionFactory,
-        GroupCollection $groupCollection,
-        GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
-        ImageHelper $imageHelper
-    ) {
-        $this->eavConfig = $eavConfig;
-        $this->configHelper = $configHelper;
-        $this->algoliaHelper = $algoliaHelper;
-        $this->logger = $logger;
-        $this->storeManager = $storeManager;
-        $this->eventManager = $eventManager;
-        $this->visibility = $visibility;
-        $this->stockHelper = $stockHelper;
-        $this->stockRegistry = $stockRegistry;
-        $this->currencyManager = $currencyManager;
-        $this->categoryHelper = $categoryHelper;
-        $this->priceManager = $priceManager;
-        $this->productType = $productType;
-        $this->productCollectionFactory = $productCollectionFactory;
-        $this->groupCollection = $groupCollection;
-        $this->groupExcludedWebsiteRepository = $groupExcludedWebsiteRepository;
-        $this->imageHelper = $imageHelper;
-    }
+        protected Config                                  $eavConfig,
+        protected ConfigHelper                            $configHelper,
+        protected AlgoliaHelper                           $algoliaHelper,
+        protected Logger                                  $logger,
+        protected StoreManagerInterface                   $storeManager,
+        protected ManagerInterface                        $eventManager,
+        protected Visibility                              $visibility,
+        protected Stock                                   $stockHelper,
+        protected StockRegistryInterface                  $stockRegistry,
+        protected CurrencyHelper                          $currencyManager,
+        protected CategoryHelper                          $categoryHelper,
+        protected PriceManager                            $priceManager,
+        protected Type                                    $productType,
+        protected CollectionFactory                       $productCollectionFactory,
+        protected GroupCollection                         $groupCollection,
+        protected GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
+        protected ImageHelper                             $imageHelper
+    ) {}
 
     /**
      * @return string
