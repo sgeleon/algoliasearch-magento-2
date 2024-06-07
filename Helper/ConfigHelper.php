@@ -145,6 +145,8 @@ class ConfigHelper
     public const ENHANCED_QUEUE_ARCHIVE = 'algoliasearch_advanced/queue/enhanced_archive';
     public const NUMBER_OF_ELEMENT_BY_PAGE = 'algoliasearch_advanced/queue/number_of_element_by_page';
     public const ARCHIVE_LOG_CLEAR_LIMIT = 'algoliasearch_advanced/queue/archive_clear_limit';
+    // https://www.algolia.com/doc/guides/managing-results/refine-results/sorting/in-depth/replicas/#what-are-virtual-replicas
+    public const MAX_VIRTUAL_REPLICA_LIMIT = 20;
 
     /**
      * @var Magento\Framework\App\Config\ScopeConfigInterface
