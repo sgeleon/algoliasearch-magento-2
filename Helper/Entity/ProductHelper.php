@@ -1484,6 +1484,7 @@ class ProductHelper
      * Return a formatted Algolia `replicas` configuration for the provided sorting indices
      * @param mixed[] $sortingIndices Array of sorting index objects
      * @return string[]
+     * @deprecated This method is moving to ReplicaManager where it is being re-envisioned
      */
     protected function decorateReplicasSetting(array $sortingIndices): array {
         return array_map(

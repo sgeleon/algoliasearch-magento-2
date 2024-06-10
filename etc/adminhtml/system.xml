@@ -1246,7 +1246,7 @@
                     <comment>
                         <![CDATA[
                             Do you want to use <code>partialUpdateObjects</code> instead of <code>addObjects</code>?<br>
-                            You should enable this option if you want to update only some attributes of your records from an external source without avoiding overriding Magento data.
+                            You should enable this option if you want to update only some attributes of your records from an external source without overriding Magento data.
                         ]]>
                     </comment>
                 </field>

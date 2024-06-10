@@ -5,6 +5,7 @@ namespace Algolia\AlgoliaSearch\Model\Product;
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
+use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -34,7 +35,8 @@ class ReplicaManager implements ReplicaManagerInterface
     public const REPLICA_TRANSFORM_MODE_ACTUAL   = 3;
 
     public function __construct(
-        protected ConfigHelper $configHelper
+        protected ConfigHelper $configHelper,
+        protected AlgoliaHelper $algoliaHelper
     ) {}
 
     /**
@@ -68,7 +70,7 @@ class ReplicaManager implements ReplicaManagerInterface
         $new = $this->transformSortingIndicesToReplicaSetting($this->configHelper->getSortingIndices($indexName, $storeId));
         sort($old);
         sort($new);
-        return $old === $new;
+        return $old !== $new;
     }
 
     protected function getAlgoliaReplicaConfiguration($indexName)
@@ -108,11 +110,13 @@ class ReplicaManager implements ReplicaManagerInterface
     ): array
     {
         return array_map(
-            function($sort) {
+            function($sort) use ($mode) {
                 $replica = $sort['name'];
                 if (
-                    $sort['virtualReplica'] && $mode === self::REPLICA_TRANSFORM_MODE_ACTUAL
-                    || $mode === self::REPLICA_TRANSFORM_MODE_VIRTUAL
+                    $mode === self::REPLICA_TRANSFORM_MODE_VIRTUAL
+                    || array_key_exists('virtualReplica', $sort)
+                        && $sort['virtualReplica']
+                        && $mode === self::REPLICA_TRANSFORM_MODE_ACTUAL
                 ) {
                     $replica = "virtual($replica)";
                 }
@@ -146,6 +150,7 @@ class ReplicaManager implements ReplicaManagerInterface
         {
             // We only care about configuring ranking for replicas that were added!
             $addedReplicas = $this->setReplicasOnPrimaryIndex($indexName, $storeId);
+            $this->configureRanking($addedReplicas);
         }
     }
 
@@ -161,7 +166,7 @@ class ReplicaManager implements ReplicaManagerInterface
         $oldReplicas = $this->getAlgoliaReplicaConfiguration($indexName);
         $newReplicas = $this->transformSortingIndicesToReplicaSetting($this->configHelper->getsortingIndices($indexName, $storeId));
         $replicasToDelete = array_diff($oldReplicas, $newReplicas);
-        $replicasToAdd = array_diff($oldReplicas, $newReplicas);
+        $replicasToAdd = array_diff($newReplicas, $oldReplicas);
         $this->algoliaHelper->setSettings($indexName, ['replicas' => $newReplicas]);
         $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
         $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
@@ -174,6 +179,13 @@ class ReplicaManager implements ReplicaManagerInterface
         foreach ($replicasToDelete as $deletedReplica) {
             $this->algoliaHelper->deleteIndex($deletedReplica);
         }
+    }
 
+    /** Apply ranking settings to the replica indices */
+    protected function configureRanking(array $replicas): void
+    {
+        foreach ($replicas as $replica) {
+
+        }
     }
 }
