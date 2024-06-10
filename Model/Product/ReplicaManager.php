@@ -34,6 +34,9 @@ class ReplicaManager implements ReplicaManagerInterface
     public const REPLICA_TRANSFORM_MODE_VIRTUAL  = 2;
     public const REPLICA_TRANSFORM_MODE_ACTUAL   = 3;
 
+    protected array $_algoliaReplicaConfig = [];
+    protected array $_magentoReplicaPossibleConfig = [];
+
     public function __construct(
         protected ConfigHelper $configHelper,
         protected AlgoliaHelper $algoliaHelper
@@ -73,12 +76,26 @@ class ReplicaManager implements ReplicaManagerInterface
         return $old !== $new;
     }
 
-    protected function getAlgoliaReplicaConfiguration($indexName)
+    protected function getReplicaConfigurationFromAlgolia($indexName, bool $refreshCache = false)
     {
-        $currentSettings = $this->algoliaHelper->getSettings($indexName);
-        return array_key_exists('replicas', $currentSettings)
-            ? $currentSettings['replicas']
-            : [];
+        if ($refreshCache || !isset($this->_algoliaReplicaConfig[$indexName])) {
+            $currentSettings = $this->algoliaHelper->getSettings($indexName);
+            $this->_algoliaReplicaConfig[$indexName] = array_key_exists('replicas', $currentSettings)
+                ? $currentSettings['replicas']
+                : [];
+        }
+        return $this->_algoliaReplicaConfig[$indexName];
+    }
+
+    protected function clearAlgoliaReplicaSettingCache($indexName = null): void
+    {
+        if (is_null($indexName)) {
+            $this->_algoliaReplicaConfig = [];
+        }
+        else
+        {
+            unset($this->_algoliaReplicaConfig[$indexName]);
+        }
     }
 
     /**
@@ -93,10 +110,20 @@ class ReplicaManager implements ReplicaManagerInterface
      */
     protected function getMagentoReplicaConfigurationFromAlgolia(string $indexName, int $storeId): array
     {
-        $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
-        $algoliaReplicas = $this->getAlgoliaReplicaConfiguration($indexName);
-        $magentoReplicas = $this->getPossibleMagentoReplicaSettings($sortingIndices);
-        return array_intersect($magentoReplicas, $algoliaReplicas);
+        $algoliaReplicas = $this->getReplicaConfigurationFromAlgolia($indexName);
+        $magentoReplicas = $this->getPossibleMagentoReplicaSettings($indexName, $storeId);
+        return array_values(array_intersect($magentoReplicas, $algoliaReplicas));
+    }
+
+    /**
+     * @throws NoSuchEntityException
+     * @throws LocalizedException
+     */
+    protected function getNonMagentoReplicaConfigurationFromAlgolia(string $indexName, int $storeId): array
+    {
+        $algoliaReplicas = $this->getReplicaConfigurationFromAlgolia($indexName);
+        $magentoReplicas = $this->getPossibleMagentoReplicaSettings($indexName, $storeId);
+        return array_diff($algoliaReplicas, $magentoReplicas);
     }
 
     /**
@@ -126,11 +153,20 @@ class ReplicaManager implements ReplicaManagerInterface
         );
     }
 
-    protected function getPossibleMagentoReplicaSettings(array $sortingIndices): array {
-        return array_merge(
-            $this->transformSortingIndicesToReplicaSetting($sortingIndices, self::REPLICA_TRANSFORM_MODE_STANDARD),
-            $this->transformSortingIndicesToReplicaSetting($sortingIndices, self::REPLICA_TRANSFORM_MODE_VIRTUAL)
-        );
+    /**
+     * @throws NoSuchEntityException
+     * @throws LocalizedException
+     */
+    protected function getPossibleMagentoReplicaSettings(string $indexName, int $storeId, bool $refreshCache = false): array
+    {
+        if ($refreshCache || !isset($this->_magentoReplicaPossibleConfig[$storeId])) {
+            $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
+            $this->_magentoReplicaPossibleConfig[$storeId] = array_merge(
+                $this->transformSortingIndicesToReplicaSetting($sortingIndices, self::REPLICA_TRANSFORM_MODE_STANDARD),
+                $this->transformSortingIndicesToReplicaSetting($sortingIndices, self::REPLICA_TRANSFORM_MODE_VIRTUAL)
+            );
+        }
+        return $this->_magentoReplicaPossibleConfig[$storeId];
     }
 
     /**
@@ -160,18 +196,34 @@ class ReplicaManager implements ReplicaManagerInterface
      * @return string[] Replicas added by this operation
      * @throws LocalizedException
      * @throws NoSuchEntityException
+     * @throws AlgoliaException
      */
     protected function setReplicasOnPrimaryIndex($indexName, int $storeId): array
     {
-        $oldReplicas = $this->getAlgoliaReplicaConfiguration($indexName);
-        $newReplicas = $this->transformSortingIndicesToReplicaSetting($this->configHelper->getsortingIndices($indexName, $storeId));
-        $replicasToDelete = array_diff($oldReplicas, $newReplicas);
-        $replicasToAdd = array_diff($newReplicas, $oldReplicas);
-        $this->algoliaHelper->setSettings($indexName, ['replicas' => $newReplicas]);
+        $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
+        $newMagentoReplicas = $this->transformSortingIndicesToReplicaSetting($sortingIndices);
+        $oldMagentoReplicas = $this->getMagentoReplicaConfigurationFromAlgolia($indexName, $storeId);
+        $nonMagentoReplicas = $this->getNonMagentoReplicaConfigurationFromAlgolia($indexName, $storeId);
+        $oldMagentoReplicaIndices = $this->getBareIndexNamesFromReplicaSetting($oldMagentoReplicas);
+        $newMagentoReplicaIndices = $this->getBareIndexNamesFromReplicaSetting($newMagentoReplicas);
+        $replicasToDelete = array_diff($oldMagentoReplicaIndices, $newMagentoReplicaIndices);
+        $replicasToAdd = array_diff($newMagentoReplicaIndices, $oldMagentoReplicaIndices);
+        $this->algoliaHelper->setSettings($indexName, ['replicas' => array_merge($newMagentoReplicas, $nonMagentoReplicas)]);
         $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
         $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
+        $this->clearAlgoliaReplicaSettingCache($indexName);
         $this->deleteReplicas($replicasToDelete);
         return $replicasToAdd;
+    }
+
+    function getBareIndexNamesFromReplicaSetting(array $replicas): array
+    {
+        return array_map(
+            function($str) {
+                return preg_replace('/.*\((.*)\).*/', '$1', $str);
+            },
+            $replicas
+        );
     }
 
     protected function deleteReplicas(array $replicasToDelete): void
