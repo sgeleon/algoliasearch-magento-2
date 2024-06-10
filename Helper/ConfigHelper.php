@@ -135,6 +135,8 @@ class ConfigHelper
     protected const IS_ADDTOCART_ENABLED_IN_FREQUENTLY_BOUGHT_TOGETHER = 'algoliasearch_recommend/recommend/frequently_bought_together/is_addtocart_enabled';
     protected const IS_ADDTOCART_ENABLED_IN_RELATED_PRODUCTS = 'algoliasearch_recommend/recommend/related_product/is_addtocart_enabled';
     protected const IS_ADDTOCART_ENABLED_IN_TRENDS_ITEM = 'algoliasearch_recommend/recommend/trends_item/is_addtocart_enabled';
+    protected const IS_ADDTOCART_ENABLED_IN_LOOKING_SIMILAR = 'algoliasearch_recommend/recommend/looking_similar/is_addtocart_enabled';
+    protected const LOOKING_SIMILAR_TITLE = 'algoliasearch_recommend/recommend/looking_similar/title';
     protected const USE_VIRTUAL_REPLICA_ENABLED = 'algoliasearch_instant/instant/use_virtual_replica';
     protected const AUTOCOMPLETE_KEYBORAD_NAVIAGATION = 'algoliasearch_autocomplete/autocomplete/navigator';
     protected const FREQUENTLY_BOUGHT_TOGETHER_TITLE = 'algoliasearch_recommend/recommend/frequently_bought_together/title';
@@ -832,6 +834,42 @@ class ConfigHelper
     }
 
     /**
+     * Determines whether Looking Similar enabled on PDP
+     *
+     * @param $storeId
+     * @return int
+     */
+    public function isLookingSimilarEnabledOnPDP($storeId = null)
+    {
+        return (int)$this->configInterface->getValue(
+            self::IS_LOOKING_SIMILAR_ENABLED_ON_PDP,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    public function getLookingSimilarTitle($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::LOOKING_SIMILAR_TITLE,
+            ScopeInterface::SCOPE_STORE, $storeId
+        );
+    }
+
+    /**
+     * @param $storeId
+     * @return int
+     */
+    public function isLookingSimilarEnabledOnShoppingCart($storeId = null)
+    {
+        return (int)$this->configInterface->getValue(
+            self::IS_LOOKING_SIMILAR_ENABLED_ON_SHOPPING_CART,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
      * @param $storeId
      * @return int
      */
@@ -882,6 +920,21 @@ class ConfigHelper
     public function isAddToCartEnabledInTrendsItem($storeId = null)
     {
         return $this->configInterface->isSetFlag(self::IS_ADDTOCART_ENABLED_IN_TRENDS_ITEM, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * Determines whether add to cart is enabled in Looking Similar
+     *
+     * @param $storeId
+     * @return bool
+     */
+    public function isAddToCartEnabledInLookingSimilar($storeId = null)
+    {
+        return $this->configInterface->isSetFlag(
+            self::IS_ADDTOCART_ENABLED_IN_LOOKING_SIMILAR,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
     }
 
     /**

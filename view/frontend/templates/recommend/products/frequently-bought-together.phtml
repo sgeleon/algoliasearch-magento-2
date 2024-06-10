@@ -1,0 +1,13 @@
+<div id="frequentlyBoughtTogether" class="recommend-component"></div>
+<script type="text/x-magento-init">
+    {
+        "#frequentlyBoughtTogether": {
+            "Algolia_AlgoliaSearch/recommend" : {
+                "algoliObjectId" : ["<?= $product->getId() ?>"]
+            }
+        },
+        "[data-role=tocart-form]": {
+            "catalogAddToCart": {}
+        }
+    }
+</script>

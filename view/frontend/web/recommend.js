@@ -24,7 +24,7 @@ define([
                 $('body').hasClass('checkout-cart-index')
             ) {
                 // --- Add the current product objectID here ---
-                if (
+                 if (
                     (algoliaConfig.recommend.enabledFBT &&
                         $('body').hasClass('catalog-product-view')) ||
                     (algoliaConfig.recommend.enabledFBTInCart &&
@@ -162,6 +162,41 @@ define([
                             algoliaConfig.recommend.isAddToCartEnabledInTrendsItem
                         );
                     },
+                });
+            }
+
+            if (
+                (algoliaConfig.recommend.isLookingSimilarEnabledOnPDP &&
+                    $('body').hasClass('catalog-product-view')) ||
+                (algoliaConfig.recommend.isLookingSimilarEnabledOnCartPage &&
+                    $('body').hasClass('checkout-cart-index'))
+            ) {
+                console.log(recommendClient);
+                console.log(indexName);
+                recommendJs.lookingSimilar({
+                    container: '#looking-similar',
+                    recommendClient,
+                    indexName,
+                    maxRecommendations: 6,
+                    transformItems: function (items) {
+                        return items.map((item, index) => ({
+                            ...item,
+                            position: index + 1,
+                        }));
+                    },
+                    headerComponent({html}) {
+                        return recommendProductsHtml.getHeaderHtml(
+                            html,
+                            algoliaConfig.recommend.lookingSimilarTitle
+                        );
+                    },
+                    itemComponent({item, html}) {
+                        return recommendProductsHtml.getItemHtml(
+                            item,
+                            html,
+                            algoliaConfig.recommend.isAddToCartEnabledInLookingSimilar
+                        );
+                    }
                 });
             }
         });

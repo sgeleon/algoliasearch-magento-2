@@ -233,10 +233,13 @@ class Configuration extends Algolia implements CollectionDataSourceInterface
                 'isAddToCartEnabledInFBT' => $config->isAddToCartEnabledInFrequentlyBoughtTogether(),
                 'isAddToCartEnabledInRelatedProduct' => $config->isAddToCartEnabledInRelatedProducts(),
                 'isAddToCartEnabledInTrendsItem' => $config->isAddToCartEnabledInTrendsItem(),
+                'isAddToCartEnabledInLookingSimilar' => $config->isAddToCartEnabledInLookingSimilar(),
                 'FBTTitle' => __($config->getFBTTitle()),
                 'relatedProductsTitle' => __($config->getRelatedProductsTitle()),
                 'trendingItemsTitle' => __($config->getTrendingItemsTitle()),
                 'addToCartParams' => $addToCartParams,
+                'isLookingSimilarEnabledOnPDP' => $config->isLookingSimilarEnabledOnPDP(),
+                'lookingSimilarTitle' => __($config->getLookingSimilarTitle())
             ],
             'extensionVersion' => $config->getExtensionVersion(),
             'applicationId' => $config->getApplicationID(),

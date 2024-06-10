@@ -1,0 +1,13 @@
+<div id="relatedProducts" class="recommend-component"></div>
+<script type="text/x-magento-init">
+    {
+        "#relatedProducts": {
+            "Algolia_AlgoliaSearch/recommend" : {
+                "algoliObjectId" : ["<?= $product->getId() ?>"]
+            }
+        },
+        "[data-role=tocart-form]": {
+            "catalogAddToCart": {}
+        }
+    }
+</script>
