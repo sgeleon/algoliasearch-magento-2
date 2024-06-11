@@ -35,19 +35,20 @@ class Sorts extends ArraySerialized
      * @param ProductHelper $productHelper
      */
     public function __construct(
-        Context $context,
-        Registry $registry,
-        ScopeConfigInterface $config,
-        TypeListInterface $cacheTypeList,
+        Context                         $context,
+        Registry                        $registry,
+        ScopeConfigInterface            $config,
+        TypeListInterface               $cacheTypeList,
         protected StoreManagerInterface $storeManager,
-        protected Data $helper,
-        protected ProductHelper $productHelper,
-        protected ReplicaState $replicaState,
-        AbstractResource $resource = null,
-        AbstractDb $resourceCollection = null,
-        array $data = [],
-        Json $serializer = null
-    ) {
+        protected Data                  $helper,
+        protected ProductHelper         $productHelper,
+        protected ReplicaState          $replicaState,
+        AbstractResource                $resource = null,
+        AbstractDb                      $resourceCollection = null,
+        array                           $data = [],
+        Json                            $serializer = null
+    )
+    {
         $this->serializer = $serializer ?: ObjectManager::getInstance()->get(Json::class);
         parent::__construct(
             $context,

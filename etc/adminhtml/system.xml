@@ -1253,7 +1253,7 @@
                 <field id="customer_groups_enable" translate="label comment" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Enable Customer Groups</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Replica</backend_model>
+                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\EnableCustomerGroups</backend_model>
                     <comment>
                         <![CDATA[
                             Do you want to take into account customer groups and display the price of the logged-in group instead of the default price?
