@@ -199,6 +199,7 @@ define([
                 });
             } else if (
                 algoliaConfig.recommend.enabledLookingSimilar &&
+                config.algoliObjectId &&
                 typeof config.recommendLSContainer !== 'undefined'
             ){
                 let containerValue = '#' + config.recommendLSContainer;
@@ -206,6 +207,7 @@ define([
                     container: containerValue,
                     recommendClient,
                     indexName,
+                    objectIDs: config.algoliObjectId,
                     maxRecommendations: config.numOfLookingSimilarItem
                         ? parseInt(config.numOfLookingSimilarItem)
                         : algoliaConfig.recommend.limitLookingSimilar,
