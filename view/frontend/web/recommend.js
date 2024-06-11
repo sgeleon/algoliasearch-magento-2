@@ -197,6 +197,38 @@ define([
                         );
                     }
                 });
+            } else if (
+                algoliaConfig.recommend.enabledLookingSimilar &&
+                typeof config.recommendLSContainer !== 'undefined'
+            ){
+                let containerValue = '#' + config.recommendLSContainer;
+                recommendJs.lookingSimilar({
+                    container: containerValue,
+                    recommendClient,
+                    indexName,
+                    maxRecommendations: config.numOfLookingSimilarItem
+                        ? parseInt(config.numOfLookingSimilarItem)
+                        : algoliaConfig.recommend.limitLookingSimilar,
+                    transformItems    : function (items) {
+                        return items.map((item, index) => ({
+                            ...item,
+                            position: index + 1,
+                        }));
+                    },
+                    headerComponent({html}) {
+                        return recommendProductsHtml.getHeaderHtml(
+                            html,
+                            algoliaConfig.recommend.lookingSimilarTitle
+                        );
+                    },
+                    itemComponent({item, html}) {
+                        return recommendProductsHtml.getItemHtml(
+                            item,
+                            html,
+                            algoliaConfig.recommend.isAddToCartEnabledInLookingSimilar
+                        );
+                    },
+                });
             }
         });
     };

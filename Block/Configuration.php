@@ -222,6 +222,7 @@ class Configuration extends Algolia implements CollectionDataSourceInterface
                 'enabledRelated' => $config->isRecommendRelatedProductsEnabled(),
                 'enabledFBTInCart' => $config->isRecommendFrequentlyBroughtTogetherEnabledOnCartPage(),
                 'enabledRelatedInCart' => $config->isRecommendRelatedProductsEnabledOnCartPage(),
+                'enabledLookingSimilar' => $config->isRecommendLookingSimilarEnabled(),
                 'limitFBTProducts' => $config->getNumberOfFrequentlyBoughtTogetherProducts(),
                 'limitRelatedProducts' => $config->getNumberOfRelatedProducts(),
                 'limitTrendingItems' => $config->getNumberOfTrendingItems(),

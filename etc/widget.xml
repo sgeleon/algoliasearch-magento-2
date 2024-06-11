@@ -19,4 +19,15 @@
             </parameter>
         </parameters>
     </widget>
+    <widget class="Algolia\AlgoliaSearch\Block\Widget\LookingSimilar" id="algoliasearch_looking_similar_item">
+        <label>Algolia Looking Similar Items</label>
+        <description>You can allow Algolia Looking Similar items to appear anywhere you want</description>
+        <parameters>
+            <parameter name="numOfLookingSimilarItem" sort_order="10" visible="true" xsi:type="text">
+                <label>Number Of Looking Similar Items</label>
+                <description>How many products do you want to display in the Looking Similar Items?.</description>
+                <value>6</value>
+            </parameter>
+        </parameters>
+    </widget>
 </widgets>
