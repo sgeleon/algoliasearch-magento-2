@@ -138,8 +138,8 @@ class ConfigHelper
     protected const IS_ADDTOCART_ENABLED_IN_RELATED_PRODUCTS = 'algoliasearch_recommend/recommend/related_product/is_addtocart_enabled';
     protected const IS_ADDTOCART_ENABLED_IN_TRENDS_ITEM = 'algoliasearch_recommend/recommend/trends_item/is_addtocart_enabled';
     protected const IS_ADDTOCART_ENABLED_IN_LOOKING_SIMILAR = 'algoliasearch_recommend/recommend/looking_similar/is_addtocart_enabled';
-    protected const IS_LOOKING_SIMILAR_ENABLED_ON_PDP = 'algoliasearch_recommend/recommend/looking_similar/is_looking_similar_enabled_on_pdp';
-    protected const IS_LOOKING_SIMILAR_ENABLED_ON_SHOPPING_CART = 'algoliasearch_recommend/recommend/looking_similar/is_looking_similar_enabled_on_cart_page';
+    protected const IS_LOOKING_SIMILAR_ENABLED_IN_PDP = 'algoliasearch_recommend/recommend/looking_similar/is_looking_similar_enabled_on_pdp';
+    protected const IS_LOOKING_SIMILAR_ENABLED_IN_SHOPPING_CART = 'algoliasearch_recommend/recommend/looking_similar/is_looking_similar_enabled_on_cart_page';
     protected const LOOKING_SIMILAR_TITLE = 'algoliasearch_recommend/recommend/looking_similar/title';
     protected const USE_VIRTUAL_REPLICA_ENABLED = 'algoliasearch_instant/instant/use_virtual_replica';
     protected const AUTOCOMPLETE_KEYBORAD_NAVIAGATION = 'algoliasearch_autocomplete/autocomplete/navigator';
@@ -873,10 +873,10 @@ class ConfigHelper
      * @param $storeId
      * @return int
      */
-    public function isLookingSimilarEnabledOnPDP($storeId = null)
+    public function isLookingSimilarEnabledInPDP($storeId = null)
     {
         return (int)$this->configInterface->getValue(
-            self::IS_LOOKING_SIMILAR_ENABLED_ON_PDP,
+            self::IS_LOOKING_SIMILAR_ENABLED_IN_PDP,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
@@ -894,10 +894,10 @@ class ConfigHelper
      * @param $storeId
      * @return int
      */
-    public function isLookingSimilarEnabledOnShoppingCart($storeId = null)
+    public function isLookingSimilarEnabledInShoppingCart($storeId = null)
     {
         return (int)$this->configInterface->getValue(
-            self::IS_LOOKING_SIMILAR_ENABLED_ON_SHOPPING_CART,
+            self::IS_LOOKING_SIMILAR_ENABLED_IN_SHOPPING_CART,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );

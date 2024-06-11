@@ -166,9 +166,9 @@ define([
             }
 
             if (
-                (algoliaConfig.recommend.isLookingSimilarEnabledOnPDP &&
+                (algoliaConfig.recommend.isLookingSimilarEnabledInPDP &&
                     $('body').hasClass('catalog-product-view')) ||
-                (algoliaConfig.recommend.isLookingSimilarEnabledOnCartPage &&
+                (algoliaConfig.recommend.isLookingSimilarEnabledInCartPage &&
                     $('body').hasClass('checkout-cart-index'))
             ) {
                 recommendJs.lookingSimilar({

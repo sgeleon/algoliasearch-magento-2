@@ -68,7 +68,7 @@ class ProductView implements ArgumentInterface
             'enabledFBT' => $this->configHelper->isRecommendFrequentlyBroughtTogetherEnabled(),
             'enabledRelated' => $this->configHelper->isRecommendRelatedProductsEnabled(),
             'isTrendItemsEnabledInPDP' => $this->configHelper->isTrendItemsEnabledInPDP(),
-            'isLookingSimilarEnabledInPDP' => $this->configHelper->isLookingSimilarEnabledOnPDP()
+            'isLookingSimilarEnabledInPDP' => $this->configHelper->isLookingSimilarEnabledInPDP()
         ];
     }
 }

@@ -240,8 +240,8 @@ class Configuration extends Algolia implements CollectionDataSourceInterface
                 'relatedProductsTitle' => __($config->getRelatedProductsTitle()),
                 'trendingItemsTitle' => __($config->getTrendingItemsTitle()),
                 'addToCartParams' => $addToCartParams,
-                'isLookingSimilarEnabledOnPDP' => $config->isLookingSimilarEnabledOnPDP(),
-                'isLookingSimilarEnabledOnCartPage' => $config->isLookingSimilarEnabledOnShoppingCart(),
+                'isLookingSimilarEnabledInPDP' => $config->isLookingSimilarEnabledInPDP(),
+                'isLookingSimilarEnabledInCartPage' => $config->isLookingSimilarEnabledInShoppingCart(),
                 'lookingSimilarTitle' => __($config->getLookingSimilarTitle())
             ],
             'extensionVersion' => $config->getExtensionVersion(),
