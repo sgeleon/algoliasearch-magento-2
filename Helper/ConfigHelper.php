@@ -1087,30 +1087,35 @@ class ConfigHelper
     }
 
     /**
-     * @param $originalIndexName
-     * @param $storeId
-     * @param $currentCustomerGroupId
-     * @param $attrs - serialized array to transform (defaults to saved sorting config)
+     * Augment sorting configuration with corresponding replica indices, ranking,
+     * and (as needed) customer group pricing
+     *
+     * @param string $originalIndexName
+     * @param ?int $storeId
+     * @param ?int $currentCustomerGroupId
+     * @param ?array $attrs - serialized array of sorting attributes to transform (defaults to saved sorting config)
      * @return array of transformed sorting / replica objects
      * @throws Magento\Framework\Exception\LocalizedException
      * @throws Magento\Framework\Exception\NoSuchEntityException
      */
     public function getSortingIndices(
-        $originalIndexName,
-        $storeId = null,
-        $currentCustomerGroupId = null,
-        $attrs = null
+        string $originalIndexName,
+        int $storeId = null,
+        int $currentCustomerGroupId = null,
+        array $attrs = null
     ): array
     {
-        // Selectively cache this result
-        if (is_null($currentCustomerGroupId)
+        // Selectively cache this result - only cache manipulation of saved settings per store
+        $useCache = is_null($currentCustomerGroupId) && is_null($attrs);
+
+        if ($useCache
             && array_key_exists($storeId, $this->_sortingIndices)
             && is_array($this->_sortingIndices[$storeId])) {
             return $this->_sortingIndices[$storeId];
         }
 
-        // TODO: Remove this override - poorly conceived
-        if (!$attrs){
+        // If no sorting configuration is supplied - obtain from the saved configuration
+        if (!$attrs) {
             $attrs = $this->getSorting($storeId);
         }
 
@@ -1121,7 +1126,7 @@ class ConfigHelper
             $sortAttribute = false;
             // Group pricing
             if ($this->isCustomerGroupsEnabled($storeId) && $attr['attribute'] === self::SORT_ATTRIBUTE_PRICE) {
-                $websiteId = (int)$this->storeManager->getStore($storeId)->getWebsiteId();
+                $websiteId = (int) $this->storeManager->getStore($storeId)->getWebsiteId();
                 $groupCollection = $this->groupCollection;
                 if (!is_null($currentCustomerGroupId)) {
                     $groupCollection->addFilter('customer_group_id', $currentCustomerGroupId);
@@ -1152,7 +1157,7 @@ class ConfigHelper
         }
         $attrsToReturn = [];
         if (count($attributesToAdd)) {
-            foreach ($attrs as $key => $attr) {
+            foreach ($attrs as $attr) {
                 if ($attr['attribute'] == self::SORT_ATTRIBUTE_PRICE && isset($attributesToAdd[$attr['sort']])) {
                     $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
                 } else {
@@ -1161,7 +1166,9 @@ class ConfigHelper
             }
         }
 
-        $this->_sortingIndices[$storeId] = $attrsToReturn;
+        if ($useCache) {
+            $this->_sortingIndices[$storeId] = $attrsToReturn;
+        }
 
         return $attrsToReturn;
     }

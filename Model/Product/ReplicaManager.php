@@ -7,6 +7,7 @@ use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Registry\ReplicaState;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 
@@ -39,10 +40,15 @@ class ReplicaManager implements ReplicaManagerInterface
 
     public function __construct(
         protected ConfigHelper $configHelper,
-        protected AlgoliaHelper $algoliaHelper
+        protected AlgoliaHelper $algoliaHelper,
+        protected ReplicaState $replicaState
     ) {}
 
     /**
+     * Evaluate the replica state of the index for a given store and determine
+     * if Algolia and Magento are no longer in sync
+     *
+     * @return bool Returns true if Magento and Algolia are out of sync, otherwise false if they are up-to-date
      * @throws NoSuchEntityException
      * @throws LocalizedException
      */
@@ -154,13 +160,24 @@ class ReplicaManager implements ReplicaManagerInterface
     }
 
     /**
-     * @throws NoSuchEntityException
+     * In order to avoid interfering with replicas configured directly in the Algolia dashboard,
+     * we must know which replica indices are Magento managed and which are not.
+     *
+     * @param string $indexName
+     * @param int $storeId
+     * @param bool $refreshCache
+     * @return array
      * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     protected function getPossibleMagentoReplicaSettings(string $indexName, int $storeId, bool $refreshCache = false): array
     {
         if ($refreshCache || !isset($this->_magentoReplicaPossibleConfig[$storeId])) {
-            $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
+            //TODO: Determine whether it is necessary to merge the new configuration on an update when checking against Algolia
+            $sortConfig = $this->replicaState->isStateChanged()
+                ? array_merge($this->replicaState->getOriginalSortConfiguration(), $this->replicaState->getUpdatedSortConfiguration())
+                : null;
+            $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId, null, $sortConfig);
             $this->_magentoReplicaPossibleConfig[$storeId] = array_merge(
                 $this->transformSortingIndicesToReplicaSetting($sortingIndices, self::REPLICA_TRANSFORM_MODE_STANDARD),
                 $this->transformSortingIndicesToReplicaSetting($sortingIndices, self::REPLICA_TRANSFORM_MODE_VIRTUAL)
