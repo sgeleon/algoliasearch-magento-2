@@ -171,13 +171,12 @@ define([
                 (algoliaConfig.recommend.isLookingSimilarEnabledOnCartPage &&
                     $('body').hasClass('checkout-cart-index'))
             ) {
-                console.log(recommendClient);
-                console.log(indexName);
                 recommendJs.lookingSimilar({
-                    container: '#looking-similar',
+                    container: '#lookingSimilar',
                     recommendClient,
                     indexName,
-                    maxRecommendations: 6,
+                    objectIDs: config.algoliObjectId,
+                    maxRecommendations: algoliaConfig.recommend.limitLookingSimilar,
                     transformItems: function (items) {
                         return items.map((item, index) => ({
                             ...item,

@@ -127,6 +127,7 @@ class ConfigHelper
     protected const IS_REMOVE_RELATED_PRODUCTS_BLOCK = 'algoliasearch_recommend/recommend/related_product/is_remove_core_related_products_block';
     protected const IS_REMOVE_UPSELL_PRODUCTS_BLOCK = 'algoliasearch_recommend/recommend/frequently_bought_together/is_remove_core_upsell_products_block';
     protected const IS_RECOMMEND_TRENDING_ITEMS_ENABLED = 'algoliasearch_recommend/recommend/trends_item/is_trending_items_enabled';
+    protected const NUM_OF_LOOKING_SIMILAR = 'algoliasearch_recommend/recommend/looking_similar/num_of_products';
     protected const NUM_OF_TRENDING_ITEMS = 'algoliasearch_recommend/recommend/trends_item/num_of_trending_items';
     protected const TREND_ITEMS_FACET_NAME = 'algoliasearch_recommend/recommend/trends_item/facet_name';
     protected const TREND_ITEMS_FACET_VALUE = 'algoliasearch_recommend/recommend/trends_item/facet_value';
@@ -804,6 +805,21 @@ class ConfigHelper
     {
         return (int)$this->configInterface->getValue(
             self::NUM_OF_TRENDING_ITEMS,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * Returns number of looking similar products to display
+     *
+     * @param $storeId
+     * @return int
+     */
+    public function getNumberOfLookingSimilar($storeId = null)
+    {
+        return (int)$this->configInterface->getValue(
+            self::NUM_OF_LOOKING_SIMILAR,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );

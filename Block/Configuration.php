@@ -225,6 +225,7 @@ class Configuration extends Algolia implements CollectionDataSourceInterface
                 'limitFBTProducts' => $config->getNumberOfFrequentlyBoughtTogetherProducts(),
                 'limitRelatedProducts' => $config->getNumberOfRelatedProducts(),
                 'limitTrendingItems' => $config->getNumberOfTrendingItems(),
+                'limitLookingSimilar' => $config->getNumberOfLookingSimilar(),
                 'enabledTrendItems' => $config->isRecommendTrendingItemsEnabled(),
                 'trendItemFacetName' => $config->getTrendingItemsFacetName(),
                 'trendItemFacetValue' => $config->getTrendingItemsFacetValue(),
