@@ -5,11 +5,13 @@ namespace Algolia\AlgoliaSearch\Model\Backend;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\Data;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
+use Algolia\AlgoliaSearch\Registry\ReplicaState;
 use Magento\Config\Model\Config\Backend\Serialized\ArraySerialized;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
@@ -40,6 +42,7 @@ class Sorts extends ArraySerialized
         protected StoreManagerInterface $storeManager,
         protected Data $helper,
         protected ProductHelper $productHelper,
+        protected ReplicaState $replicaState,
         AbstractResource $resource = null,
         AbstractDb $resourceCollection = null,
         array $data = [],
@@ -60,26 +63,15 @@ class Sorts extends ArraySerialized
     /**
      * @return $this
      * @throws AlgoliaException
-     * @throws NoSuchEntityException
+     * @throws NoSuchEntityException|LocalizedException
      */
-    public function afterSave()
+    public function afterSave(): \Magento\Framework\App\Config\Value
     {
         if ($this->isValueChanged()) {
-            try{
-                $oldValue = $this->serializer->unserialize($this->getOldValue());
-                $updatedValue = $this->serializer->unserialize($this->getValue());
-                $sortingAttributes = array_merge($oldValue, $updatedValue);
-                $storeIds = array_keys($this->storeManager->getStores());
-                foreach ($storeIds as $storeId) {
-                    $indexName = $this->helper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
-                    $this->productHelper->handlingReplica($indexName, $storeId, $sortingAttributes);
-                }
-            } catch (AlgoliaException $e) {
-                if ($e->getCode() !== 404) {
-                    throw $e;
-                }
-            }
+            $this->replicaState->setOriginalSortConfiguration($this->serializer->unserialize($this->getOldValue()));
+            $this->replicaState->setUpdatedSortConfiguration($this->serializer->unserialize($this->getValue()));
         }
+
         return parent::afterSave();
     }
 }
