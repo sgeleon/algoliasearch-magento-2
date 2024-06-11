@@ -19,49 +19,42 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class Sorts extends ArraySerialized
 {
-    /** @var StoreManagerInterface */
-    protected $storeManager;
-    /**
-     * @var Data
-     */
-    protected $helper;
-
-    /**
-     * @var ProductHelper
-     */
-    protected $productHelper;
-
     /**
      * @param Context $context
      * @param Registry $registry
      * @param ScopeConfigInterface $config
      * @param TypeListInterface $cacheTypeList
-     * @param StoreManagerInterface $storeManager
-     * @param Data $helper
-     * @param ProductHelper $productHelper
      * @param AbstractResource|null $resource
      * @param AbstractDb|null $resourceCollection
      * @param array $data
      * @param Json|null $serializer
+     * @param StoreManagerInterface $storeManager
+     * @param Data $helper
+     * @param ProductHelper $productHelper
      */
     public function __construct(
         Context $context,
         Registry $registry,
         ScopeConfigInterface $config,
         TypeListInterface $cacheTypeList,
-        StoreManagerInterface $storeManager,
-        Data $helper,
-        ProductHelper $productHelper,
+        protected StoreManagerInterface $storeManager,
+        protected Data $helper,
+        protected ProductHelper $productHelper,
         AbstractResource $resource = null,
         AbstractDb $resourceCollection = null,
         array $data = [],
         Json $serializer = null
     ) {
-        $this->storeManager = $storeManager;
-        $this->helper = $helper;
-        $this->productHelper = $productHelper;
         $this->serializer = $serializer ?: ObjectManager::getInstance()->get(Json::class);
-        parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
+        parent::__construct(
+            $context,
+            $registry,
+            $config,
+            $cacheTypeList,
+            $resource,
+            $resourceCollection,
+            $data,
+            $serializer);
     }
 
     /**
