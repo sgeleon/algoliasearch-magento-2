@@ -7,6 +7,7 @@ use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
 use Magento\Directory\Model\Currency as DirCurrency;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\DataObject;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Locale\Currency;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -35,14 +36,14 @@ class ConfigHelper
     public const REPLACE_CATEGORIES = 'algoliasearch_instant/instant/replace_categories';
     public const INSTANT_SELECTOR = 'algoliasearch_instant/instant/instant_selector';
     public const NUMBER_OF_PRODUCT_RESULTS = 'algoliasearch_instant/instant/number_product_results';
-    public const FACETS = 'algoliasearch_instant/instant/facets';
-    public const MAX_VALUES_PER_FACET = 'algoliasearch_instant/instant/max_values_per_facet';
-    public const SORTING_INDICES = 'algoliasearch_instant/instant/sorts';
-    public const SHOW_SUGGESTIONS_NO_RESULTS = 'algoliasearch_instant/instant/show_suggestions_on_no_result_page';
-    public const XML_ADD_TO_CART_ENABLE = 'algoliasearch_instant/instant/add_to_cart_enable';
-    public const INFINITE_SCROLL_ENABLE = 'algoliasearch_instant/instant/infinite_scroll_enable';
-    public const SEARCHBOX_ENABLE = 'algoliasearch_instant/instant/instantsearch_searchbox';
-    public const HIDE_PAGINATION = 'algoliasearch_instant/instant/hide_pagination';
+    public const FACETS = 'algoliasearch_instant/instant_facets/facets';
+    public const MAX_VALUES_PER_FACET = 'algoliasearch_instant/instant_facets/max_values_per_facet';
+    public const SORTING_INDICES = 'algoliasearch_instant/instant_sorts/sorts';
+    public const SEARCHBOX_ENABLE = 'algoliasearch_instant/instant_options/instantsearch_searchbox';
+    public const SHOW_SUGGESTIONS_NO_RESULTS = 'algoliasearch_instant/instant_options/show_suggestions_on_no_result_page';
+    public const XML_ADD_TO_CART_ENABLE = 'algoliasearch_instant/instant_options/add_to_cart_enable';
+    public const INFINITE_SCROLL_ENABLE = 'algoliasearch_instant/instant_options/infinite_scroll_enable';
+    public const HIDE_PAGINATION = 'algoliasearch_instant/instant_options/hide_pagination';
 
     public const IS_POPUP_ENABLED = 'algoliasearch_autocomplete/autocomplete/is_popup_enabled';
     public const NB_OF_PRODUCTS_SUGGESTIONS = 'algoliasearch_autocomplete/autocomplete/nb_of_products_suggestions';
@@ -135,7 +136,7 @@ class ConfigHelper
     protected const IS_ADDTOCART_ENABLED_IN_FREQUENTLY_BOUGHT_TOGETHER = 'algoliasearch_recommend/recommend/frequently_bought_together/is_addtocart_enabled';
     protected const IS_ADDTOCART_ENABLED_IN_RELATED_PRODUCTS = 'algoliasearch_recommend/recommend/related_product/is_addtocart_enabled';
     protected const IS_ADDTOCART_ENABLED_IN_TRENDS_ITEM = 'algoliasearch_recommend/recommend/trends_item/is_addtocart_enabled';
-    protected const USE_VIRTUAL_REPLICA_ENABLED = 'algoliasearch_instant/instant/use_virtual_replica';
+    protected const USE_VIRTUAL_REPLICA_ENABLED = 'algoliasearch_instant/instant/use_virtual_replica'; //legacy config
     protected const AUTOCOMPLETE_KEYBORAD_NAVIAGATION = 'algoliasearch_autocomplete/autocomplete/navigator';
     protected const FREQUENTLY_BOUGHT_TOGETHER_TITLE = 'algoliasearch_recommend/recommend/frequently_bought_together/title';
     protected const RELATED_PRODUCTS_TITLE = 'algoliasearch_recommend/recommend/related_product/title';
@@ -145,6 +146,10 @@ class ConfigHelper
     public const ENHANCED_QUEUE_ARCHIVE = 'algoliasearch_advanced/queue/enhanced_archive';
     public const NUMBER_OF_ELEMENT_BY_PAGE = 'algoliasearch_advanced/queue/number_of_element_by_page';
     public const ARCHIVE_LOG_CLEAR_LIMIT = 'algoliasearch_advanced/queue/archive_clear_limit';
+    // https://www.algolia.com/doc/guides/managing-results/refine-results/sorting/in-depth/replicas/#what-are-virtual-replicas
+    public const MAX_VIRTUAL_REPLICA_LIMIT = 20;
+
+    public const SORT_ATTRIBUTE_PRICE = 'price';
 
     /**
      * @var Magento\Framework\App\Config\ScopeConfigInterface
@@ -205,6 +210,11 @@ class ConfigHelper
      * @var CookieHelper
      */
     protected $cookieHelper;
+
+    /**
+     * @var array<int,<array<string, mixed>>>
+     */
+    protected array $_sortingIndices = [];
 
     /**
      * @param Magento\Framework\App\Config\ScopeConfigInterface $configInterface
@@ -1005,17 +1015,107 @@ class ConfigHelper
     }
 
     /**
-     * @param $originalIndexName
-     * @param $storeId
-     * @param $currentCustomerGroupId
-     * @param $attrs
+     * When group pricing is enabled a replica must be created for each possible sort
+     *
+     * @param string $originalIndexName
+     * @param int $customerGroupId
+     * @param string $currency
+     * @param array $origAttr
      * @return array
+     */
+    protected function getCustomerGroupSortPriceOverride(
+        string $originalIndexName,
+        int    $customerGroupId,
+        string $currency,
+        array  $origAttr): array
+    {
+        $attrName = $origAttr['attribute'];
+        $sortDir = $origAttr['sort'];
+        $groupIndexNameSuffix = 'group_' . $customerGroupId;
+        $groupIndexName =
+            $originalIndexName . '_' . $attrName . '_' . $groupIndexNameSuffix . '_' . $sortDir;
+        $groupSortAttribute = $attrName . '.' . $currency . '.' . $groupIndexNameSuffix;
+        $newAttr = [
+            'attribute' => $attrName,
+            'name'      => $groupIndexName,
+            'sort'      => $sortDir,
+            'sortLabel' => $origAttr['sortLabel']
+        ];
+
+        $newAttr['ranking'] = $this->getSortAttributingRankingSetting($groupSortAttribute, $sortDir);
+        return $this->decorateSortAttribute($newAttr);
+    }
+
+    /*
+     * Add data to the sort attribute object
+     */
+    protected function decorateSortAttribute(array $attr): array {
+        if (!array_key_exists('label', $attr) && array_key_exists('sortLabel', $attr)) {
+            $attr['label'] = $attr['sortLabel'];
+        }
+        return $attr;
+    }
+
+    /**
+     * Get ranking setting to be used for the standard sorting replica
+     * @param string $attrName
+     * @param string $sortDir
+     * @return string[]
+     */
+    protected function getSortAttributingRankingSetting(string $attrName, string $sortDir): array
+    {
+        return [
+            $sortDir . '(' . $attrName . ')',
+            'typo',
+            'geo',
+            'words',
+            'filters',
+            'proximity',
+            'attribute',
+            'exact',
+            'custom',
+        ];
+    }
+
+    /**
+     * @throws LocalizedException
+     */
+    protected function isGroupPricingExcludedFromWebsite(int $customerGroupId, int $websiteId): bool
+    {
+        $excludedWebsites = $this->groupExcludedWebsiteRepository->getCustomerGroupExcludedWebsites($customerGroupId);
+        return in_array($websiteId, $excludedWebsites);
+    }
+
+    /**
+     * Augment sorting configuration with corresponding replica indices, ranking,
+     * and (as needed) customer group pricing
+     *
+     * @param string $originalIndexName
+     * @param ?int $storeId
+     * @param ?int $currentCustomerGroupId
+     * @param ?array $attrs - serialized array of sorting attributes to transform (defaults to saved sorting config)
+     * @return array of transformed sorting / replica objects
      * @throws Magento\Framework\Exception\LocalizedException
      * @throws Magento\Framework\Exception\NoSuchEntityException
      */
-    public function getSortingIndices($originalIndexName, $storeId = null, $currentCustomerGroupId = null, $attrs = null)
+    public function getSortingIndices(
+        string $originalIndexName,
+        int $storeId = null,
+        int $currentCustomerGroupId = null,
+        array $attrs = null
+    ): array
     {
-        if (!$attrs){
+        // Selectively cache this result - only cache manipulation of saved settings per store
+        $useCache = is_null($currentCustomerGroupId) && is_null($attrs);
+
+        if ($useCache
+            && array_key_exists($storeId, $this->_sortingIndices)
+            && is_array($this->_sortingIndices[$storeId])) {
+            return $this->_sortingIndices[$storeId];
+        }
+
+        // If no sorting configuration is supplied - obtain from the saved configuration
+        if (!$attrs) {
             $attrs = $this->getSorting($storeId);
         }
 
@@ -1024,85 +1124,54 @@ class ConfigHelper
         foreach ($attrs as $key => $attr) {
             $indexName = false;
             $sortAttribute = false;
-            if ($this->isCustomerGroupsEnabled($storeId) && $attr['attribute'] === 'price') {
-                $websiteId = (int)$this->storeManager->getStore($storeId)->getWebsiteId();
+            // Group pricing
+            if ($this->isCustomerGroupsEnabled($storeId) && $attr['attribute'] === self::SORT_ATTRIBUTE_PRICE) {
+                $websiteId = (int) $this->storeManager->getStore($storeId)->getWebsiteId();
                 $groupCollection = $this->groupCollection;
                 if (!is_null($currentCustomerGroupId)) {
                     $groupCollection->addFilter('customer_group_id', $currentCustomerGroupId);
                 }
                 foreach ($groupCollection as $group) {
-                    $customerGroupId = (int)$group->getData('customer_group_id');
-                    $excludedWebsites = $this->groupExcludedWebsiteRepository->getCustomerGroupExcludedWebsites($customerGroupId);
-                    if (in_array($websiteId, $excludedWebsites)) {
-                        continue;
+                    $customerGroupId = (int) $group->getData('customer_group_id');
+                    if (!$this->isGroupPricingExcludedFromWebsite($customerGroupId, $websiteId)) {
+                        $newAttr = $this->getCustomerGroupSortPriceOverride($originalIndexName, $customerGroupId, $currency, $attr);;
+                        $attributesToAdd[$newAttr['sort']][] = $this->decorateSortAttribute($newAttr);
                     }
-                    $groupIndexNameSuffix = 'group_' . $customerGroupId;
-                    $groupIndexName =
-                        $originalIndexName . '_' . $attr['attribute'] . '_' . $groupIndexNameSuffix . '_' . $attr['sort'];
-                    $groupSortAttribute = $attr['attribute'] . '.' . $currency . '.' . $groupIndexNameSuffix;
-                    $newAttr = [];
-                    $newAttr['name'] = $groupIndexName;
-                    $newAttr['attribute'] = $attr['attribute'];
-                    $newAttr['sort'] = $attr['sort'];
-                    $newAttr['sortLabel'] = $attr['sortLabel'];
-                    if (!array_key_exists('label', $newAttr) && array_key_exists('sortLabel', $newAttr)) {
-                        $newAttr['label'] = $newAttr['sortLabel'];
-                    }
-                    $newAttr['ranking'] = [
-                        $newAttr['sort'] . '(' . $groupSortAttribute . ')',
-                        'typo',
-                        'geo',
-                        'words',
-                        'filters',
-                        'proximity',
-                        'attribute',
-                        'exact',
-                        'custom',
-                    ];
-                    $attributesToAdd[$newAttr['sort']][] = $newAttr;
                 }
-            } elseif ($attr['attribute'] === 'price') {
+            // Regular pricing
+            } elseif ($attr['attribute'] === self::SORT_ATTRIBUTE_PRICE) {
                 $indexName = $originalIndexName . '_' . $attr['attribute'] . '_' . 'default' . '_' . $attr['sort'];
                 $sortAttribute = $attr['attribute'] . '.' . $currency . '.' . 'default';
+            // All other sort attributes
             } else {
                 $indexName = $originalIndexName . '_' . $attr['attribute'] . '_' . $attr['sort'];
                 $sortAttribute = $attr['attribute'];
             }
+
+            // Decorate all non group pricing attributes
             if ($indexName && $sortAttribute) {
                 $attrs[$key]['name'] = $indexName;
-                if (!array_key_exists('label', $attrs[$key]) && array_key_exists('sortLabel', $attrs[$key])) {
-                    $attrs[$key]['label'] = $attrs[$key]['sortLabel'];
-                }
-                $attrs[$key]['ranking'] = [
-                    $attr['sort'] . '(' . $sortAttribute . ')',
-                    'typo',
-                    'geo',
-                    'words',
-                    'filters',
-                    'proximity',
-                    'attribute',
-                    'exact',
-                    'custom',
-                ];
+                $attrs[$key]['ranking'] = $this->getSortAttributingRankingSetting($sortAttribute, $attr['sort']);
+                $attrs[$key] = $this->decorateSortAttribute($attrs[$key]);
             }
         }
         $attrsToReturn = [];
-        if (count($attributesToAdd) > 0) {
-            foreach ($attrs as $key => $attr) {
-                if ($attr['attribute'] == 'price' && isset($attributesToAdd[$attr['sort']])) {
-                    $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
-                } else {
-                    $attrsToReturn[] = $attr;
-                }
+
+        foreach ($attrs as $attr) {
+            if ($attr['attribute'] == self::SORT_ATTRIBUTE_PRICE
+                && count($attributesToAdd)
+                && isset($attributesToAdd[$attr['sort']])) {
+                $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
+            } else {
+                $attrsToReturn[] = $attr;
             }
         }
-        if (count($attrsToReturn) > 0) {
-            return $attrsToReturn;
+        
+        if ($useCache) {
+            $this->_sortingIndices[$storeId] = $attrsToReturn;
         }
-        if (is_array($attrs)) {
-            return $attrs;
-        }
-        return [];
+
+        return $attrsToReturn;
     }
 
     /***
@@ -1791,14 +1860,17 @@ class ConfigHelper
     }
 
     /**
-     * @param $storeId
-     * @return mixed
+     * @param int|null $storeId
+     * @return bool
      */
-    public function useVirtualReplica($storeId = null) {
-        return $this->configInterface->isSetFlag(self::USE_VIRTUAL_REPLICA_ENABLED,
-            ScopeInterface::SCOPE_STORE,
-            $storeId
-        );
+    public function useVirtualReplica(?int $storeId = null): bool
+    {
+        return (bool) count(array_filter(
+            $this->getSorting($storeId),
+            function ($sort) {
+                return $sort['virtualReplica'];
+            }
+        ));
     }
 
     /**

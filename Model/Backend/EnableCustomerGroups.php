@@ -15,20 +15,8 @@ use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
 use Magento\Store\Model\StoreManagerInterface;
 
-class Replica extends Value
+class EnableCustomerGroups extends Value
 {
-    /** @var StoreManagerInterface */
-    protected $storeManager;
-    /**
-     * @var Data
-     */
-    protected $helper;
-
-    /**
-     * @var ProductHelper
-     */
-    protected $productHelper;
-
     /**
      * @param Context $context
      * @param Registry $registry
@@ -42,20 +30,18 @@ class Replica extends Value
      * @param array $data
      */
     public function __construct(
-        Context               $context,
-        Registry              $registry,
-        ScopeConfigInterface  $config,
-        TypeListInterface     $cacheTypeList,
-        StoreManagerInterface $storeManager,
-        Data                  $helper,
-        ProductHelper         $productHelper,
-        AbstractResource      $resource = null,
-        AbstractDb            $resourceCollection = null,
-        array                 $data = []
-    ) {
-        $this->storeManager = $storeManager;
-        $this->helper = $helper;
-        $this->productHelper = $productHelper;
+        Context                         $context,
+        Registry                        $registry,
+        ScopeConfigInterface            $config,
+        TypeListInterface               $cacheTypeList,
+        protected StoreManagerInterface $storeManager,
+        protected Data                  $helper,
+        protected ProductHelper         $productHelper,
+        AbstractResource                $resource = null,
+        AbstractDb                      $resourceCollection = null,
+        array                           $data = []
+    )
+    {
         parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
     }
 
@@ -64,8 +50,10 @@ class Replica extends Value
      * @throws AlgoliaException
      * @throws NoSuchEntityException
      */
-    public function afterSave()
+    public function afterSave(): \Magento\Framework\App\Config\Value
     {
+        // TODO: Determine if this action should be performed in the event of customer group pricing enablement
+        /*
         if ($this->isValueChanged()) {
             try {
                 $storeIds = array_keys($this->storeManager->getStores());
@@ -79,6 +67,8 @@ class Replica extends Value
                 }
             }
         }
+        */
+
         return parent::afterSave();
     }
 }
