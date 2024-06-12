@@ -1156,16 +1156,17 @@ class ConfigHelper
             }
         }
         $attrsToReturn = [];
-        if (count($attributesToAdd)) {
-            foreach ($attrs as $attr) {
-                if ($attr['attribute'] == self::SORT_ATTRIBUTE_PRICE && isset($attributesToAdd[$attr['sort']])) {
-                    $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
-                } else {
-                    $attrsToReturn[] = $attr;
-                }
+
+        foreach ($attrs as $attr) {
+            if ($attr['attribute'] == self::SORT_ATTRIBUTE_PRICE
+                && count($attributesToAdd)
+                && isset($attributesToAdd[$attr['sort']])) {
+                $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
+            } else {
+                $attrsToReturn[] = $attr;
             }
         }
-
+        
         if ($useCache) {
             $this->_sortingIndices[$storeId] = $attrsToReturn;
         }
