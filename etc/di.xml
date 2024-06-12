@@ -35,6 +35,8 @@
 
     <preference for="Algolia\AlgoliaSearch\Api\Insights\EventsInterface" type="Algolia\AlgoliaSearch\Model\Insights\Events"/>
 
+    <preference for="Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface" type="Algolia\AlgoliaSearch\Model\Product\ReplicaManager"/>
+
     <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
         <arguments>
             <argument name="collections" xsi:type="array">

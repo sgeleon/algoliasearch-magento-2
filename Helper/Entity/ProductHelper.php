@@ -2,6 +2,7 @@
 
 namespace Algolia\AlgoliaSearch\Helper\Entity;
 
+use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
 use Algolia\AlgoliaSearch\Exception\ProductDeletedException;
 use Algolia\AlgoliaSearch\Exception\ProductDisabledException;
 use Algolia\AlgoliaSearch\Exception\ProductNotVisibleException;
@@ -14,7 +15,6 @@ use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
 use Algolia\AlgoliaSearch\Helper\Image as ImageHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
-use Algolia\AlgoliaSearch\Model\Product\ReplicaManager;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
@@ -125,7 +125,7 @@ class ProductHelper
         protected GroupCollection                         $groupCollection,
         protected GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
         protected ImageHelper                             $imageHelper,
-        protected ReplicaManager                          $replicaManager
+        protected ReplicaManagerInterface                 $replicaManager
     ) {}
 
     /**
@@ -376,7 +376,7 @@ class ProductHelper
         /*
          * Handle replicas
          */
-        $this->setReplicaSettings($indexName, $storeId);
+        $this->replicaManager->handleReplicas($indexName, $storeId, $indexSettings);
 
         if ($saveToTmpIndicesToo === true) {
             try {
@@ -401,71 +401,6 @@ class ProductHelper
                 }
             }
         }
-    }
-
-    protected function setReplicaSettings(string $indexName, int $storeId): void
-    {
-        $this->replicaManager->handleReplicas($indexName, $storeId);
-
-        return;
-
-        $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
-        $replicas = [];
-
-        if ($this->configHelper->isInstantEnabled($storeId)) {
-            $replicas = array_values(array_map(function ($sortingIndex) {
-                return $sortingIndex['name'];
-            }, $sortingIndices));
-        }
-
-        // Managing Virtual Replica
-        if ($this->configHelper->useVirtualReplica($storeId)) {
-            $replicas = $this->handleVirtualReplica($replicas);
-        }
-
-        // Merge current replicas with sorting replicas to not delete A/B testing replica indices
-        try {
-            $currentSettings = $this->algoliaHelper->getSettings($indexName);
-            if (is_array($currentSettings) && array_key_exists('replicas', $currentSettings)) {
-                $replicas = array_values(array_unique(array_merge($replicas, $currentSettings['replicas'])));
-            }
-        } catch (AlgoliaException $e) {
-            if ($e->getCode() !== 404) {
-                throw $e;
-            }
-        }
-
-        if (count($replicas) > 0) {
-            $this->algoliaHelper->setSettings($indexName, ['replicas' => $replicas]);
-            $this->logger->log('Setting replicas to "' . $indexName . '" index.');
-            $this->logger->log('Replicas: ' . json_encode($replicas));
-            $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
-            if (!$this->configHelper->useVirtualReplica($storeId)) {
-                foreach ($sortingIndices as $values) {
-                    $replicaName = $values['name'];
-                    $indexSettings['ranking'] = $values['ranking'];
-                    $this->algoliaHelper->setSettings($replicaName, $indexSettings, false, true);
-                    $this->logger->log('Setting settings to "' . $replicaName . '" replica.');
-                    $this->logger->log('Settings: ' . json_encode($indexSettings));
-                }
-            } else {
-                foreach ($sortingIndices as $values) {
-                    $replicaName = $values['name'];
-                    array_unshift($customRanking, $values['ranking'][0]);
-                    $replicaSetting['customRanking'] = $customRanking;
-                    $this->algoliaHelper->setSettings($replicaName, $replicaSetting, false, false);
-                    $this->logger->log('Setting settings to "' . $replicaName . '" replica.');
-                    $this->logger->log('Settings: ' . json_encode($replicaSetting));
-                }
-            }
-        } else {
-            $this->algoliaHelper->setSettings($indexName, ['replicas' => []]);
-            $this->logger->log('Removing replicas from "' . $indexName . '" index');
-            $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
-        }
-
-        // Commented out as it doesn't delete anything now because of merging replica indices earlier
-        // $this->deleteUnusedReplicas($indexName, $replicas, $setReplicasTaskId);
     }
 
     /**
@@ -1484,7 +1419,7 @@ class ProductHelper
      * Return a formatted Algolia `replicas` configuration for the provided sorting indices
      * @param mixed[] $sortingIndices Array of sorting index objects
      * @return string[]
-     * @deprecated This method is moving to ReplicaManager where it is being re-envisioned
+     * @deprecated This method should no longer used
      */
     protected function decorateReplicasSetting(array $sortingIndices): array {
         return array_map(
@@ -1508,34 +1443,35 @@ class ProductHelper
      * @throws ExceededRetriesException
      * @throws LocalizedException
      * @throws NoSuchEntityException
-     * @deprecated This function may be removed in a future release
+     * @deprecated This function will be removed in a future release
+     * @see Algolia::AlgoliaSearch::Api::Product::ReplicaManagerInterface
      */
     public function handlingReplica(string $indexName, int $storeId, $sortingAttribute = false): void
     {
-//        $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId, null, $sortingAttribute);
-//        if ($this->configHelper->isInstantEnabled($storeId)) {
-//            $newReplicas = $this->decorateReplicasSetting($sortingIndices);
-//
-//            try {
-//                $currentSettings = $this->algoliaHelper->getSettings($indexName);
-//                if (array_key_exists('replicas', $currentSettings)) {
-//                    $oldReplicas = $currentSettings['replicas'];
-//                    $replicasToDelete = array_diff($oldReplicas, $newReplicas);
-//                    $this->algoliaHelper->setSettings($indexName, ['replicas' => $newReplicas]);
-//                    $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
-//                    $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
-//                    if (count($replicasToDelete) > 0) {
-//                        foreach ($replicasToDelete as $deletedReplica) {
-//                            $this->algoliaHelper->deleteIndex($deletedReplica);
-//                        }
-//                    }
-//                }
-//            } catch (AlgoliaException $e) {
-//                if ($e->getCode() !== 404) {
-//                    $this->logger->log($e->getMessage());
-//                    throw $e;
-//                }
-//            }
-//        }
+        $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId, null, $sortingAttribute);
+        if ($this->configHelper->isInstantEnabled($storeId)) {
+            $newReplicas = $this->decorateReplicasSetting($sortingIndices);
+
+            try {
+                $currentSettings = $this->algoliaHelper->getSettings($indexName);
+                if (array_key_exists('replicas', $currentSettings)) {
+                    $oldReplicas = $currentSettings['replicas'];
+                    $replicasToDelete = array_diff($oldReplicas, $newReplicas);
+                    $this->algoliaHelper->setSettings($indexName, ['replicas' => $newReplicas]);
+                    $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
+                    $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
+                    if (count($replicasToDelete) > 0) {
+                        foreach ($replicasToDelete as $deletedReplica) {
+                            $this->algoliaHelper->deleteIndex($deletedReplica);
+                        }
+                    }
+                }
+            } catch (AlgoliaException $e) {
+                if ($e->getCode() !== 404) {
+                    $this->logger->log($e->getMessage());
+                    throw $e;
+                }
+            }
+        }
     }
 }

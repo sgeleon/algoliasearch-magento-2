@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Algolia\AlgoliaSearch\Model\Product;
 
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
@@ -187,23 +189,17 @@ class ReplicaManager implements ReplicaManagerInterface
     }
 
     /**
-     * @param string $indexName - could be tmp (legacy impl)
-     * @param int $storeId
-     * @return void
-     *
-     * @throws AlgoliaException
-     * @throws ExceededRetriesException
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
+     * @inheritDoc
      */
-    public function handleReplicas(string $indexName, int $storeId): void
+    public function handleReplicas(string $indexName, int $storeId, array $primaryIndexSettings): void
     {
+        // TODO: Determine if InstantSearch is a hard requirement (i.e. headless implementations may still need replicas)
         if ($this->configHelper->isInstantEnabled($storeId)
             && $this->hasReplicaConfigurationChanged($indexName, $storeId))
         {
-            // We only care about configuring ranking for replicas that were added!
+            // TODO: Handle ranking adjustments when toggling virtual vs standard replicas
             $addedReplicas = $this->setReplicasOnPrimaryIndex($indexName, $storeId);
-            $this->configureRanking($addedReplicas);
+            $this->configureRanking($indexName, $storeId, $addedReplicas, $primaryIndexSettings);
         }
     }
 
@@ -250,11 +246,46 @@ class ReplicaManager implements ReplicaManagerInterface
         }
     }
 
-    /** Apply ranking settings to the replica indices */
-    protected function configureRanking(array $replicas): void
+    /**
+     * Apply ranking settings to the added replica indices
+     * @param string $indexName
+     * @param int $storeId
+     * @param string[] $replicas
+     * @param array<string, mixed> $primaryIndexSettings
+     * @return void
+     * @throws AlgoliaException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     */
+    protected function configureRanking(string $indexName, int $storeId, array $replicas, array $primaryIndexSettings): void
     {
-        foreach ($replicas as $replica) {
-
+        $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
+        $replicaDetails = array_filter(
+            $sortingIndices,
+            function($replica) use ($replicas) {
+                return in_array($replica['name'], $replicas);
+            }
+        );
+        foreach ($replicaDetails as $replica) {
+            $replicaName = $replica['name'];
+            // Virtual replicas - relevant sort
+            if ($replica['virtualReplica']) {
+                $customRanking = array_key_exists('customRanking', $primaryIndexSettings)
+                    ? $primaryIndexSettings['customRanking']
+                    : [];
+                array_unshift($customRanking, $replica['ranking'][0]);
+                $this->algoliaHelper->setSettings(
+                    $replicaName,
+                    [ 'customRanking' => $customRanking ]
+                );
+            // Standard replicas - exhaustive sort
+            } else {
+                $primaryIndexSettings['ranking'] = $replica['ranking'];
+                $this->algoliaHelper->setSettings(
+                    $replicaName,
+                    $primaryIndexSettings
+                );
+            }
         }
     }
 }
