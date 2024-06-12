@@ -10,6 +10,7 @@ if ($isEnabled):
                 "Algolia_AlgoliaSearch/recommend" : {
                     "recommendLSContainer" : "<?= $lsContainer ?>",
                     "numOfLookingSimilarItem" : "<?= $block->getData('numOfLookingSimilarItem') ?>",
+                    "productIds" : <?= $block->getProductIds() ?>
                 }
             }
         }
