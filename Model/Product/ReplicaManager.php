@@ -55,28 +55,6 @@ class ReplicaManager implements ReplicaManagerInterface
      * @throws LocalizedException
      */
     protected function hasReplicaConfigurationChanged(string $indexName, int $storeId): bool {
-        /*
-         * Method 1 (exhaustive)
-         * Get the current replica configuration from Algolia
-         * Extract the non Magento replicas (e.g. sorting strategies, dashboard managed, etc.)
-         * Calculate the new replica setting for Magento
-         * Merge the non Magento replicas with new Magento replica config
-         * Perform an array diff (this code can be optimized based on how array_diff works)
-         * If there is a change return true else return false
-         *
-         * Method 2 (efficient)
-         * Get the current replica configuration from Algolia
-         * Remove non Magento replicas from list and call this $old
-         * Determine new Magento replica config and call this $new
-         * Sort both arrays ($old and $new)
-         * Compare the arrays (array diff etc) and return true if not matching (order should not matter)
-         *
-         * This gets complicated however if we are dealing with stores -
-         * so we must abstract the obtaining of the replica configuration from Algolia
-         * In other words if a store is using the default config we compare the sorts to the default index
-         * If however there is store scoping - we must isolate the store specific index and compare to that
-         */
-
         $old = $this->getMagentoReplicaConfigurationFromAlgolia($indexName, $storeId);
         $new = $this->transformSortingIndicesToReplicaSetting($this->configHelper->getSortingIndices($indexName, $storeId));
         sort($old);
@@ -220,6 +198,7 @@ class ReplicaManager implements ReplicaManagerInterface
         $oldMagentoReplicaIndices = $this->getBareIndexNamesFromReplicaSetting($oldMagentoReplicas);
         $newMagentoReplicaIndices = $this->getBareIndexNamesFromReplicaSetting($newMagentoReplicas);
         $replicasToDelete = array_diff($oldMagentoReplicaIndices, $newMagentoReplicaIndices);
+        // TODO: Refactor for virtual / standard toggle - not just added replica indices require ranking config
         $replicasToAdd = array_diff($newMagentoReplicaIndices, $oldMagentoReplicaIndices);
         $this->algoliaHelper->setSettings($indexName, ['replicas' => array_merge($newMagentoReplicas, $nonMagentoReplicas)]);
         $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
