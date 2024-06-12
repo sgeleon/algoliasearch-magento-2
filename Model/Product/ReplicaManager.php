@@ -204,7 +204,7 @@ class ReplicaManager implements ReplicaManagerInterface
     /**
      * @param $primaryIndexName
      * @param int $storeId
-     * @return string[] Replicas added by this operation
+     * @return string[] Replicas added or modified by this operation
      * @throws LocalizedException
      * @throws NoSuchEntityException
      * @throws AlgoliaException
@@ -219,9 +219,9 @@ class ReplicaManager implements ReplicaManagerInterface
         $newMagentoReplicaIndices = $this->getBareIndexNamesFromReplicaSetting($newMagentoReplicasSetting);
 
         $replicasToDelete = array_diff($oldMagentoReplicaIndices, $newMagentoReplicaIndices);
-        $replicasToUpdate = array_diff($newMagentoReplicasSetting, $oldMagentoReplicasSetting);
-        $replicasToUpdate = $this->getBareIndexNamesFromReplicaSetting($replicasToUpdate);
         $replicasToAdd = array_diff($newMagentoReplicaIndices, $oldMagentoReplicaIndices);
+        $replicasToRank = $this->getBareIndexNamesFromReplicaSetting(array_diff($newMagentoReplicasSetting, $oldMagentoReplicasSetting));
+        $replicasToUpdate = array_diff($replicasToRank, $replicasToAdd);
 
         $this->algoliaHelper->setSettings(
             $indexName,
@@ -241,7 +241,8 @@ class ReplicaManager implements ReplicaManagerInterface
             );
         }
 
-        return $replicasToUpdate;
+        // include both added and updated replica indices
+        return $replicasToRank;
     }
 
     /**
