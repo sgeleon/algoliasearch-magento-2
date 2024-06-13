@@ -42,9 +42,9 @@ define([
                                 position: index + 1,
                             }));
                         },
-                        headerComponent({html}) {
-                            if (this.props.recommendations.length === 0) {
-                                return html
+                        headerComponent({html, recommendations}) {
+                            if (!recommendations.length) {
+                                return '';
                             }
                             return recommendProductsHtml.getHeaderHtml(
                                 html,
@@ -78,9 +78,9 @@ define([
                                 position: index + 1,
                             }));
                         },
-                        headerComponent({html}) {
-                            if (this.props.recommendations.length === 0) {
-                                return html;
+                        headerComponent({html, recommendations}) {
+                            if (!recommendations.length) {
+                                return '';
                             }
                             return recommendProductsHtml.getHeaderHtml(
                                 html,
@@ -121,9 +121,9 @@ define([
                             position: index + 1,
                         }));
                     },
-                    headerComponent({html}) {
-                        if (this.props.recommendations.length === 0) {
-                            return html;
+                    headerComponent({html, recommendations}) {
+                        if (!recommendations.length) {
+                            return '';
                         }
                         return recommendProductsHtml.getHeaderHtml(
                             html,
