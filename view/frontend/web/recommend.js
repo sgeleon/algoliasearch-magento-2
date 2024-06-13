@@ -43,6 +43,9 @@ define([
                             }));
                         },
                         headerComponent({html}) {
+                            if (this.props.recommendations.length === 0) {
+                                return html
+                            }
                             return recommendProductsHtml.getHeaderHtml(
                                 html,
                                 algoliaConfig.recommend.FBTTitle
@@ -76,6 +79,9 @@ define([
                             }));
                         },
                         headerComponent({html}) {
+                            if (this.props.recommendations.length === 0) {
+                                return html;
+                            }
                             return recommendProductsHtml.getHeaderHtml(
                                 html,
                                 algoliaConfig.recommend.relatedProductsTitle
@@ -116,6 +122,9 @@ define([
                         }));
                     },
                     headerComponent({html}) {
+                        if (this.props.recommendations.length === 0) {
+                            return html;
+                        }
                         return recommendProductsHtml.getHeaderHtml(
                             html,
                             algoliaConfig.recommend.trendingItemsTitle
