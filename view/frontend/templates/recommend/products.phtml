@@ -22,7 +22,7 @@ if (!empty($recommendConfig['enabledFBT'])
         {
             "*": {
                 "Algolia_AlgoliaSearch/recommend" : {
-                    "algoliObjectId" : ["<?= $product->getId() ?>"]
+                    "objectIDs" : ["<?= $product->getId() ?>"]
                 }
             }
         }

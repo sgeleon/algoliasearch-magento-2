@@ -13,7 +13,7 @@ if (!empty($recommendConfig['enabledRelatedInCart']) || !empty($recommendConfig[
         {
             "*": {
                 "Algolia_AlgoliaSearch/recommend" : {
-                    "algoliObjectId" : <?= json_encode($cartItems) ?>
+                    "objectIDs" : <?= json_encode($cartItems) ?>
                 }
             }
         }

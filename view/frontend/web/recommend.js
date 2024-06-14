@@ -19,13 +19,13 @@ define([
             const apiKey = algoliaConfig.apiKey;
             const recommendClient = recommend(appId, apiKey);
             const indexName = this.defaultIndexName;
-            const objectIds = config.productIds ? config.productIds : config.algoliObjectId;
+            const objectIDs = config.objectIDs;
             if (
                 $('body').hasClass('catalog-product-view') ||
                 $('body').hasClass('checkout-cart-index')
             ) {
                 // --- Add the current product objectID here ---
-                 if (
+                if (
                     (algoliaConfig.recommend.enabledFBT &&
                         $('body').hasClass('catalog-product-view')) ||
                     (algoliaConfig.recommend.enabledFBTInCart &&
@@ -35,7 +35,7 @@ define([
                         container         : '#frequentlyBoughtTogether',
                         recommendClient,
                         indexName,
-                        objectIDs         : objectIds,
+                        objectIDs,
                         maxRecommendations: algoliaConfig.recommend.limitFBTProducts,
                         transformItems    : function (items) {
                             return items.map((item, index) => ({
@@ -68,7 +68,7 @@ define([
                         container         : '#relatedProducts',
                         recommendClient,
                         indexName,
-                        objectIDs         : objectIds,
+                        objectIDs,
                         maxRecommendations: algoliaConfig.recommend.limitRelatedProducts,
                         transformItems    : function (items) {
                             return items.map((item, index) => ({
@@ -176,7 +176,7 @@ define([
                     container: '#lookingSimilar',
                     recommendClient,
                     indexName,
-                    objectIDs: objectIds,
+                    objectIDs,
                     maxRecommendations: algoliaConfig.recommend.limitLookingSimilar,
                     transformItems: function (items) {
                         return items.map((item, index) => ({
@@ -200,7 +200,7 @@ define([
                 });
             } else if (
                 algoliaConfig.recommend.enabledLookingSimilar &&
-                objectIds &&
+                objectIDs &&
                 typeof config.recommendLSContainer !== 'undefined'
             ){
                 let containerValue = '#' + config.recommendLSContainer;
@@ -208,7 +208,7 @@ define([
                     container: containerValue,
                     recommendClient,
                     indexName,
-                    objectIDs: objectIds,
+                    objectIDs,
                     maxRecommendations: config.numOfLookingSimilarItem
                         ? parseInt(config.numOfLookingSimilarItem)
                         : algoliaConfig.recommend.limitLookingSimilar,
