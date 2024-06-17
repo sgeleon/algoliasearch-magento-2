@@ -127,6 +127,8 @@ class ConfigHelper
     protected const IS_REMOVE_RELATED_PRODUCTS_BLOCK = 'algoliasearch_recommend/recommend/related_product/is_remove_core_related_products_block';
     protected const IS_REMOVE_UPSELL_PRODUCTS_BLOCK = 'algoliasearch_recommend/recommend/frequently_bought_together/is_remove_core_upsell_products_block';
     protected const IS_RECOMMEND_TRENDING_ITEMS_ENABLED = 'algoliasearch_recommend/recommend/trends_item/is_trending_items_enabled';
+    protected const IS_RECOMMEND_LOOKING_SIMILAR_ENABLED = 'algoliasearch_recommend/recommend/looking_similar/is_looking_similar_enabled';
+    protected const NUM_OF_LOOKING_SIMILAR = 'algoliasearch_recommend/recommend/looking_similar/num_of_products';
     protected const NUM_OF_TRENDING_ITEMS = 'algoliasearch_recommend/recommend/trends_item/num_of_trending_items';
     protected const TREND_ITEMS_FACET_NAME = 'algoliasearch_recommend/recommend/trends_item/facet_name';
     protected const TREND_ITEMS_FACET_VALUE = 'algoliasearch_recommend/recommend/trends_item/facet_value';
@@ -135,6 +137,10 @@ class ConfigHelper
     protected const IS_ADDTOCART_ENABLED_IN_FREQUENTLY_BOUGHT_TOGETHER = 'algoliasearch_recommend/recommend/frequently_bought_together/is_addtocart_enabled';
     protected const IS_ADDTOCART_ENABLED_IN_RELATED_PRODUCTS = 'algoliasearch_recommend/recommend/related_product/is_addtocart_enabled';
     protected const IS_ADDTOCART_ENABLED_IN_TRENDS_ITEM = 'algoliasearch_recommend/recommend/trends_item/is_addtocart_enabled';
+    protected const IS_ADDTOCART_ENABLED_IN_LOOKING_SIMILAR = 'algoliasearch_recommend/recommend/looking_similar/is_addtocart_enabled';
+    protected const IS_LOOKING_SIMILAR_ENABLED_IN_PDP = 'algoliasearch_recommend/recommend/looking_similar/is_looking_similar_enabled_on_pdp';
+    protected const IS_LOOKING_SIMILAR_ENABLED_IN_SHOPPING_CART = 'algoliasearch_recommend/recommend/looking_similar/is_looking_similar_enabled_on_cart_page';
+    protected const LOOKING_SIMILAR_TITLE = 'algoliasearch_recommend/recommend/looking_similar/title';
     protected const USE_VIRTUAL_REPLICA_ENABLED = 'algoliasearch_instant/instant/use_virtual_replica';
     protected const AUTOCOMPLETE_KEYBORAD_NAVIAGATION = 'algoliasearch_autocomplete/autocomplete/navigator';
     protected const FREQUENTLY_BOUGHT_TOGETHER_TITLE = 'algoliasearch_recommend/recommend/frequently_bought_together/title';
@@ -806,6 +812,21 @@ class ConfigHelper
     }
 
     /**
+     * Returns number of looking similar products to display
+     *
+     * @param $storeId
+     * @return int
+     */
+    public function getNumberOfLookingSimilar($storeId = null)
+    {
+        return (int)$this->configInterface->getValue(
+            self::NUM_OF_LOOKING_SIMILAR,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
      * @param $storeId
      * @return mixed
      */
@@ -826,6 +847,57 @@ class ConfigHelper
     {
         return $this->configInterface->getValue(
             self::TREND_ITEMS_FACET_VALUE,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * Determines whether Looking Similar enabled (for widgets))
+     *
+     * @param $storeId
+     * @return int
+     */
+    public function isRecommendLookingSimilarEnabled($storeId = null)
+    {
+        return (int)$this->configInterface->getValue(
+            self::IS_RECOMMEND_LOOKING_SIMILAR_ENABLED,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    /**
+     * Determines whether Looking Similar enabled on PDP
+     *
+     * @param $storeId
+     * @return int
+     */
+    public function isLookingSimilarEnabledInPDP($storeId = null)
+    {
+        return (int)$this->configInterface->getValue(
+            self::IS_LOOKING_SIMILAR_ENABLED_IN_PDP,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
+    }
+
+    public function getLookingSimilarTitle($storeId = null)
+    {
+        return $this->configInterface->getValue(
+            self::LOOKING_SIMILAR_TITLE,
+            ScopeInterface::SCOPE_STORE, $storeId
+        );
+    }
+
+    /**
+     * @param $storeId
+     * @return int
+     */
+    public function isLookingSimilarEnabledInShoppingCart($storeId = null)
+    {
+        return (int)$this->configInterface->getValue(
+            self::IS_LOOKING_SIMILAR_ENABLED_IN_SHOPPING_CART,
             ScopeInterface::SCOPE_STORE,
             $storeId
         );
@@ -882,6 +954,21 @@ class ConfigHelper
     public function isAddToCartEnabledInTrendsItem($storeId = null)
     {
         return $this->configInterface->isSetFlag(self::IS_ADDTOCART_ENABLED_IN_TRENDS_ITEM, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * Determines whether add to cart is enabled in Looking Similar
+     *
+     * @param $storeId
+     * @return bool
+     */
+    public function isAddToCartEnabledInLookingSimilar($storeId = null)
+    {
+        return $this->configInterface->isSetFlag(
+            self::IS_ADDTOCART_ENABLED_IN_LOOKING_SIMILAR,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
     }
 
     /**

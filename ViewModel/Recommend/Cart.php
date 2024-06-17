@@ -16,7 +16,7 @@ class Cart implements ArgumentInterface
      * @var StoreManagerInterface
      */
     protected $storeManager;
-    
+
     /**
      * @var Session
      */
@@ -81,7 +81,8 @@ class Cart implements ArgumentInterface
         return [
             'enabledFBTInCart' => $this->configHelper->isRecommendFrequentlyBroughtTogetherEnabledOnCartPage(),
             'enabledRelatedInCart' => $this->configHelper->isRecommendRelatedProductsEnabledOnCartPage(),
-            'isTrendItemsEnabledInCartPage' => $this->configHelper->isTrendItemsEnabledInShoppingCart()
+            'isTrendItemsEnabledInCartPage' => $this->configHelper->isTrendItemsEnabledInShoppingCart(),
+            'isLookingSimilarEnabledInCartPage' => $this->configHelper->isLookingSimilarEnabledInShoppingCart()
         ];
     }
 }
