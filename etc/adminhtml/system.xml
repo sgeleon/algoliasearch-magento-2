@@ -440,20 +440,6 @@
             <group id="instant_sorts" translate="label" type="text" sortOrder="10" showInDefault="1"
                    showInWebsite="1" showInStore="1">
                 <label>Sorting</label>
-
-                <!--                <field id="use_virtual_replica" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">-->
-                <!--                    <label>Use Virtual Replica</label>-->
-                <!--                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>-->
-                <!--                    <backend_model>Algolia\AlgoliaSearch\Model\Backend\Replica</backend_model>-->
-                <!--                    <comment>-->
-                <!--                        <![CDATA[-->
-                <!--                            Virtual Replica is only available on Premium plans <a target="_blank" href="https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/?client=php#switching-to-virtual-replica">documentation</a>-->
-                <!--                        ]]>-->
-                <!--                    </comment>-->
-                <!--                    <depends>-->
-                <!--                        <field id="is_instant_enabled">1</field>-->
-                <!--                    </depends>-->
-                <!--                </field>-->
                 <field id="sorts" translate="label comment" type="text" sortOrder="20" showInDefault="1"
                        showInWebsite="1" showInStore="1">
                     <label>Sorts</label>

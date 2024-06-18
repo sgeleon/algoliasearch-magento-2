@@ -6,7 +6,6 @@ namespace Algolia\AlgoliaSearch\Model\Product;
 
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
-use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
@@ -49,8 +48,7 @@ class ReplicaManager implements ReplicaManagerInterface
         protected ReplicaState  $replicaState,
         protected Logger        $logger
     )
-    {
-    }
+    {}
 
     /**
      * Evaluate the replica state of the index for a given store and determine
@@ -62,11 +60,19 @@ class ReplicaManager implements ReplicaManagerInterface
      */
     protected function hasReplicaConfigurationChanged(string $primaryIndexName, int $storeId): bool
     {
-        $old = $this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName, $storeId);
-        $new = $this->transformSortingIndicesToReplicaSetting($this->configHelper->getSortingIndices($primaryIndexName, $storeId));
-        sort($old);
-        sort($new);
-        return $old !== $new;
+        switch ($this->replicaState->getChangeState($storeId)) {
+            case ReplicaState::REPLICA_STATE_CHANGED:
+                return true;
+            case ReplicaState::REPLICA_STATE_UNCHANGED:
+                return false;
+            case ReplicaState::REPLICA_STATE_UNKNOWN:
+            default:
+                $old = $this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName);
+                $new = $this->transformSortingIndicesToReplicaSetting($this->configHelper->getSortingIndices($primaryIndexName, $storeId));
+                sort($old);
+                sort($new);
+                return $old !== $new;
+        }
     }
 
     protected function getReplicaConfigurationFromAlgolia($primaryIndexName, bool $refreshCache = false)
@@ -96,10 +102,8 @@ class ReplicaManager implements ReplicaManagerInterface
      * @param string $primaryIndexName
      * @param int $storeId
      * @return string[]
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
      */
-    protected function getMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName, int $storeId): array
+    protected function getMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName): array
     {
         $algoliaReplicas = $this->getReplicaConfigurationFromAlgolia($primaryIndexName);
         $magentoReplicas = $this->getPossibleMagentoReplicaSettings($primaryIndexName, $algoliaReplicas);
@@ -123,8 +127,9 @@ class ReplicaManager implements ReplicaManagerInterface
     }
 
     /**
-     * @throws NoSuchEntityException
-     * @throws LocalizedException
+     * @param string $primaryIndexName
+     * @param int $storeId
+     * @return array
      */
     protected function getNonMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName, int $storeId): array
     {
@@ -174,9 +179,8 @@ class ReplicaManager implements ReplicaManagerInterface
     protected function getPossibleMagentoReplicaSettingsFromConfig(string $primaryIndexName, int $storeId, bool $refreshCache = false): array
     {
         if ($refreshCache || !isset($this->_magentoReplicaPossibleConfig[$storeId])) {
-            //TODO: Determine whether it is necessary to merge the new configuration on an update when checking against Algolia
-            $sortConfig = $this->replicaState->isStateChanged()
-                ? array_merge($this->replicaState->getOriginalSortConfiguration(), $this->replicaState->getUpdatedSortConfiguration())
+            $sortConfig = $this->replicaState->getChangeState($storeId) === ReplicaState::REPLICA_STATE_CHANGED
+                ? array_merge($this->replicaState->getOriginalSortConfiguration($storeId), $this->replicaState->getUpdatedSortConfiguration($storeId))
                 : null;
             $sortingIndices = $this->configHelper->getSortingIndices($primaryIndexName, $storeId, null, $sortConfig);
             $this->_magentoReplicaPossibleConfig[$storeId] = array_merge(
@@ -195,7 +199,6 @@ class ReplicaManager implements ReplicaManagerInterface
         // TODO: Determine if InstantSearch is a hard requirement (i.e. headless implementations may still need replicas)
         if ($this->configHelper->isInstantEnabled($storeId)
             && $this->hasReplicaConfigurationChanged($primaryIndexName, $storeId)) {
-            // TODO: Handle ranking adjustments when toggling virtual vs standard replicas
             $addedReplicas = $this->setReplicasOnPrimaryIndex($primaryIndexName, $storeId);
             $this->configureRanking($primaryIndexName, $storeId, $addedReplicas, $primaryIndexSettings);
         }

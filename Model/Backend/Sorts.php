@@ -2,7 +2,6 @@
 
 namespace Algolia\AlgoliaSearch\Model\Backend;
 
-use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\Data;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Registry\ReplicaState;
@@ -11,8 +10,6 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Data\Collection\AbstractDb;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
@@ -63,16 +60,33 @@ class Sorts extends ArraySerialized
 
     /**
      * @return $this
-     * @throws AlgoliaException
-     * @throws NoSuchEntityException|LocalizedException
      */
     public function afterSave(): \Magento\Framework\App\Config\Value
     {
-        if ($this->isValueChanged()) {
-            $this->replicaState->setOriginalSortConfiguration($this->serializer->unserialize($this->getOldValue()));
-            $this->replicaState->setUpdatedSortConfiguration($this->serializer->unserialize($this->getValue()));
+        $storeIds = $this->getAffectedStoreIds();
+        foreach ($storeIds as $storeId) {
+            if ($this->isValueChanged()) {
+                $this->replicaState->setChangeState(ReplicaState::REPLICA_STATE_CHANGED, $storeId);
+                $this->replicaState->setOriginalSortConfiguration($this->serializer->unserialize($this->getOldValue()), $storeId);
+                $this->replicaState->setUpdatedSortConfiguration($this->serializer->unserialize($this->getValue()), $storeId);
+            } else {
+                $this->replicaState->setChangeState(ReplicaState::REPLICA_STATE_UNCHANGED, $storeId);
+            }
         }
 
         return parent::afterSave();
+    }
+
+    public function getAffectedStoreIds(): array
+    {
+        $scopeId = $this->getScopeId();
+        $scope = $this->getScope();
+        $storeIds = [];
+        //TODO Consider generating a list of affected stores based on scope (default vs website vs store) - but may be unnecessarily complex
+        // For now just return store scoped changes
+        if ($scope === 'stores') {
+            $storeIds[] = $scopeId;
+        }
+        return $storeIds;
     }
 }
