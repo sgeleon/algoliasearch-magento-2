@@ -2,7 +2,6 @@
 
 namespace Algolia\AlgoliaSearch\Helper\Configuration;
 
-use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
@@ -34,7 +33,6 @@ class ConfigChecker
      */
     public function checkAndApplyAllScopes(string $path, callable $callback, bool $includeDefault = true) {
         // First update all the possible scoped configurations
-        /** @var \Magento\Store\Api\Data\WebsiteInterface $website */
         foreach ($this->storeManager->getWebsites() as $website) {
             if ($this->isSettingAppliedForScopeAndCode(
                 $path,
@@ -45,7 +43,6 @@ class ConfigChecker
             }
         }
 
-        /** @var \Magento\Store\Api\Data\StoreInterface $store */
         foreach ($this->storeManager->getStores() as $store) {
             if ($this->isSettingAppliedForScopeAndCode(
                 $path,
