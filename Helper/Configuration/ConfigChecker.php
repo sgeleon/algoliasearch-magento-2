@@ -16,11 +16,32 @@ class ConfigChecker
         protected WebsiteRepositoryInterface $websiteRepository
     ) {}
 
-    public function isSettingAppliedForScopeAndCode(string $path, string $scope, string $code): bool
+    /**
+     * Is a scoped value different from the default?
+     * @param string $path
+     * @param string $scope
+     * @param mixed $code
+     * @return bool
+     */
+    public function isSettingAppliedForScopeAndCode(string $path, string $scope, mixed $code): bool
     {
         $value = $this->scopeConfig->getValue($path, $scope, $code);
         $defaultValue = $this->scopeConfig->getValue($path);
         return ($value !== $defaultValue);
+    }
+
+    /**
+     * Does a store config override the website config?
+     * @param string $path
+     * @param mixed $websiteId
+     * @param int $storeId
+     * @return bool
+     */
+    protected function isStoreSettingOverridingWebsite(string $path, mixed $websiteId, int $storeId): bool
+    {
+        $storeValue = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORES, $storeId);
+        $websiteValue = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_WEBSITES, $websiteId);
+        return ($storeValue !== $websiteValue);
     }
 
     /**
@@ -94,9 +115,9 @@ class ConfigChecker
             case ScopeInterface::SCOPE_WEBSITES:
                 $website = $this->websiteRepository->getById($scopeId);
                 foreach ($website->getStores() as $store) {
-                    if (!$this->isSettingAppliedForScopeAndCode(
+                    if (!$this->isStoreSettingOverridingWebsite(
                         $path,
-                        ScopeInterface::SCOPE_STORES,
+                        $website->getId(),
                         $store->getId()
                     )) {
                         $storeIds[] = $store->getId();
