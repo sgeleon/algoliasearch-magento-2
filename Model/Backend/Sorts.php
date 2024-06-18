@@ -83,42 +83,34 @@ class Sorts extends ArraySerialized
         $storeIds = [];
 
         switch ($scope) {
-            // check and find all scopes that are not overridden
+            // check and find all stores that are not overridden
             case ScopeConfigInterface::SCOPE_TYPE_DEFAULT:
-                $storeIds = array_keys($this->storeManager->getStores());
-                $this->configChecker->checkAndApplyAllScopes(
-                    $this->getPath(),
-                    function (string $scope, int $scopeId) use (&$storeIds) {
-                        if ($scope === ScopeInterface::SCOPE_STORES) {
-                            // remove overridden store (not in scope of this change)
-                            if (($key = array_search($scopeId, $storeIds)) !== false) {
-                                unset($storeIds[$key]);
-                            }
-                        }
-                        elseif ($scope === ScopeInterface::SCOPE_WEBSITES) {
-                            // website overridden - remove all the stores (not in scope)
-                            $website = $this->websiteRepository->getById($scopeId);
-                            foreach ($website->getStores() as $store) {
-                                if (($key = array_search($store->getId(), $storeIds)) !== false) {
-                                    unset($storeIds[$key]);
-                                }
-                            }
-                        }
-                    },
-                    false
-                );
-                break;
-
-            // website config applied - check and find all stores that are not overridden
-            case ScopeInterface::SCOPE_WEBSITES:
-                $website = $this->websiteRepository->getById($scopeId);
-                foreach ($website->getStores() as $store) {
-                    if (!$this->configChecker->isSettingAppliedForScopeAndCode($this->getPath(), ScopeInterface::SCOPE_STORES, $store->getId())) {
+                foreach ($this->storeManager->getStores() as $store) {
+                    if (!$this->configChecker->isSettingAppliedForScopeAndCode(
+                        $this->getPath(),
+                        ScopeInterface::SCOPE_STORES,
+                        $store->getId()
+                    )) {
                         $storeIds[] = $store->getId();
                     }
                 }
                 break;
-            // store override only
+
+            // website config applied - check and find all stores under that website that are not overridden
+            case ScopeInterface::SCOPE_WEBSITES:
+                $website = $this->websiteRepository->getById($scopeId);
+                foreach ($website->getStores() as $store) {
+                    if (!$this->configChecker->isSettingAppliedForScopeAndCode(
+                        $this->getPath(),
+                        ScopeInterface::SCOPE_STORES,
+                        $store->getId()
+                    )) {
+                        $storeIds[] = $store->getId();
+                    }
+                }
+                break;
+
+            // simple store specific config
             case ScopeInterface::SCOPE_STORES:
                 $storeIds[] = $scopeId;
         }
