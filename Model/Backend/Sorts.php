@@ -3,8 +3,6 @@
 namespace Algolia\AlgoliaSearch\Model\Backend;
 
 use Algolia\AlgoliaSearch\Helper\Configuration\ConfigChecker;
-use Algolia\AlgoliaSearch\Helper\Data;
-use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Registry\ReplicaState;
 use Magento\Config\Model\Config\Backend\Serialized\ArraySerialized;
 use Magento\Framework\App\Cache\TypeListInterface;
@@ -16,27 +14,20 @@ use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
 use Magento\Framework\Serialize\Serializer\Json;
-use Magento\Store\Api\WebsiteRepositoryInterface;
-use Magento\Store\Model\ScopeInterface;
-use Magento\Store\Model\StoreManagerInterface;
 
 class Sorts extends ArraySerialized
 {
     public function __construct(
-        Context                              $context,
-        Registry                             $registry,
-        ScopeConfigInterface                 $config,
-        TypeListInterface                    $cacheTypeList,
-        protected StoreManagerInterface      $storeManager,
-        protected Data                       $helper,
-        protected ProductHelper              $productHelper,
-        protected WebsiteRepositoryInterface $websiteRepository,
-        protected ReplicaState               $replicaState,
-        protected ConfigChecker              $configChecker,
-        AbstractResource                     $resource = null,
-        AbstractDb                           $resourceCollection = null,
-        array                                $data = [],
-        Json                                 $serializer = null
+        Context                 $context,
+        Registry                $registry,
+        ScopeConfigInterface    $config,
+        TypeListInterface       $cacheTypeList,
+        protected ReplicaState  $replicaState,
+        protected ConfigChecker $configChecker,
+        AbstractResource        $resource = null,
+        AbstractDb              $resourceCollection = null,
+        array                   $data = [],
+        Json                    $serializer = null
     )
     {
         $this->serializer = $serializer ?: ObjectManager::getInstance()->get(Json::class);
@@ -57,7 +48,12 @@ class Sorts extends ArraySerialized
      */
     public function afterSave(): \Magento\Framework\App\Config\Value
     {
-        $storeIds = $this->getAffectedStoreIds();
+        $storeIds = $this->configChecker->getAffectedStoreIds(
+            $this->getPath(),
+            $this->getScope(),
+            $this->getScopeId()
+        );
+
         foreach ($storeIds as $storeId) {
             if ($this->isValueChanged()) {
                 $this->replicaState->setChangeState(ReplicaState::REPLICA_STATE_CHANGED, $storeId);
@@ -69,74 +65,5 @@ class Sorts extends ArraySerialized
         }
 
         return parent::afterSave();
-    }
-
-    /**
-     * For the current operation's scope determine which stores need to be updated
-     * @return int[]
-     * @throws NoSuchEntityException
-     */
-    public function getAffectedStoreIds(): array
-    {
-        $scopeId = $this->getScopeId();
-        $scope = $this->getScope();
-        $storeIds = [];
-
-        switch ($scope) {
-            // check and find all stores that are not overridden
-            case ScopeConfigInterface::SCOPE_TYPE_DEFAULT:
-                foreach ($this->storeManager->getStores() as $store) {
-                    if (!$this->configChecker->isSettingAppliedForScopeAndCode(
-                        $this->getPath(),
-                        ScopeInterface::SCOPE_STORES,
-                        $store->getId()
-                    )) {
-                        $storeIds[] = $store->getId();
-                    }
-                }
-                break;
-
-            // website config applied - check and find all stores under that website that are not overridden
-            case ScopeInterface::SCOPE_WEBSITES:
-                $website = $this->websiteRepository->getById($scopeId);
-                foreach ($website->getStores() as $store) {
-                    if (!$this->configChecker->isSettingAppliedForScopeAndCode(
-                        $this->getPath(),
-                        ScopeInterface::SCOPE_STORES,
-                        $store->getId()
-                    )) {
-                        $storeIds[] = $store->getId();
-                    }
-                }
-                break;
-
-            // simple store specific config
-            case ScopeInterface::SCOPE_STORES:
-                $storeIds[] = $scopeId;
-        }
-        return $storeIds;
-    }
-
-    /**
-     * For a given website perform an operation on each of the corresponding stores
-     * based on whether the store has overridden the config.
-     *
-     * @param int $websiteId
-     * @param callable $callback Callback to execute for a given store
-     *                           Signature: function(int $storeId, bool $isConfigOverridden)
-     * @return void
-     * @throws NoSuchEntityException
-     */
-    protected function handleStoresForWebsite(int $websiteId, callable $callback): void
-    {
-        $website = $this->websiteRepository->getById($websiteId);
-        foreach ($website->getStores() as $store) {
-            $callback(
-                $store->getId(),
-                $this->configChecker->isSettingAppliedForScopeAndCode(
-                    $this->getPath(),
-                    ScopeInterface::SCOPE_STORES, $store->getId())
-            );
-        }
     }
 }
