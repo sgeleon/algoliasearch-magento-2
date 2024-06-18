@@ -37,7 +37,7 @@ class ConfigChecker
         /** @var \Magento\Store\Api\Data\WebsiteInterface $website */
         foreach ($this->storeManager->getWebsites() as $website) {
             if ($this->isSettingAppliedForScopeAndCode(
-                ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
+                $path,
                 ScopeInterface::SCOPE_WEBSITES,
                 $website->getId()
             )) {
@@ -48,7 +48,7 @@ class ConfigChecker
         /** @var \Magento\Store\Api\Data\StoreInterface $store */
         foreach ($this->storeManager->getStores() as $store) {
             if ($this->isSettingAppliedForScopeAndCode(
-                ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
+                $path,
                 ScopeInterface::SCOPE_STORES,
                 $store->getId()
             )) {
