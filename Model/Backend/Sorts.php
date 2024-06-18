@@ -11,6 +11,7 @@ use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\ObjectManager;
 use Magento\Framework\Data\Collection\AbstractDb;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
@@ -21,19 +22,6 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class Sorts extends ArraySerialized
 {
-    /**
-     * @param Context $context
-     * @param Registry $registry
-     * @param ScopeConfigInterface $config
-     * @param TypeListInterface $cacheTypeList
-     * @param AbstractResource|null $resource
-     * @param AbstractDb|null $resourceCollection
-     * @param array $data
-     * @param Json|null $serializer
-     * @param StoreManagerInterface $storeManager
-     * @param Data $helper
-     * @param ProductHelper $productHelper
-     */
     public function __construct(
         Context                              $context,
         Registry                             $registry,
@@ -65,6 +53,7 @@ class Sorts extends ArraySerialized
 
     /**
      * @return $this
+     * @throws NoSuchEntityException
      */
     public function afterSave(): \Magento\Framework\App\Config\Value
     {
@@ -85,6 +74,7 @@ class Sorts extends ArraySerialized
     /**
      * For the current operation's scope determine which stores need to be updated
      * @return int[]
+     * @throws NoSuchEntityException
      */
     public function getAffectedStoreIds(): array
     {
@@ -93,16 +83,25 @@ class Sorts extends ArraySerialized
         $storeIds = [];
 
         switch ($scope) {
+            // check and find all scopes that are not overridden
             case ScopeConfigInterface::SCOPE_TYPE_DEFAULT:
-                // check and find all scopes that are not overridden
                 $storeIds = array_keys($this->storeManager->getStores());
                 $this->configChecker->checkAndApplyAllScopes(
                     $this->getPath(),
                     function (string $scope, int $scopeId) use (&$storeIds) {
                         if ($scope === ScopeInterface::SCOPE_STORES) {
-                            $key = array_search($scopeId, $storeIds);
-                            if ($key !== false) {
+                            // remove overridden store (not in scope of this change)
+                            if (($key = array_search($scopeId, $storeIds)) !== false) {
                                 unset($storeIds[$key]);
+                            }
+                        }
+                        elseif ($scope === ScopeInterface::SCOPE_WEBSITES) {
+                            // website overridden - remove all the stores (not in scope)
+                            $website = $this->websiteRepository->getById($scopeId);
+                            foreach ($website->getStores() as $store) {
+                                if (($key = array_search($store->getId(), $storeIds)) !== false) {
+                                    unset($storeIds[$key]);
+                                }
                             }
                         }
                     },
@@ -124,5 +123,28 @@ class Sorts extends ArraySerialized
                 $storeIds[] = $scopeId;
         }
         return $storeIds;
+    }
+
+    /**
+     * For a given website perform an operation on each of the corresponding stores
+     * based on whether the store has overridden the config.
+     *
+     * @param int $websiteId
+     * @param callable $callback Callback to execute for a given store
+     *                           Signature: function(int $storeId, bool $isConfigOverridden)
+     * @return void
+     * @throws NoSuchEntityException
+     */
+    protected function handleStoresForWebsite(int $websiteId, callable $callback): void
+    {
+        $website = $this->websiteRepository->getById($websiteId);
+        foreach ($website->getStores() as $store) {
+            $callback(
+                $store->getId(),
+                $this->configChecker->isSettingAppliedForScopeAndCode(
+                    $this->getPath(),
+                    ScopeInterface::SCOPE_STORES, $store->getId())
+            );
+        }
     }
 }
