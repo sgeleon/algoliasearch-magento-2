@@ -6,7 +6,6 @@ namespace Algolia\AlgoliaSearch\Model\Product;
 
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
-use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
@@ -38,6 +37,8 @@ class ReplicaManager implements ReplicaManagerInterface
     public const REPLICA_TRANSFORM_MODE_VIRTUAL = 2;
     public const REPLICA_TRANSFORM_MODE_ACTUAL = 3;
 
+    public const SORT_KEY_VIRTUAL_REPLICA = 'virtualReplica';
+
     protected const _DEBUG = true;
 
     protected array $_algoliaReplicaConfig = [];
@@ -49,8 +50,7 @@ class ReplicaManager implements ReplicaManagerInterface
         protected ReplicaState  $replicaState,
         protected Logger        $logger
     )
-    {
-    }
+    {}
 
     /**
      * Evaluate the replica state of the index for a given store and determine
@@ -62,20 +62,40 @@ class ReplicaManager implements ReplicaManagerInterface
      */
     protected function hasReplicaConfigurationChanged(string $primaryIndexName, int $storeId): bool
     {
-        $old = $this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName, $storeId);
-        $new = $this->transformSortingIndicesToReplicaSetting($this->configHelper->getSortingIndices($primaryIndexName, $storeId));
-        sort($old);
-        sort($new);
-        return $old !== $new;
+        switch ($this->replicaState->getChangeState($storeId)) {
+            case ReplicaState::REPLICA_STATE_CHANGED:
+                return true;
+            case ReplicaState::REPLICA_STATE_UNCHANGED:
+                return false;
+            case ReplicaState::REPLICA_STATE_UNKNOWN:
+            default:
+                $old = $this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName);
+                $new = $this->transformSortingIndicesToReplicaSetting($this->configHelper->getSortingIndices($primaryIndexName, $storeId));
+                sort($old);
+                sort($new);
+                return $old !== $new;
+        }
     }
 
-    protected function getReplicaConfigurationFromAlgolia($primaryIndexName, bool $refreshCache = false)
+    /**
+     * @param $primaryIndexName
+     * @param bool $refreshCache
+     * @return array<string, mixed>
+     * @throws LocalizedException
+     */
+    protected function getReplicaConfigurationFromAlgolia($primaryIndexName, bool $refreshCache = false): array
     {
         if ($refreshCache || !isset($this->_algoliaReplicaConfig[$primaryIndexName])) {
-            $currentSettings = $this->algoliaHelper->getSettings($primaryIndexName);
-            $this->_algoliaReplicaConfig[$primaryIndexName] = array_key_exists('replicas', $currentSettings)
-                ? $currentSettings['replicas']
-                : [];
+            try {
+                $currentSettings = $this->algoliaHelper->getSettings($primaryIndexName);
+                $this->_algoliaReplicaConfig[$primaryIndexName] = array_key_exists('replicas', $currentSettings)
+                    ? $currentSettings['replicas']
+                    : [];
+            } catch (\Exception $e) {
+                $msg = "Unable to retrieve replica settings for $primaryIndexName: " . $e->getMessage();
+                $this->logger->error($msg);
+                throw new LocalizedException(__($msg));
+            }
         }
         return $this->_algoliaReplicaConfig[$primaryIndexName];
     }
@@ -94,15 +114,13 @@ class ReplicaManager implements ReplicaManagerInterface
      * relevant to the Magento integration
      *
      * @param string $primaryIndexName
-     * @param int $storeId
      * @return string[]
      * @throws LocalizedException
-     * @throws NoSuchEntityException
      */
-    protected function getMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName, int $storeId): array
+    protected function getMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName): array
     {
         $algoliaReplicas = $this->getReplicaConfigurationFromAlgolia($primaryIndexName);
-        $magentoReplicas = $this->getPossibleMagentoReplicaSettings($primaryIndexName, $algoliaReplicas);
+        $magentoReplicas = $this->getMagentoReplicaSettings($primaryIndexName, $algoliaReplicas);
         return array_values(array_intersect($magentoReplicas, $algoliaReplicas));
     }
 
@@ -112,7 +130,7 @@ class ReplicaManager implements ReplicaManagerInterface
      * @param string[] $algoliaReplicas
      * @return string[]
      */
-    protected function getPossibleMagentoReplicaSettings(string $baseIndexName, array $algoliaReplicas): array
+    protected function getMagentoReplicaSettings(string $baseIndexName, array $algoliaReplicas): array
     {
         return array_filter(
             $algoliaReplicas,
@@ -123,13 +141,14 @@ class ReplicaManager implements ReplicaManagerInterface
     }
 
     /**
-     * @throws NoSuchEntityException
+     * @param string $primaryIndexName
+     * @return array
      * @throws LocalizedException
      */
-    protected function getNonMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName, int $storeId): array
+    protected function getNonMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName): array
     {
         $algoliaReplicas = $this->getReplicaConfigurationFromAlgolia($primaryIndexName);
-        $magentoReplicas = $this->getPossibleMagentoReplicaSettings($primaryIndexName, $algoliaReplicas);
+        $magentoReplicas = $this->getMagentoReplicaSettings($primaryIndexName, $algoliaReplicas);
         return array_diff($algoliaReplicas, $magentoReplicas);
     }
 
@@ -148,8 +167,8 @@ class ReplicaManager implements ReplicaManagerInterface
                 $replica = $sort['name'];
                 if (
                     $mode === self::REPLICA_TRANSFORM_MODE_VIRTUAL
-                    || array_key_exists('virtualReplica', $sort)
-                    && $sort['virtualReplica']
+                    || array_key_exists(self::SORT_KEY_VIRTUAL_REPLICA, $sort)
+                    && $sort[self::SORT_KEY_VIRTUAL_REPLICA]
                     && $mode === self::REPLICA_TRANSFORM_MODE_ACTUAL
                 ) {
                     $replica = "virtual($replica)";
@@ -171,12 +190,11 @@ class ReplicaManager implements ReplicaManagerInterface
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    protected function getPossibleMagentoReplicaSettingsFromConfig(string $primaryIndexName, int $storeId, bool $refreshCache = false): array
+    protected function getMagentoReplicaSettingsFromConfig(string $primaryIndexName, int $storeId, bool $refreshCache = false): array
     {
         if ($refreshCache || !isset($this->_magentoReplicaPossibleConfig[$storeId])) {
-            //TODO: Determine whether it is necessary to merge the new configuration on an update when checking against Algolia
-            $sortConfig = $this->replicaState->isStateChanged()
-                ? array_merge($this->replicaState->getOriginalSortConfiguration(), $this->replicaState->getUpdatedSortConfiguration())
+            $sortConfig = $this->replicaState->getChangeState($storeId) === ReplicaState::REPLICA_STATE_CHANGED
+                ? array_merge($this->replicaState->getOriginalSortConfiguration($storeId), $this->replicaState->getUpdatedSortConfiguration($storeId))
                 : null;
             $sortingIndices = $this->configHelper->getSortingIndices($primaryIndexName, $storeId, null, $sortConfig);
             $this->_magentoReplicaPossibleConfig[$storeId] = array_merge(
@@ -195,26 +213,25 @@ class ReplicaManager implements ReplicaManagerInterface
         // TODO: Determine if InstantSearch is a hard requirement (i.e. headless implementations may still need replicas)
         if ($this->configHelper->isInstantEnabled($storeId)
             && $this->hasReplicaConfigurationChanged($primaryIndexName, $storeId)) {
-            // TODO: Handle ranking adjustments when toggling virtual vs standard replicas
             $addedReplicas = $this->setReplicasOnPrimaryIndex($primaryIndexName, $storeId);
             $this->configureRanking($primaryIndexName, $storeId, $addedReplicas, $primaryIndexSettings);
         }
     }
 
     /**
-     * @param $primaryIndexName
+     * @param string $indexName
      * @param int $storeId
      * @return string[] Replicas added or modified by this operation
      * @throws LocalizedException
      * @throws NoSuchEntityException
      * @throws AlgoliaException
      */
-    protected function setReplicasOnPrimaryIndex($indexName, int $storeId): array
+    protected function setReplicasOnPrimaryIndex(string $indexName, int $storeId): array
     {
         $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId);
         $newMagentoReplicasSetting = $this->transformSortingIndicesToReplicaSetting($sortingIndices);
-        $oldMagentoReplicasSetting = $this->getMagentoReplicaConfigurationFromAlgolia($indexName, $storeId);
-        $nonMagentoReplicasSetting = $this->getNonMagentoReplicaConfigurationFromAlgolia($indexName, $storeId);
+        $oldMagentoReplicasSetting = $this->getMagentoReplicaConfigurationFromAlgolia($indexName);
+        $nonMagentoReplicasSetting = $this->getNonMagentoReplicaConfigurationFromAlgolia($indexName);
         $oldMagentoReplicaIndices = $this->getBareIndexNamesFromReplicaSetting($oldMagentoReplicasSetting);
         $newMagentoReplicaIndices = $this->getBareIndexNamesFromReplicaSetting($newMagentoReplicasSetting);
 
@@ -264,6 +281,11 @@ class ReplicaManager implements ReplicaManagerInterface
         return preg_replace('/.*\((.*)\).*/', '$1', $replicaSetting);
     }
 
+    /**
+     * @param array $replicasToDelete
+     * @return void
+     * @throws AlgoliaException
+     */
     protected function deleteReplicas(array $replicasToDelete): void
     {
         foreach ($replicasToDelete as $deletedReplica) {
@@ -294,7 +316,8 @@ class ReplicaManager implements ReplicaManagerInterface
         foreach ($replicaDetails as $replica) {
             $replicaName = $replica['name'];
             // Virtual replicas - relevant sort
-            if ($replica['virtualReplica']) {
+            if (array_key_exists(self::SORT_KEY_VIRTUAL_REPLICA, $replica)
+                && $replica[self::SORT_KEY_VIRTUAL_REPLICA]) {
                 $customRanking = array_key_exists('customRanking', $primaryIndexSettings)
                     ? $primaryIndexSettings['customRanking']
                     : [];

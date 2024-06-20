@@ -4,32 +4,58 @@ namespace Algolia\AlgoliaSearch\Registry;
 
 class ReplicaState
 {
-    private ?array $originalSortConfiguration = null;
-    private ?array $updatedSortConfiguration = null;
+    public const REPLICA_STATE_UNCHANGED = 1;
+    public const REPLICA_STATE_CHANGED = 2;
+    public const REPLICA_STATE_UNKNOWN = 3;
 
-    public function getOriginalSortConfiguration(): array
+    private array $_scopeState = [];
+
+    private array $_scopeConfigurationOld = [];
+
+    private array $_scopeConfigurationNew = [];
+    
+    public function getOriginalSortConfiguration(int $storeId): array
     {
-        return $this->originalSortConfiguration;
+        return $this->_scopeConfigurationOld[$storeId] ?? [];
     }
 
-    public function setOriginalSortConfiguration(array $originalSortConfiguration): void
+    public function setOriginalSortConfiguration(array $originalSortConfiguration, int $storeId): void
     {
-        $this->originalSortConfiguration = $originalSortConfiguration;
+        $this->_scopeConfigurationOld[$storeId] = $originalSortConfiguration;
     }
 
-    public function getUpdatedSortConfiguration(): array
+    public function getUpdatedSortConfiguration(int $storeId): array
     {
-        return $this->updatedSortConfiguration;
+        return $this->_scopeConfigurationNew[$storeId] ?? [];
     }
 
-    public function setUpdatedSortConfiguration(array $updatedSortConfiguration): void
+    public function setUpdatedSortConfiguration(array $updatedSortConfiguration, int $storeId): void
     {
-        $this->updatedSortConfiguration = $updatedSortConfiguration;
+        $this->_scopeConfigurationNew[$storeId] = $updatedSortConfiguration;
     }
 
-    public function isStateChanged(): bool
+    protected function hasConfigDataToCompare(int $storeId) {
+        return isset($this->_scopeConfigurationOld[$storeId])
+            && isset($this->_scopeConfigurationNew[$storeId]);
+    }
+
+    public function getChangeState(int $storeId): int
     {
-        return $this->updatedSortConfiguration !== $this->originalSortConfiguration;
+        $state = $this->_scopeState[$storeId] ?? self::REPLICA_STATE_UNKNOWN;
+        if ($state === self::REPLICA_STATE_UNKNOWN && $this->hasConfigDataToCompare($storeId)) {
+            $state = $this->getOriginalSortConfiguration($storeId) === $this->getUpdatedSortConfiguration($storeId)
+                ? self::REPLICA_STATE_UNCHANGED
+                : self::REPLICA_STATE_CHANGED;
+        }
+        return $state;
+    }
+
+    public function setChangeState(int $state, int $storeId): void
+    {
+        if ($state < self::REPLICA_STATE_UNCHANGED || $state > self::REPLICA_STATE_UNKNOWN) {
+            $state = self::REPLICA_STATE_UNKNOWN;
+        }
+        $this->_scopeState[$storeId] = $state;
     }
 
 }

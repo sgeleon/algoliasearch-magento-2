@@ -2,23 +2,46 @@
 
 namespace Algolia\AlgoliaSearch\Helper\Configuration;
 
-use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Api\WebsiteRepositoryInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
 
 class ConfigChecker
 {
     public function __construct(
-        protected ScopeConfigInterface $scopeConfig,
-        protected StoreManagerInterface $storeManager
+        protected ScopeConfigInterface       $scopeConfig,
+        protected StoreManagerInterface      $storeManager,
+        protected WebsiteRepositoryInterface $websiteRepository
     ) {}
 
-    public function isSettingAppliedForScopeAndCode(string $path, string $scope, string $code): bool
+    /**
+     * Is a scoped value different from the default?
+     * @param string $path
+     * @param string $scope
+     * @param mixed $code
+     * @return bool
+     */
+    public function isSettingAppliedForScopeAndCode(string $path, string $scope, mixed $code): bool
     {
         $value = $this->scopeConfig->getValue($path, $scope, $code);
         $defaultValue = $this->scopeConfig->getValue($path);
         return ($value !== $defaultValue);
+    }
+
+    /**
+     * Does a store config override the website config?
+     * @param string $path
+     * @param mixed $websiteId
+     * @param int $storeId
+     * @return bool
+     */
+    protected function isStoreSettingOverridingWebsite(string $path, mixed $websiteId, int $storeId): bool
+    {
+        $storeValue = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_STORES, $storeId);
+        $websiteValue = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_WEBSITES, $websiteId);
+        return ($storeValue !== $websiteValue);
     }
 
     /**
@@ -32,12 +55,12 @@ class ConfigChecker
      *
      * @return void
      */
-    public function checkAndApplyAllScopes(string $path, callable $callback, bool $includeDefault = true) {
+    public function checkAndApplyAllScopes(string $path, callable $callback, bool $includeDefault = true): void
+    {
         // First update all the possible scoped configurations
-        /** @var \Magento\Store\Api\Data\WebsiteInterface $website */
         foreach ($this->storeManager->getWebsites() as $website) {
             if ($this->isSettingAppliedForScopeAndCode(
-                ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
+                $path,
                 ScopeInterface::SCOPE_WEBSITES,
                 $website->getId()
             )) {
@@ -45,10 +68,9 @@ class ConfigChecker
             }
         }
 
-        /** @var \Magento\Store\Api\Data\StoreInterface $store */
         foreach ($this->storeManager->getStores() as $store) {
             if ($this->isSettingAppliedForScopeAndCode(
-                ConfigHelper::CC_CONVERSION_ANALYTICS_MODE,
+                $path,
                 ScopeInterface::SCOPE_STORES,
                 $store->getId()
             )) {
@@ -60,5 +82,53 @@ class ConfigChecker
         if ($includeDefault) {
             $callback(ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
         }
+    }
+
+
+    /**
+     * For a given path and scope determine which stores are affected
+     * @param string $path The configuration path
+     * @param string $scope The scope: `default`, `websites` or `stores`
+     * @param int $scopeId The entity referenced by the corresponding scope
+     * @return int[]
+     * @throws NoSuchEntityException
+     */
+    public function getAffectedStoreIds(string $path, string $scope, int $scopeId): array
+    {
+        $storeIds = [];
+
+        switch ($scope) {
+            // check and find all stores that are not overridden
+            case ScopeConfigInterface::SCOPE_TYPE_DEFAULT:
+                foreach ($this->storeManager->getStores() as $store) {
+                    if (!$this->isSettingAppliedForScopeAndCode(
+                        $path,
+                        ScopeInterface::SCOPE_STORES,
+                        $store->getId()
+                    )) {
+                        $storeIds[] = $store->getId();
+                    }
+                }
+                break;
+
+            // website config applied - check and find all stores under that website that are not overridden
+            case ScopeInterface::SCOPE_WEBSITES:
+                $website = $this->websiteRepository->getById($scopeId);
+                foreach ($website->getStores() as $store) {
+                    if (!$this->isStoreSettingOverridingWebsite(
+                        $path,
+                        $website->getId(),
+                        $store->getId()
+                    )) {
+                        $storeIds[] = $store->getId();
+                    }
+                }
+                break;
+
+            // simple store specific config
+            case ScopeInterface::SCOPE_STORES:
+                $storeIds[] = $scopeId;
+        }
+        return $storeIds;
     }
 }
