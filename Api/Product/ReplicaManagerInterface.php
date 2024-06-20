@@ -12,7 +12,7 @@ interface ReplicaManagerInterface
     /**
      * Configure replicas in Algolia based on the sorting configuration in Magento
      *
-     * @param string $indexName Could be tmp (legacy impl)
+     * @param string $primaryIndexName Could be tmp (legacy impl)
      * @param int $storeId
      * @param array<string, mixed> $primaryIndexSettings
      * @return void
@@ -22,5 +22,5 @@ interface ReplicaManagerInterface
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    public function handleReplicas(string $indexName, int $storeId, array $primaryIndexSettings): void;
+    public function handleReplicas(string $primaryIndexName, int $storeId, array $primaryIndexSettings): void;
 }

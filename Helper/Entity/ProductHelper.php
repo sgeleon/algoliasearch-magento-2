@@ -363,22 +363,22 @@ class ProductHelper
 
         $this->algoliaHelper->setSettings($indexName, $indexSettings, false, true);
         $this->logger->log('Settings: ' . json_encode($indexSettings));
-        if ($saveToTmpIndicesToo === true) {
+        if ($saveToTmpIndicesToo) {
             $this->algoliaHelper->setSettings($indexNameTmp, $indexSettings, false, true, $indexName);
             $this->logger->log('Pushing the same settings to TMP index as well');
         }
 
         $this->setFacetsQueryRules($indexName);
-        if ($saveToTmpIndicesToo === true) {
+        if ($saveToTmpIndicesToo) {
             $this->setFacetsQueryRules($indexNameTmp);
         }
 
-        /*
-         * Handle replicas
-         */
         $this->replicaManager->handleReplicas($indexName, $storeId, $indexSettings);
+        if ($saveToTmpIndicesToo) {
+            $this->replicaManager->handleReplicas($indexNameTmp, $storeId, $indexSettings);
+        }
 
-        if ($saveToTmpIndicesToo === true) {
+        if ($saveToTmpIndicesToo) {
             try {
                 $this->algoliaHelper->copySynonyms($indexName, $indexNameTmp);
                 $this->algoliaHelper->waitLastTask();

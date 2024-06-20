@@ -78,10 +78,12 @@ class IndicesConfigurator
     /**
      * @param int $storeId
      * @param bool $useTmpIndex
-     *
+     * @return void
      * @throws AlgoliaException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    public function saveConfigurationToAlgolia($storeId, $useTmpIndex = false)
+    public function saveConfigurationToAlgolia(int $storeId, bool $useTmpIndex = false): void
     {
         $logEventName = 'Save configuration to Algolia for store: ' . $this->logger->getStoreName($storeId);
         $this->logger->start($logEventName);
@@ -210,10 +212,12 @@ class IndicesConfigurator
     /**
      * @param int $storeId
      * @param bool $useTmpIndex
-     *
+     * @return void
      * @throws AlgoliaException
+     * @throws \Magento\Framework\Exception\LocalizedException
+     * @throws \Magento\Framework\Exception\NoSuchEntityException
      */
-    protected function setProductsSettings($storeId, $useTmpIndex)
+    protected function setProductsSettings(int $storeId, bool $useTmpIndex): void
     {
         $this->logger->start('Pushing settings for products indices.');
 
