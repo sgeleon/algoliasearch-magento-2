@@ -2,6 +2,7 @@
 
 namespace Algolia\AlgoliaSearch\Helper;
 
+use Algolia\AlgoliaSearch\Model\Product\ReplicaManager;
 use Magento;
 use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
 use Magento\Directory\Model\Currency as DirCurrency;
@@ -1166,7 +1167,7 @@ class ConfigHelper
                 $attrsToReturn[] = $attr;
             }
         }
-        
+
         if ($useCache) {
             $this->_sortingIndices[$storeId] = $attrsToReturn;
         }
@@ -1868,7 +1869,7 @@ class ConfigHelper
         return (bool) count(array_filter(
             $this->getSorting($storeId),
             function ($sort) {
-                return $sort['virtualReplica'];
+                return $sort[ReplicaManager::SORT_KEY_VIRTUAL_REPLICA];
             }
         ));
     }

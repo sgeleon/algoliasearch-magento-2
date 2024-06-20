@@ -2,6 +2,8 @@
 
 namespace Algolia\AlgoliaSearch\Model\Source;
 
+use Algolia\AlgoliaSearch\Model\Product\ReplicaManager;
+
 /**
  * Algolia custom sort order field
  */
@@ -33,7 +35,7 @@ class Sorts extends AbstractTable
             'sortLabel' => [
                 'label' => 'Label',
             ],
-            'virtualReplica' => [
+            ReplicaManager::SORT_KEY_VIRTUAL_REPLICA => [
                 'label' => 'Enable Virtual Replica?',
                 'values' => ['0' => __('No'), '1' => __('Yes')],
             ],

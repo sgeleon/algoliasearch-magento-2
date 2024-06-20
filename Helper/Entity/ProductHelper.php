@@ -15,6 +15,7 @@ use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
 use Algolia\AlgoliaSearch\Helper\Image as ImageHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
+use Algolia\AlgoliaSearch\Model\Product\ReplicaManager;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
@@ -1425,7 +1426,7 @@ class ProductHelper
         return array_map(
             function($sort) {
                 $replica = $sort['name'];
-                return !! $sort['virtualReplica']
+                return !! $sort[ReplicaManager::SORT_KEY_VIRTUAL_REPLICA]
                     ? "virtual($replica)"
                     : $replica;
             },

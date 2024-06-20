@@ -37,6 +37,8 @@ class ReplicaManager implements ReplicaManagerInterface
     public const REPLICA_TRANSFORM_MODE_VIRTUAL = 2;
     public const REPLICA_TRANSFORM_MODE_ACTUAL = 3;
 
+    public const SORT_KEY_VIRTUAL_REPLICA = 'virtualReplica';
+
     protected const _DEBUG = true;
 
     protected array $_algoliaReplicaConfig = [];
@@ -151,8 +153,8 @@ class ReplicaManager implements ReplicaManagerInterface
                 $replica = $sort['name'];
                 if (
                     $mode === self::REPLICA_TRANSFORM_MODE_VIRTUAL
-                    || array_key_exists('virtualReplica', $sort)
-                    && $sort['virtualReplica']
+                    || array_key_exists(self::SORT_KEY_VIRTUAL_REPLICA, $sort)
+                    && $sort[self::SORT_KEY_VIRTUAL_REPLICA]
                     && $mode === self::REPLICA_TRANSFORM_MODE_ACTUAL
                 ) {
                     $replica = "virtual($replica)";
@@ -300,7 +302,8 @@ class ReplicaManager implements ReplicaManagerInterface
         foreach ($replicaDetails as $replica) {
             $replicaName = $replica['name'];
             // Virtual replicas - relevant sort
-            if ($replica['virtualReplica']) {
+            if (array_key_exists(self::SORT_KEY_VIRTUAL_REPLICA, $replica)
+                && $replica[self::SORT_KEY_VIRTUAL_REPLICA]) {
                 $customRanking = array_key_exists('customRanking', $primaryIndexSettings)
                     ? $primaryIndexSettings['customRanking']
                     : [];
