@@ -77,13 +77,25 @@ class ReplicaManager implements ReplicaManagerInterface
         }
     }
 
-    protected function getReplicaConfigurationFromAlgolia($primaryIndexName, bool $refreshCache = false)
+    /**
+     * @param $primaryIndexName
+     * @param bool $refreshCache
+     * @return array<string, mixed>
+     * @throws LocalizedException
+     */
+    protected function getReplicaConfigurationFromAlgolia($primaryIndexName, bool $refreshCache = false): array
     {
         if ($refreshCache || !isset($this->_algoliaReplicaConfig[$primaryIndexName])) {
-            $currentSettings = $this->algoliaHelper->getSettings($primaryIndexName);
-            $this->_algoliaReplicaConfig[$primaryIndexName] = array_key_exists('replicas', $currentSettings)
-                ? $currentSettings['replicas']
-                : [];
+            try {
+                $currentSettings = $this->algoliaHelper->getSettings($primaryIndexName);
+                $this->_algoliaReplicaConfig[$primaryIndexName] = array_key_exists('replicas', $currentSettings)
+                    ? $currentSettings['replicas']
+                    : [];
+            } catch (\Exception $e) {
+                $msg = "Unable to retrieve replica settings for $primaryIndexName: " . $e->getMessage();
+                $this->logger->error($msg);
+                throw new LocalizedException(__($msg));
+            }
         }
         return $this->_algoliaReplicaConfig[$primaryIndexName];
     }
@@ -103,6 +115,7 @@ class ReplicaManager implements ReplicaManagerInterface
      *
      * @param string $primaryIndexName
      * @return string[]
+     * @throws LocalizedException
      */
     protected function getMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName): array
     {
@@ -130,6 +143,7 @@ class ReplicaManager implements ReplicaManagerInterface
     /**
      * @param string $primaryIndexName
      * @return array
+     * @throws LocalizedException
      */
     protected function getNonMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName): array
     {
