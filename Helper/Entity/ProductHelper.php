@@ -373,6 +373,7 @@ class ProductHelper
         }
 
         $this->replicaManager->handleReplicas($indexName, $storeId, $indexSettings);
+        // TODO: Reevaluate whether we need to pre-bake the temp index replicas
         if ($saveToTmpIndicesToo) {
             $this->replicaManager->handleReplicas($indexNameTmp, $storeId, $indexSettings);
         }

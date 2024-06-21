@@ -146,10 +146,6 @@ class ConfigHelper
     public const ENHANCED_QUEUE_ARCHIVE = 'algoliasearch_advanced/queue/enhanced_archive';
     public const NUMBER_OF_ELEMENT_BY_PAGE = 'algoliasearch_advanced/queue/number_of_element_by_page';
     public const ARCHIVE_LOG_CLEAR_LIMIT = 'algoliasearch_advanced/queue/archive_clear_limit';
-    // https://www.algolia.com/doc/guides/managing-results/refine-results/sorting/in-depth/replicas/#what-are-virtual-replicas
-    public const MAX_VIRTUAL_REPLICA_LIMIT = 20;
-
-    public const SORT_ATTRIBUTE_PRICE = 'price';
 
     /**
      * @var Magento\Framework\App\Config\ScopeConfigInterface
@@ -1125,7 +1121,7 @@ class ConfigHelper
             $indexName = false;
             $sortAttribute = false;
             // Group pricing
-            if ($this->isCustomerGroupsEnabled($storeId) && $attr['attribute'] === self::SORT_ATTRIBUTE_PRICE) {
+            if ($this->isCustomerGroupsEnabled($storeId) && $attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] === ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE) {
                 $websiteId = (int) $this->storeManager->getStore($storeId)->getWebsiteId();
                 $groupCollection = $this->groupCollection;
                 if (!is_null($currentCustomerGroupId)) {
@@ -1139,7 +1135,7 @@ class ConfigHelper
                     }
                 }
             // Regular pricing
-            } elseif ($attr['attribute'] === self::SORT_ATTRIBUTE_PRICE) {
+            } elseif ($attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] === ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE) {
                 $indexName = $originalIndexName . '_' . $attr['attribute'] . '_' . 'default' . '_' . $attr['sort'];
                 $sortAttribute = $attr['attribute'] . '.' . $currency . '.' . 'default';
             // All other sort attributes
@@ -1158,7 +1154,7 @@ class ConfigHelper
         $attrsToReturn = [];
 
         foreach ($attrs as $attr) {
-            if ($attr['attribute'] == self::SORT_ATTRIBUTE_PRICE
+            if ($attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] == ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE
                 && count($attributesToAdd)
                 && isset($attributesToAdd[$attr['sort']])) {
                 $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
