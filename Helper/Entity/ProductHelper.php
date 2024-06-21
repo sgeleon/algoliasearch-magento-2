@@ -214,7 +214,6 @@ class ProductHelper
      * @param $productIds
      * @param $onlyVisible
      * @param $includeNotVisibleIndividually
-     * @return Collection
      */
     public function getProductCollectionQuery(
         $storeId,
@@ -599,20 +598,6 @@ class ProductHelper
         }
 
         return $customData;
-    }
-
-    protected function getCategoryPaths($product, $category)
-    {
-        $category->getUrlInstance()->setStore($product->getStoreId());
-        $path = [];
-
-        foreach ($category->getPathIds() as $treeCategoryId) {
-            $name = $this->categoryHelper->getCategoryName($treeCategoryId, $storeId);
-            if ($name) {
-                $categoryIds[] = $treeCategoryId;
-                $path[] = $name;
-            }
-        }
     }
 
     /**
@@ -1437,7 +1422,7 @@ class ProductHelper
      * Moving to ReplicaManager class
      * @param string $indexName
      * @param int $storeId
-     * @param bool $sortingAttribute
+     * @param array|bool $sortingAttribute
      * @return void
      * @throws AlgoliaException
      * @throws ExceededRetriesException
