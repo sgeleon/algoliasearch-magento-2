@@ -2,8 +2,10 @@
 
 namespace Algolia\AlgoliaSearch\Helper;
 
-use Algolia\AlgoliaSearch\Model\Product\ReplicaManager;
+use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
 use Magento;
+use Magento\Cookie\Helper\Cookie as CookieHelper;
+use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
 use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
 use Magento\Directory\Model\Currency as DirCurrency;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -13,9 +15,6 @@ use Magento\Framework\Locale\Currency;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
-use Magento\Cookie\Helper\Cookie as CookieHelper;
-
 
 class ConfigHelper
 {
@@ -1869,7 +1868,7 @@ class ConfigHelper
         return (bool) count(array_filter(
             $this->getSorting($storeId),
             function ($sort) {
-                return $sort[ReplicaManager::SORT_KEY_VIRTUAL_REPLICA];
+                return $sort[ReplicaManagerInterface::SORT_KEY_VIRTUAL_REPLICA];
             }
         ));
     }

@@ -9,6 +9,12 @@ use Magento\Framework\Exception\NoSuchEntityException;
 
 interface ReplicaManagerInterface
 {
+    public const REPLICA_TRANSFORM_MODE_STANDARD = 1;
+    public const REPLICA_TRANSFORM_MODE_VIRTUAL = 2;
+    public const REPLICA_TRANSFORM_MODE_ACTUAL = 3;
+
+    public const SORT_KEY_VIRTUAL_REPLICA = 'virtualReplica';
+
     /**
      * Configure replicas in Algolia based on the sorting configuration in Magento
      *
