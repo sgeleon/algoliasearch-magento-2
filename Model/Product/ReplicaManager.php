@@ -210,8 +210,7 @@ class ReplicaManager implements ReplicaManagerInterface
      */
     public function handleReplicas(string $primaryIndexName, int $storeId, array $primaryIndexSettings): void
     {
-        // TODO: InstantSearch enablement should not be a hard requirement (i.e. headless implementations may still need replicas) - add an override for this
-        if ($this->configHelper->isInstantEnabled($storeId)
+        if ($this->isReplicaSyncEnabled($storeId)
             && $this->hasReplicaConfigurationChanged($primaryIndexName, $storeId)
             && $this->isReplicaConfigurationValid($primaryIndexName, $storeId)) {
             $addedReplicas = $this->setReplicasOnPrimaryIndex($primaryIndexName, $storeId);
@@ -362,5 +361,13 @@ class ReplicaManager implements ReplicaManagerInterface
                 );
             }
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isReplicaSyncEnabled(int $storeId): bool
+    {
+        return $this->configHelper->isInstantEnabled($storeId);
     }
 }

@@ -31,4 +31,13 @@ interface ReplicaManagerInterface
      * @throws NoSuchEntityException
      */
     public function handleReplicas(string $primaryIndexName, int $storeId, array $primaryIndexSettings): void;
+
+
+    /**
+     * For standard Magento front end (e.g. Luma) replicas will likely only be needed if InstantSearch is enabled
+     * Headless implementations may wish to override this behavior via plugin
+     * @param int $storeId
+     * @return bool
+     */
+    public function isReplicaSyncEnabled(int $storeId): bool;
 }
