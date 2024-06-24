@@ -370,4 +370,12 @@ class ReplicaManager implements ReplicaManagerInterface
     {
         return $this->configHelper->isInstantEnabled($storeId);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function getMaxVirtualReplicasPerIndex() : int
+    {
+        return self::MAX_VIRTUAL_REPLICA_LIMIT;
+    }
 }

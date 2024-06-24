@@ -11,10 +11,15 @@ class VirtualReplicaValidator
     protected bool $replicaLimitExceeded = false;
     protected bool $tooManyCustomerGroups = false;
 
+    public function __construct(
+        protected ReplicaManagerInterface $replicaManager
+    )
+    {}
+
     public function isReplicaConfigurationValid(array $replicas): bool
     {
         foreach ($replicas as $replica) {
-            // TODO: Implement replica limit override
+            $maxReplicas = $this->replicaManager->getMaxVirtualReplicasPerIndex();
             if (!empty($replica[ReplicaManagerInterface::SORT_KEY_VIRTUAL_REPLICA])) {
                 $this->replicaCount++;
                 if ($replica[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] == ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE) {
@@ -22,9 +27,9 @@ class VirtualReplicaValidator
                 }
             }
 
-            if ($this->replicaCount > ReplicaManagerInterface::MAX_VIRTUAL_REPLICA_LIMIT) {
+            if ($this->replicaCount > $maxReplicas) {
                 $this->replicaLimitExceeded = true;
-                $this->tooManyCustomerGroups = $this->priceSortReplicaCount > ReplicaManagerInterface::MAX_VIRTUAL_REPLICA_LIMIT;
+                $this->tooManyCustomerGroups = $this->priceSortReplicaCount > $maxReplicas;
             }
         }
         return !$this->replicaLimitExceeded;
