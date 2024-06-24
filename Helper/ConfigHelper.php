@@ -1028,16 +1028,14 @@ class ConfigHelper
         $attrName = $origAttr['attribute'];
         $sortDir = $origAttr['sort'];
         $groupIndexNameSuffix = 'group_' . $customerGroupId;
-        $groupIndexName =
-            $originalIndexName . '_' . $attrName . '_' . $groupIndexNameSuffix . '_' . $sortDir;
-        $groupSortAttribute = $attrName . '.' . $currency . '.' . $groupIndexNameSuffix;
-        $newAttr = [
-            'attribute' => $attrName,
-            'name'      => $groupIndexName,
-            'sort'      => $sortDir,
-            'sortLabel' => $origAttr['sortLabel']
-        ];
+        $groupIndexName = $originalIndexName . '_' . $attrName . '_' . $groupIndexNameSuffix . '_' . $sortDir;
 
+        $newAttr = array_merge(
+            $origAttr,
+            ['name' => $groupIndexName]
+        );
+
+        $groupSortAttribute = $attrName . '.' . $currency . '.' . $groupIndexNameSuffix;
         $newAttr['ranking'] = $this->getSortAttributingRankingSetting($groupSortAttribute, $sortDir);
         return $this->decorateSortAttribute($newAttr);
     }
