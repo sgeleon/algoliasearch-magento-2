@@ -36,6 +36,9 @@ class EnableCustomerGroups extends Value
      */
     public function afterSave(): Value
     {
+        $this->replicaState->setAppliedScope($this->getScope(), $this->getScopeId());
+        $this->replicaState->setCustomerGroupsEnabled((bool) $this->getValue());
+
         $storeIds = $this->configChecker->getAffectedStoreIds(
             $this->getPath(),
             $this->getScope(),

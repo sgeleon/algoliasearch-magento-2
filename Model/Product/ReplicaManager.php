@@ -303,6 +303,14 @@ class ReplicaManager implements ReplicaManagerInterface
             return true;
         }
 
+        if ($this->replicaState->wereCustomerGroupsEnabled()) {
+            $this->configHelper->setCustomerGroupsEnabled(
+                false,
+                $this->replicaState->getParentScope(),
+                $this->replicaState->getParentScopeId());
+            return true;
+        }
+
         return false;
     }
 

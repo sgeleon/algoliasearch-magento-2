@@ -1160,6 +1160,16 @@ class ConfigHelper
         return $this->configInterface->isSetFlag(self::CUSTOMER_GROUPS_ENABLE, ScopeInterface::SCOPE_STORE, $storeId);
     }
 
+    public function setCustomerGroupsEnabled(bool $val, ?string $scope = null, ?int $scopeId = null): void
+    {
+        $this->configWriter->save(
+            self::CUSTOMER_GROUPS_ENABLE,
+            $val ? '1' : '0',
+            $scope,
+            $scopeId
+        );
+    }
+
     /**
      * @param $storeId
      * @return bool
