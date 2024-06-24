@@ -275,8 +275,10 @@ class ReplicaManager implements ReplicaManagerInterface
         $sortingIndices = $this->configHelper->getSortingIndices($primaryIndexName, $storeId);
         $validator = $this->validatorFactory->create();
         if (!$validator->isReplicaConfigurationValid($sortingIndices)) {
-            $postfix = "Please note that there can be no more than " . $this->getMaxVirtualReplicasPerIndex() . " virtual replicas per index. Reverting to previous configuration.";
-            // TODO: Implement revert settings via ReplicaState
+            $postfix = "Please note that there can be no more than " . $this->getMaxVirtualReplicasPerIndex() . " virtual replicas per index.";
+            if ($this->revertReplicaConfig($storeId)) {
+                $postfix .= ' Reverting to previous configuration.';
+            }
             if ($validator->isTooManyCustomerGroups()) {
                 throw (new TooManyCustomerGroupsAsReplicasException(__("You have too many customer groups to enable virtual replicas on the pricing sort. $postfix")))
                     ->withReplicaCount($validator->getReplicaCount())
@@ -288,6 +290,20 @@ class ReplicaManager implements ReplicaManagerInterface
             }
         }
         return true;
+    }
+
+    protected function revertReplicaConfig(int $storeId): bool
+    {
+        if ($ogConfig = $this->replicaState->getOriginalSortConfiguration($storeId)) {
+            $this->configHelper->setSorting(
+                $ogConfig,
+                $this->replicaState->getParentScope(),
+                $this->replicaState->getParentScopeId()
+            );
+            return true;
+        }
+
+        return false;
     }
 
     /**

@@ -48,6 +48,10 @@ class Sorts extends ArraySerialized
      */
     public function afterSave(): \Magento\Framework\App\Config\Value
     {
+        // Save context of the admin operation for possible state reversion
+        $this->replicaState->setParentScope($this->getScope());
+        $this->replicaState->setParentScopeId($this->getScopeId());
+
         $storeIds = $this->configChecker->getAffectedStoreIds(
             $this->getPath(),
             $this->getScope(),

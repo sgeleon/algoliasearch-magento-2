@@ -443,6 +443,10 @@ class ConfigHelper
         return [];
     }
 
+    protected function serialize(array $value): string {
+        return $this->serializer->serialize($value);
+    }
+
     /**
      * @param $value
      * @return array|bool|float|int|mixed|string|null
@@ -1116,6 +1120,22 @@ class ConfigHelper
             self::SORTING_INDICES,
             ScopeInterface::SCOPE_STORE,
             $storeId
+        );
+    }
+
+    /**
+     * @param array $sorting
+     * @param string|null $scope
+     * @param int|null $scopeId
+     * @return void
+     */
+    public function setSorting(array $sorting, ?string $scope = null, ?int $scopeId = null): void
+    {
+        $this->configWriter->save(
+            self::SORTING_INDICES,
+            $this->serialize($sorting),
+            $scope,
+            $scopeId
         );
     }
 

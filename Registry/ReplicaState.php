@@ -13,7 +13,28 @@ class ReplicaState
     private array $_scopeConfigurationOld = [];
 
     private array $_scopeConfigurationNew = [];
-    
+
+    private ?string $_parentScope = null;
+    private ?int $_parentScopeId = null;
+
+    public function getParentScope(): ?string
+    {
+        return $this->_parentScope;
+    }
+
+    public function setParentScope(string $scope) {
+        $this->_parentScope = $scope;
+    }
+
+    public function getParentScopeId(): ?int
+    {
+        return $this->_parentScopeId;
+    }
+
+    public function setParentScopeId(int $scopeId) {
+        $this->_parentScopeId = $scopeId;
+    }
+
     public function getOriginalSortConfiguration(int $storeId): array
     {
         return $this->_scopeConfigurationOld[$storeId] ?? [];
