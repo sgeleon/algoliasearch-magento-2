@@ -1103,20 +1103,20 @@ class ConfigHelper
 
     /***
      * @param $storeId
-     * @return array|bool|float|int|mixed|string|null
+     * @return array<string,<array<string, mixed>>>
      */
-    public function getSorting($storeId = null)
+    public function getSorting($storeId = null): array
     {
         return $this->unserialize($this->getRawSortingValue($storeId));
     }
 
     /**
-     * @param $storeId
-     * @return mixed
+     * @param int|null $storeId
+     * @return string
      */
-    public function getRawSortingValue($storeId = null)
+    public function getRawSortingValue(?int $storeId = null): string
     {
-        return $this->configInterface->getValue(
+        return (string) $this->configInterface->getValue(
             self::SORTING_INDICES,
             ScopeInterface::SCOPE_STORE,
             $storeId
@@ -1155,7 +1155,7 @@ class ConfigHelper
      * @param $storeId
      * @return bool
      */
-    public function isCustomerGroupsEnabled($storeId = null)
+    public function isCustomerGroupsEnabled($storeId = null): bool
     {
         return $this->configInterface->isSetFlag(self::CUSTOMER_GROUPS_ENABLE, ScopeInterface::SCOPE_STORE, $storeId);
     }
