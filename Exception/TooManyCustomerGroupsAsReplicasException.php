@@ -2,8 +2,6 @@
 
 namespace Algolia\AlgoliaSearch\Exception;
 
-use Algolia\AlgoliaSearch\Exception\ReplicaLimitExceededException;
-
 class TooManyCustomerGroupsAsReplicasException extends ReplicaLimitExceededException
 {
     protected int $priceSortReplicaCount = 0;

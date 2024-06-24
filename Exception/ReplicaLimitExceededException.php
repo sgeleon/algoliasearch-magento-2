@@ -2,9 +2,9 @@
 
 namespace Algolia\AlgoliaSearch\Exception;
 
-use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
+use Magento\Framework\Exception\LocalizedException;
 
-class ReplicaLimitExceededException extends AlgoliaException
+class ReplicaLimitExceededException extends LocalizedException
 {
     protected int $replicaCount = 0;
 

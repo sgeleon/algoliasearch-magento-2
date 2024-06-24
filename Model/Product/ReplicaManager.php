@@ -275,14 +275,15 @@ class ReplicaManager implements ReplicaManagerInterface
         $sortingIndices = $this->configHelper->getSortingIndices($primaryIndexName, $storeId);
         $validator = $this->validatorFactory->create();
         if (!$validator->isReplicaConfigurationValid($sortingIndices)) {
+            $postfix = "Please note that there can be no more than " . $this->getMaxVirtualReplicasPerIndex() . " virtual replicas per index. Reverting to previous configuration.";
             // TODO: Implement revert settings via ReplicaState
             if ($validator->isTooManyCustomerGroups()) {
-                throw (new TooManyCustomerGroupsAsReplicasException("You have too many customer groups to enable virtual replicas on the pricing sort."))
+                throw (new TooManyCustomerGroupsAsReplicasException(__("You have too many customer groups to enable virtual replicas on the pricing sort. $postfix")))
                     ->withReplicaCount($validator->getReplicaCount())
                     ->withPriceSortReplicaCount($validator->getPriceSortReplicaCount());
             }
             else {
-                throw (new ReplicaLimitExceededException("Replica limit exceeded."))
+                throw (new ReplicaLimitExceededException(__("Replica limit exceeded. $postfix")))
                     ->withReplicaCount($validator->getReplicaCount());
             }
         }
