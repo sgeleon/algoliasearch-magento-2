@@ -148,66 +148,6 @@ class ConfigHelper
     public const ARCHIVE_LOG_CLEAR_LIMIT = 'algoliasearch_advanced/queue/archive_clear_limit';
 
     /**
-     * @var Magento\Framework\App\Config\ScopeConfigInterface
-     */
-    protected $configInterface;
-
-    /**
-     * @var Currency
-     */
-    protected $currency;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    protected $storeManager;
-
-    /**
-     * @var DirCurrency
-     */
-    protected $dirCurrency;
-
-    /**
-     * @var DirectoryList
-     */
-    protected $directoryList;
-
-    /**
-     * @var Magento\Framework\Module\ResourceInterface
-     */
-    protected $moduleResource;
-
-    /**
-     * @var Magento\Framework\App\ProductMetadataInterface
-     */
-    protected $productMetadata;
-
-    /**
-     * @var Magento\Framework\Event\ManagerInterface
-     */
-    protected $eventManager;
-
-    /**
-     * @var SerializerInterface
-     */
-    protected $serializer;
-
-    /**
-     * @var GroupCollection
-     */
-    protected $groupCollection;
-
-    /**
-     * @var GroupExcludedWebsiteRepositoryInterface
-     */
-    protected $groupExcludedWebsiteRepository;
-
-    /**
-     * @var CookieHelper
-     */
-    protected $cookieHelper;
-
-    /**
      * @var array<int,<array<string, mixed>>>
      */
     protected array $_sortingIndices = [];
@@ -228,32 +168,21 @@ class ConfigHelper
 
      */
     public function __construct(
-        Magento\Framework\App\Config\ScopeConfigInterface $configInterface,
-        StoreManagerInterface                             $storeManager,
-        Currency                                          $currency,
-        DirCurrency                                       $dirCurrency,
-        DirectoryList                                     $directoryList,
-        Magento\Framework\Module\ResourceInterface        $moduleResource,
-        Magento\Framework\App\ProductMetadataInterface    $productMetadata,
-        Magento\Framework\Event\ManagerInterface          $eventManager,
-        SerializerInterface                               $serializer,
-        GroupCollection                                   $groupCollection,
-        GroupExcludedWebsiteRepositoryInterface           $groupExcludedWebsiteRepository,
-        CookieHelper                                      $cookieHelper
-    ) {
-        $this->configInterface = $configInterface;
-        $this->currency = $currency;
-        $this->storeManager = $storeManager;
-        $this->dirCurrency = $dirCurrency;
-        $this->directoryList = $directoryList;
-        $this->moduleResource = $moduleResource;
-        $this->productMetadata = $productMetadata;
-        $this->eventManager = $eventManager;
-        $this->serializer = $serializer;
-        $this->groupCollection = $groupCollection;
-        $this->groupExcludedWebsiteRepository = $groupExcludedWebsiteRepository;
-        $this->cookieHelper = $cookieHelper;
-    }
+        protected Magento\Framework\App\Config\ScopeConfigInterface    $configInterface,
+        protected Magento\Framework\App\Config\Storage\WriterInterface $configWriter,
+        protected StoreManagerInterface                                $storeManager,
+        protected Currency                                             $currency,
+        protected DirCurrency                                          $dirCurrency,
+        protected DirectoryList                                        $directoryList,
+        protected Magento\Framework\Module\ResourceInterface           $moduleResource,
+        protected Magento\Framework\App\ProductMetadataInterface       $productMetadata,
+        protected Magento\Framework\Event\ManagerInterface             $eventManager,
+        protected SerializerInterface                                  $serializer,
+        protected GroupCollection                                      $groupCollection,
+        protected GroupExcludedWebsiteRepositoryInterface              $groupExcludedWebsiteRepository,
+        protected CookieHelper                                         $cookieHelper
+    )
+    {}
 
 
     /**
