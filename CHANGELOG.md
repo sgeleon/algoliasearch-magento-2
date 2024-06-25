@@ -6,7 +6,7 @@
 - Fixed XSS vulnerability issue in InstantSearch search box
 - Fixed Algolia merchandising product listing issue
 - Fixed lock timeout issue on indexing queue integration test
-- Community fix added - job queue dropping jobs from sandwiched full reindexes
+- Community fix added - job queue dropping jobs from sandwiched full reindexes - thank you @pikulsky
 
 
 ## 3.13.3
