@@ -1,5 +1,14 @@
 # CHANGE LOG
 
+## 3.13.4
+
+### Bug Fixes
+- Fixed XSS vulnerability issue in InstantSearch search box
+- Fixed Algolia merchandising product listing issue
+- Fixed lock timeout issue on indexing queue integration test
+- Community fix added - job queue dropping jobs from sandwiched full reindexes
+
+
 ## 3.13.3
 
 ### Updates
