@@ -280,12 +280,12 @@ class ReplicaManager implements ReplicaManagerInterface
                 $postfix .= ' Reverting to previous configuration.';
             }
             if ($validator->isTooManyCustomerGroups()) {
-                throw (new TooManyCustomerGroupsAsReplicasException(__("You have too many customer groups to enable virtual replicas on the pricing sort. $postfix")))
+                throw (new TooManyCustomerGroupsAsReplicasException(__("You have too many customer groups to enable virtual replicas on the pricing sort for store $storeId. $postfix")))
                     ->withReplicaCount($validator->getReplicaCount())
                     ->withPriceSortReplicaCount($validator->getPriceSortReplicaCount());
             }
             else {
-                throw (new ReplicaLimitExceededException(__("Replica limit exceeded. $postfix")))
+                throw (new ReplicaLimitExceededException(__("Replica limit exceeded for store ID $storeId. $postfix")))
                     ->withReplicaCount($validator->getReplicaCount());
             }
         }
