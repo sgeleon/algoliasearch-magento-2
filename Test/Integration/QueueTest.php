@@ -30,9 +30,9 @@ class QueueTest extends TestCase
 
         $this->jobsCollectionFactory = $this->getObjectManager()->create(JobsCollectionFactory::class);
 
-        /** @var ResourceConnection $resouce */
-        $resouce = $this->getObjectManager()->create(ResourceConnection::class);
-        $this->connection = $resouce->getConnection();
+        /** @var ResourceConnection $resource */
+        $resource = $this->getObjectManager()->create(ResourceConnection::class);
+        $this->connection = $resource->getConnection();
 
         $this->queue = $this->getObjectManager()->create(Queue::class);
     }
@@ -135,6 +135,9 @@ class QueueTest extends TestCase
         $this->assertEquals(0, count($rows)); */
     }
 
+    /**
+     * @magentoDbIsolation disabled
+     */
     public function testSettings()
     {
         $this->markTestIncomplete(self::INCOMPLETE_REASON);
@@ -810,7 +813,7 @@ class QueueTest extends TestCase
     {
         // Default value - maxBatchSize = 1000
         $this->setConfig('algoliasearch_queue/queue/number_of_job_to_run', 10);
-        $this->setConfig('algoliasearch_advanced/advanced/number_of_element_by_page', 100);
+        $this->setConfig('algoliasearch_advanced/queue/number_of_element_by_page', 100);
 
         $productIds = range(1, 5000);
         $jsonProductIds = json_encode($productIds);
