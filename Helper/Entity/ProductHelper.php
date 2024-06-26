@@ -373,18 +373,14 @@ class ProductHelper
         }
 
         $this->replicaManager->handleReplicas($indexName, $storeId, $indexSettings);
-        // TODO: Reevaluate whether we need to pre-bake the temp index replicas
-        if ($saveToTmpIndicesToo) {
-            $this->replicaManager->handleReplicas($indexNameTmp, $storeId, $indexSettings);
-        }
 
         if ($saveToTmpIndicesToo) {
             try {
                 $this->algoliaHelper->copySynonyms($indexName, $indexNameTmp);
                 $this->algoliaHelper->waitLastTask();
                 $this->logger->log('
-                    Copying synonyms from production index to "' . $indexNameTmp . '" to not erase them with the index move.
-                ');
+                        Copying synonyms from production index to "' . $indexNameTmp . '" to not erase them with the index move.
+                    ');
             } catch (AlgoliaException $e) {
                 $this->logger->error('Error encountered while copying synonyms: ' . $e->getMessage());
             }
@@ -393,8 +389,8 @@ class ProductHelper
                 $this->algoliaHelper->copyQueryRules($indexName, $indexNameTmp);
                 $this->algoliaHelper->waitLastTask();
                 $this->logger->log('
-                    Copying query rules from production index to "' . $indexNameTmp . '" to not erase them with the index move.
-                ');
+                        Copying query rules from production index to "' . $indexNameTmp . '" to not erase them with the index move.
+                    ');
             } catch (AlgoliaException $e) {
                 if ($e->getCode() !== 404) {
                     throw $e;

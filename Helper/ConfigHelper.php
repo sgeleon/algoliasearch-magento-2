@@ -1016,6 +1016,7 @@ class ConfigHelper
     /**
      * Augment sorting configuration with corresponding replica indices, ranking,
      * and (as needed) customer group pricing
+     * TODO: MAGE-941 Remove the $originalIndexName param - this should never be needed as tmp indices cannot have attached replicas
      *
      * @param string $originalIndexName
      * @param ?int $storeId
