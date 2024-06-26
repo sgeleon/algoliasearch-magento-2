@@ -19,6 +19,7 @@ define([
             const apiKey = algoliaConfig.apiKey;
             const recommendClient = recommend(appId, apiKey);
             const indexName = this.defaultIndexName;
+            const objectIDs = config.objectIDs;
             if (
                 $('body').hasClass('catalog-product-view') ||
                 $('body').hasClass('checkout-cart-index')
@@ -34,7 +35,7 @@ define([
                         container         : '#frequentlyBoughtTogether',
                         recommendClient,
                         indexName,
-                        objectIDs         : config.algoliObjectId,
+                        objectIDs,
                         maxRecommendations: algoliaConfig.recommend.limitFBTProducts,
                         transformItems    : function (items) {
                             return items.map((item, index) => ({
@@ -42,7 +43,10 @@ define([
                                 position: index + 1,
                             }));
                         },
-                        headerComponent({html}) {
+                        headerComponent({html, recommendations}) {
+                            if (!recommendations.length) {
+                                return '';
+                            }
                             return recommendProductsHtml.getHeaderHtml(
                                 html,
                                 algoliaConfig.recommend.FBTTitle
@@ -67,7 +71,7 @@ define([
                         container         : '#relatedProducts',
                         recommendClient,
                         indexName,
-                        objectIDs         : config.algoliObjectId,
+                        objectIDs,
                         maxRecommendations: algoliaConfig.recommend.limitRelatedProducts,
                         transformItems    : function (items) {
                             return items.map((item, index) => ({
@@ -75,7 +79,10 @@ define([
                                 position: index + 1,
                             }));
                         },
-                        headerComponent({html}) {
+                        headerComponent({html, recommendations}) {
+                            if (!recommendations.length) {
+                                return '';
+                            }
                             return recommendProductsHtml.getHeaderHtml(
                                 html,
                                 algoliaConfig.recommend.relatedProductsTitle
@@ -115,7 +122,10 @@ define([
                             position: index + 1,
                         }));
                     },
-                    headerComponent({html}) {
+                    headerComponent({html, recommendations}) {
+                        if (!recommendations.length) {
+                            return '';
+                        }
                         return recommendProductsHtml.getHeaderHtml(
                             html,
                             algoliaConfig.recommend.trendingItemsTitle
@@ -160,6 +170,74 @@ define([
                             item,
                             html,
                             algoliaConfig.recommend.isAddToCartEnabledInTrendsItem
+                        );
+                    },
+                });
+            }
+
+            if (
+                (algoliaConfig.recommend.isLookingSimilarEnabledInPDP &&
+                    $('body').hasClass('catalog-product-view')) ||
+                (algoliaConfig.recommend.isLookingSimilarEnabledInCartPage &&
+                    $('body').hasClass('checkout-cart-index'))
+            ) {
+                recommendJs.lookingSimilar({
+                    container: '#lookingSimilar',
+                    recommendClient,
+                    indexName,
+                    objectIDs,
+                    maxRecommendations: algoliaConfig.recommend.limitLookingSimilar,
+                    transformItems: function (items) {
+                        return items.map((item, index) => ({
+                            ...item,
+                            position: index + 1,
+                        }));
+                    },
+                    headerComponent({html}) {
+                        return recommendProductsHtml.getHeaderHtml(
+                            html,
+                            algoliaConfig.recommend.lookingSimilarTitle
+                        );
+                    },
+                    itemComponent({item, html}) {
+                        return recommendProductsHtml.getItemHtml(
+                            item,
+                            html,
+                            algoliaConfig.recommend.isAddToCartEnabledInLookingSimilar
+                        );
+                    }
+                });
+            } else if (
+                algoliaConfig.recommend.enabledLookingSimilar &&
+                objectIDs &&
+                typeof config.recommendLSContainer !== 'undefined'
+            ){
+                let containerValue = '#' + config.recommendLSContainer;
+                recommendJs.lookingSimilar({
+                    container: containerValue,
+                    recommendClient,
+                    indexName,
+                    objectIDs,
+                    maxRecommendations: config.numOfLookingSimilarItem
+                        ? parseInt(config.numOfLookingSimilarItem)
+                        : algoliaConfig.recommend.limitLookingSimilar,
+                    transformItems    : function (items) {
+                        return items.map((item, index) => ({
+                            ...item,
+                            position: index + 1,
+                        }));
+                    },
+                    headerComponent({html}) {
+                        return recommendProductsHtml.getHeaderHtml(
+                            html,
+                            algoliaConfig.recommend.lookingSimilarTitle
+                        );
+                    },
+                    itemComponent({item, html}) {
+                        return recommendProductsHtml.getItemHtml(
+                            item,
+                            html,
+                            algoliaConfig.recommend.isAddToCartEnabledInLookingSimilar
                         );
                     },
                 });

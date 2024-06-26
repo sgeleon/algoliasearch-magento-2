@@ -18,6 +18,14 @@
 - Introduced PHP 8 constructor property promotion on affected classes
 - Added stronger typing to affected classes and methods
 
+## 3.13.4
+
+### Bug Fixes
+- Fixed XSS vulnerability issue in InstantSearch search box
+- Fixed Algolia merchandising product listing issue
+- Fixed lock timeout issue on indexing queue integration test
+- Community fix added - job queue dropping jobs from sandwiched full reindexes - thank you @pikulsky
+
 ## 3.14.0-beta.1
 
 ### Updates:
