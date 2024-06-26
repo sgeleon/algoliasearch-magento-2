@@ -5,10 +5,13 @@ declare(strict_types=1);
 namespace Algolia\AlgoliaSearch\Model\Product;
 
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
+use Algolia\AlgoliaSearch\Exception\ReplicaLimitExceededException;
+use Algolia\AlgoliaSearch\Exception\TooManyCustomerGroupsAsReplicasException;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
+use Algolia\AlgoliaSearch\Validator\VirtualReplicaValidatorFactory;
 use Algolia\AlgoliaSearch\Registry\ReplicaState;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -37,18 +40,17 @@ class ReplicaManager implements ReplicaManagerInterface
     public const REPLICA_TRANSFORM_MODE_VIRTUAL = 2;
     public const REPLICA_TRANSFORM_MODE_ACTUAL = 3;
 
-    public const SORT_KEY_VIRTUAL_REPLICA = 'virtualReplica';
-
     protected const _DEBUG = true;
 
     protected array $_algoliaReplicaConfig = [];
     protected array $_magentoReplicaPossibleConfig = [];
 
     public function __construct(
-        protected ConfigHelper  $configHelper,
-        protected AlgoliaHelper $algoliaHelper,
-        protected ReplicaState  $replicaState,
-        protected Logger        $logger
+        protected ConfigHelper                   $configHelper,
+        protected AlgoliaHelper                  $algoliaHelper,
+        protected ReplicaState                   $replicaState,
+        protected VirtualReplicaValidatorFactory $validatorFactory,
+        protected Logger                         $logger
     )
     {}
 
@@ -167,9 +169,7 @@ class ReplicaManager implements ReplicaManagerInterface
                 $replica = $sort['name'];
                 if (
                     $mode === self::REPLICA_TRANSFORM_MODE_VIRTUAL
-                    || array_key_exists(self::SORT_KEY_VIRTUAL_REPLICA, $sort)
-                    && $sort[self::SORT_KEY_VIRTUAL_REPLICA]
-                    && $mode === self::REPLICA_TRANSFORM_MODE_ACTUAL
+                    || !empty($sort[self::SORT_KEY_VIRTUAL_REPLICA]) && $mode === self::REPLICA_TRANSFORM_MODE_ACTUAL
                 ) {
                     $replica = "virtual($replica)";
                 }
@@ -210,9 +210,9 @@ class ReplicaManager implements ReplicaManagerInterface
      */
     public function handleReplicas(string $primaryIndexName, int $storeId, array $primaryIndexSettings): void
     {
-        // TODO: Determine if InstantSearch is a hard requirement (i.e. headless implementations may still need replicas)
-        if ($this->configHelper->isInstantEnabled($storeId)
-            && $this->hasReplicaConfigurationChanged($primaryIndexName, $storeId)) {
+        if ($this->isReplicaSyncEnabled($storeId)
+            && $this->hasReplicaConfigurationChanged($primaryIndexName, $storeId)
+            && $this->isReplicaConfigurationValid($primaryIndexName, $storeId)) {
             $addedReplicas = $this->setReplicasOnPrimaryIndex($primaryIndexName, $storeId);
             $this->configureRanking($primaryIndexName, $storeId, $addedReplicas, $primaryIndexSettings);
         }
@@ -260,6 +260,58 @@ class ReplicaManager implements ReplicaManagerInterface
 
         // include both added and updated replica indices
         return $replicasToRank;
+    }
+
+    /**
+     * @param string $primaryIndexName
+     * @param int $storeId
+     * @return bool
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     * @throws ReplicaLimitExceededException
+     */
+    protected function isReplicaConfigurationValid(string $primaryIndexName, int $storeId): bool
+    {
+        $sortingIndices = $this->configHelper->getSortingIndices($primaryIndexName, $storeId);
+        $validator = $this->validatorFactory->create();
+        if (!$validator->isReplicaConfigurationValid($sortingIndices)) {
+            $postfix = "Please note that there can be no more than " . $this->getMaxVirtualReplicasPerIndex() . " virtual replicas per index.";
+            if ($this->revertReplicaConfig($storeId)) {
+                $postfix .= ' Reverting to previous configuration.';
+            }
+            if ($validator->isTooManyCustomerGroups()) {
+                throw (new TooManyCustomerGroupsAsReplicasException(__("You have too many customer groups to enable virtual replicas on the pricing sort for store $storeId. $postfix")))
+                    ->withReplicaCount($validator->getReplicaCount())
+                    ->withPriceSortReplicaCount($validator->getPriceSortReplicaCount());
+            }
+            else {
+                throw (new ReplicaLimitExceededException(__("Replica limit exceeded for store ID $storeId. $postfix")))
+                    ->withReplicaCount($validator->getReplicaCount());
+            }
+        }
+        return true;
+    }
+
+    protected function revertReplicaConfig(int $storeId): bool
+    {
+        if ($ogConfig = $this->replicaState->getOriginalSortConfiguration($storeId)) {
+            $this->configHelper->setSorting(
+                $ogConfig,
+                $this->replicaState->getParentScope(),
+                $this->replicaState->getParentScopeId()
+            );
+            return true;
+        }
+
+        if ($this->replicaState->wereCustomerGroupsEnabled()) {
+            $this->configHelper->setCustomerGroupsEnabled(
+                false,
+                $this->replicaState->getParentScope(),
+                $this->replicaState->getParentScopeId());
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -316,8 +368,7 @@ class ReplicaManager implements ReplicaManagerInterface
         foreach ($replicaDetails as $replica) {
             $replicaName = $replica['name'];
             // Virtual replicas - relevant sort
-            if (array_key_exists(self::SORT_KEY_VIRTUAL_REPLICA, $replica)
-                && $replica[self::SORT_KEY_VIRTUAL_REPLICA]) {
+            if (!empty($replica[self::SORT_KEY_VIRTUAL_REPLICA])) {
                 $customRanking = array_key_exists('customRanking', $primaryIndexSettings)
                     ? $primaryIndexSettings['customRanking']
                     : [];
@@ -335,5 +386,21 @@ class ReplicaManager implements ReplicaManagerInterface
                 );
             }
         }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isReplicaSyncEnabled(int $storeId): bool
+    {
+        return $this->configHelper->isInstantEnabled($storeId);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getMaxVirtualReplicasPerIndex() : int
+    {
+        return self::MAX_VIRTUAL_REPLICA_LIMIT;
     }
 }

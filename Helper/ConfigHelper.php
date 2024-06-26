@@ -2,8 +2,10 @@
 
 namespace Algolia\AlgoliaSearch\Helper;
 
-use Algolia\AlgoliaSearch\Model\Product\ReplicaManager;
+use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
 use Magento;
+use Magento\Cookie\Helper\Cookie as CookieHelper;
+use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
 use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
 use Magento\Directory\Model\Currency as DirCurrency;
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -13,9 +15,6 @@ use Magento\Framework\Locale\Currency;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
-use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
-use Magento\Cookie\Helper\Cookie as CookieHelper;
-
 
 class ConfigHelper
 {
@@ -147,70 +146,6 @@ class ConfigHelper
     public const ENHANCED_QUEUE_ARCHIVE = 'algoliasearch_advanced/queue/enhanced_archive';
     public const NUMBER_OF_ELEMENT_BY_PAGE = 'algoliasearch_advanced/queue/number_of_element_by_page';
     public const ARCHIVE_LOG_CLEAR_LIMIT = 'algoliasearch_advanced/queue/archive_clear_limit';
-    // https://www.algolia.com/doc/guides/managing-results/refine-results/sorting/in-depth/replicas/#what-are-virtual-replicas
-    public const MAX_VIRTUAL_REPLICA_LIMIT = 20;
-
-    public const SORT_ATTRIBUTE_PRICE = 'price';
-
-    /**
-     * @var Magento\Framework\App\Config\ScopeConfigInterface
-     */
-    protected $configInterface;
-
-    /**
-     * @var Currency
-     */
-    protected $currency;
-
-    /**
-     * @var StoreManagerInterface
-     */
-    protected $storeManager;
-
-    /**
-     * @var DirCurrency
-     */
-    protected $dirCurrency;
-
-    /**
-     * @var DirectoryList
-     */
-    protected $directoryList;
-
-    /**
-     * @var Magento\Framework\Module\ResourceInterface
-     */
-    protected $moduleResource;
-
-    /**
-     * @var Magento\Framework\App\ProductMetadataInterface
-     */
-    protected $productMetadata;
-
-    /**
-     * @var Magento\Framework\Event\ManagerInterface
-     */
-    protected $eventManager;
-
-    /**
-     * @var SerializerInterface
-     */
-    protected $serializer;
-
-    /**
-     * @var GroupCollection
-     */
-    protected $groupCollection;
-
-    /**
-     * @var GroupExcludedWebsiteRepositoryInterface
-     */
-    protected $groupExcludedWebsiteRepository;
-
-    /**
-     * @var CookieHelper
-     */
-    protected $cookieHelper;
 
     /**
      * @var array<int,<array<string, mixed>>>
@@ -233,32 +168,21 @@ class ConfigHelper
 
      */
     public function __construct(
-        Magento\Framework\App\Config\ScopeConfigInterface $configInterface,
-        StoreManagerInterface                             $storeManager,
-        Currency                                          $currency,
-        DirCurrency                                       $dirCurrency,
-        DirectoryList                                     $directoryList,
-        Magento\Framework\Module\ResourceInterface        $moduleResource,
-        Magento\Framework\App\ProductMetadataInterface    $productMetadata,
-        Magento\Framework\Event\ManagerInterface          $eventManager,
-        SerializerInterface                               $serializer,
-        GroupCollection                                   $groupCollection,
-        GroupExcludedWebsiteRepositoryInterface           $groupExcludedWebsiteRepository,
-        CookieHelper                                      $cookieHelper
-    ) {
-        $this->configInterface = $configInterface;
-        $this->currency = $currency;
-        $this->storeManager = $storeManager;
-        $this->dirCurrency = $dirCurrency;
-        $this->directoryList = $directoryList;
-        $this->moduleResource = $moduleResource;
-        $this->productMetadata = $productMetadata;
-        $this->eventManager = $eventManager;
-        $this->serializer = $serializer;
-        $this->groupCollection = $groupCollection;
-        $this->groupExcludedWebsiteRepository = $groupExcludedWebsiteRepository;
-        $this->cookieHelper = $cookieHelper;
-    }
+        protected Magento\Framework\App\Config\ScopeConfigInterface    $configInterface,
+        protected Magento\Framework\App\Config\Storage\WriterInterface $configWriter,
+        protected StoreManagerInterface                                $storeManager,
+        protected Currency                                             $currency,
+        protected DirCurrency                                          $dirCurrency,
+        protected DirectoryList                                        $directoryList,
+        protected Magento\Framework\Module\ResourceInterface           $moduleResource,
+        protected Magento\Framework\App\ProductMetadataInterface       $productMetadata,
+        protected Magento\Framework\Event\ManagerInterface             $eventManager,
+        protected SerializerInterface                                  $serializer,
+        protected GroupCollection                                      $groupCollection,
+        protected GroupExcludedWebsiteRepositoryInterface              $groupExcludedWebsiteRepository,
+        protected CookieHelper                                         $cookieHelper
+    )
+    {}
 
 
     /**
@@ -517,6 +441,10 @@ class ConfigHelper
         }
 
         return [];
+    }
+
+    protected function serialize(array $value): string {
+        return $this->serializer->serialize($value);
     }
 
     /**
@@ -1033,16 +961,14 @@ class ConfigHelper
         $attrName = $origAttr['attribute'];
         $sortDir = $origAttr['sort'];
         $groupIndexNameSuffix = 'group_' . $customerGroupId;
-        $groupIndexName =
-            $originalIndexName . '_' . $attrName . '_' . $groupIndexNameSuffix . '_' . $sortDir;
-        $groupSortAttribute = $attrName . '.' . $currency . '.' . $groupIndexNameSuffix;
-        $newAttr = [
-            'attribute' => $attrName,
-            'name'      => $groupIndexName,
-            'sort'      => $sortDir,
-            'sortLabel' => $origAttr['sortLabel']
-        ];
+        $groupIndexName = $originalIndexName . '_' . $attrName . '_' . $groupIndexNameSuffix . '_' . $sortDir;
 
+        $newAttr = array_merge(
+            $origAttr,
+            ['name' => $groupIndexName]
+        );
+
+        $groupSortAttribute = $attrName . '.' . $currency . '.' . $groupIndexNameSuffix;
         $newAttr['ranking'] = $this->getSortAttributingRankingSetting($groupSortAttribute, $sortDir);
         return $this->decorateSortAttribute($newAttr);
     }
@@ -1090,6 +1016,7 @@ class ConfigHelper
     /**
      * Augment sorting configuration with corresponding replica indices, ranking,
      * and (as needed) customer group pricing
+     * TODO: MAGE-941 Remove the $originalIndexName param - this should never be needed as tmp indices cannot have attached replicas
      *
      * @param string $originalIndexName
      * @param ?int $storeId
@@ -1126,7 +1053,7 @@ class ConfigHelper
             $indexName = false;
             $sortAttribute = false;
             // Group pricing
-            if ($this->isCustomerGroupsEnabled($storeId) && $attr['attribute'] === self::SORT_ATTRIBUTE_PRICE) {
+            if ($this->isCustomerGroupsEnabled($storeId) && $attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] === ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE) {
                 $websiteId = (int) $this->storeManager->getStore($storeId)->getWebsiteId();
                 $groupCollection = $this->groupCollection;
                 if (!is_null($currentCustomerGroupId)) {
@@ -1140,7 +1067,7 @@ class ConfigHelper
                     }
                 }
             // Regular pricing
-            } elseif ($attr['attribute'] === self::SORT_ATTRIBUTE_PRICE) {
+            } elseif ($attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] === ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE) {
                 $indexName = $originalIndexName . '_' . $attr['attribute'] . '_' . 'default' . '_' . $attr['sort'];
                 $sortAttribute = $attr['attribute'] . '.' . $currency . '.' . 'default';
             // All other sort attributes
@@ -1159,7 +1086,7 @@ class ConfigHelper
         $attrsToReturn = [];
 
         foreach ($attrs as $attr) {
-            if ($attr['attribute'] == self::SORT_ATTRIBUTE_PRICE
+            if ($attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] == ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE
                 && count($attributesToAdd)
                 && isset($attributesToAdd[$attr['sort']])) {
                 $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
@@ -1177,23 +1104,39 @@ class ConfigHelper
 
     /***
      * @param $storeId
-     * @return array|bool|float|int|mixed|string|null
+     * @return array<string,<array<string, mixed>>>
      */
-    public function getSorting($storeId = null)
+    public function getSorting($storeId = null): array
     {
         return $this->unserialize($this->getRawSortingValue($storeId));
     }
 
     /**
-     * @param $storeId
-     * @return mixed
+     * @param int|null $storeId
+     * @return string
      */
-    public function getRawSortingValue($storeId = null)
+    public function getRawSortingValue(?int $storeId = null): string
     {
-        return $this->configInterface->getValue(
+        return (string) $this->configInterface->getValue(
             self::SORTING_INDICES,
             ScopeInterface::SCOPE_STORE,
             $storeId
+        );
+    }
+
+    /**
+     * @param array $sorting
+     * @param string|null $scope
+     * @param int|null $scopeId
+     * @return void
+     */
+    public function setSorting(array $sorting, ?string $scope = null, ?int $scopeId = null): void
+    {
+        $this->configWriter->save(
+            self::SORTING_INDICES,
+            $this->serialize($sorting),
+            $scope,
+            $scopeId
         );
     }
 
@@ -1213,9 +1156,19 @@ class ConfigHelper
      * @param $storeId
      * @return bool
      */
-    public function isCustomerGroupsEnabled($storeId = null)
+    public function isCustomerGroupsEnabled($storeId = null): bool
     {
         return $this->configInterface->isSetFlag(self::CUSTOMER_GROUPS_ENABLE, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    public function setCustomerGroupsEnabled(bool $val, ?string $scope = null, ?int $scopeId = null): void
+    {
+        $this->configWriter->save(
+            self::CUSTOMER_GROUPS_ENABLE,
+            $val ? '1' : '0',
+            $scope,
+            $scopeId
+        );
     }
 
     /**
@@ -1869,7 +1822,7 @@ class ConfigHelper
         return (bool) count(array_filter(
             $this->getSorting($storeId),
             function ($sort) {
-                return $sort[ReplicaManager::SORT_KEY_VIRTUAL_REPLICA];
+                return $sort[ReplicaManagerInterface::SORT_KEY_VIRTUAL_REPLICA];
             }
         ));
     }

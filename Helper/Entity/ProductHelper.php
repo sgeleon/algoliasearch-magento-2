@@ -15,7 +15,6 @@ use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
 use Algolia\AlgoliaSearch\Helper\Image as ImageHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
-use Algolia\AlgoliaSearch\Model\Product\ReplicaManager;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
@@ -215,7 +214,6 @@ class ProductHelper
      * @param $productIds
      * @param $onlyVisible
      * @param $includeNotVisibleIndividually
-     * @return Collection
      */
     public function getProductCollectionQuery(
         $storeId,
@@ -375,17 +373,14 @@ class ProductHelper
         }
 
         $this->replicaManager->handleReplicas($indexName, $storeId, $indexSettings);
-        if ($saveToTmpIndicesToo) {
-            $this->replicaManager->handleReplicas($indexNameTmp, $storeId, $indexSettings);
-        }
 
         if ($saveToTmpIndicesToo) {
             try {
                 $this->algoliaHelper->copySynonyms($indexName, $indexNameTmp);
                 $this->algoliaHelper->waitLastTask();
                 $this->logger->log('
-                    Copying synonyms from production index to "' . $indexNameTmp . '" to not erase them with the index move.
-                ');
+                        Copying synonyms from production index to "' . $indexNameTmp . '" to not erase them with the index move.
+                    ');
             } catch (AlgoliaException $e) {
                 $this->logger->error('Error encountered while copying synonyms: ' . $e->getMessage());
             }
@@ -394,8 +389,8 @@ class ProductHelper
                 $this->algoliaHelper->copyQueryRules($indexName, $indexNameTmp);
                 $this->algoliaHelper->waitLastTask();
                 $this->logger->log('
-                    Copying query rules from production index to "' . $indexNameTmp . '" to not erase them with the index move.
-                ');
+                        Copying query rules from production index to "' . $indexNameTmp . '" to not erase them with the index move.
+                    ');
             } catch (AlgoliaException $e) {
                 if ($e->getCode() !== 404) {
                     throw $e;
@@ -600,20 +595,6 @@ class ProductHelper
         }
 
         return $customData;
-    }
-
-    protected function getCategoryPaths($product, $category)
-    {
-        $category->getUrlInstance()->setStore($product->getStoreId());
-        $path = [];
-
-        foreach ($category->getPathIds() as $treeCategoryId) {
-            $name = $this->categoryHelper->getCategoryName($treeCategoryId, $storeId);
-            if ($name) {
-                $categoryIds[] = $treeCategoryId;
-                $path[] = $name;
-            }
-        }
     }
 
     /**
@@ -1426,7 +1407,7 @@ class ProductHelper
         return array_map(
             function($sort) {
                 $replica = $sort['name'];
-                return !! $sort[ReplicaManager::SORT_KEY_VIRTUAL_REPLICA]
+                return !! $sort[ReplicaManagerInterface::SORT_KEY_VIRTUAL_REPLICA]
                     ? "virtual($replica)"
                     : $replica;
             },
@@ -1438,7 +1419,7 @@ class ProductHelper
      * Moving to ReplicaManager class
      * @param string $indexName
      * @param int $storeId
-     * @param bool $sortingAttribute
+     * @param array|bool $sortingAttribute
      * @return void
      * @throws AlgoliaException
      * @throws ExceededRetriesException

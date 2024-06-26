@@ -48,6 +48,8 @@ class Sorts extends ArraySerialized
      */
     public function afterSave(): \Magento\Framework\App\Config\Value
     {
+        $this->replicaState->setAppliedScope($this->getScope(), $this->getScopeId());
+
         $storeIds = $this->configChecker->getAffectedStoreIds(
             $this->getPath(),
             $this->getScope(),
