@@ -372,7 +372,7 @@ class ProductHelper
             $this->setFacetsQueryRules($indexNameTmp);
         }
 
-        $this->replicaManager->handleReplicas($indexName, $storeId, $indexSettings);
+        $this->replicaManager->syncReplicasToAlgolia($indexName, $storeId, $indexSettings);
 
         if ($saveToTmpIndicesToo) {
             try {

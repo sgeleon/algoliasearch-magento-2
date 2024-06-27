@@ -29,7 +29,7 @@ interface ReplicaManagerInterface
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    public function handleReplicas(string $primaryIndexName, int $storeId, array $primaryIndexSettings): void;
+    public function syncReplicasToAlgolia(string $primaryIndexName, int $storeId, array $primaryIndexSettings): void;
 
 
     /**

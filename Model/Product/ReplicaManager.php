@@ -208,7 +208,7 @@ class ReplicaManager implements ReplicaManagerInterface
     /**
      * @inheritDoc
      */
-    public function handleReplicas(string $primaryIndexName, int $storeId, array $primaryIndexSettings): void
+    public function syncReplicasToAlgolia(string $primaryIndexName, int $storeId, array $primaryIndexSettings): void
     {
         if ($this->isReplicaSyncEnabled($storeId)
             && $this->hasReplicaConfigurationChanged($primaryIndexName, $storeId)
