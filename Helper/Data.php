@@ -269,8 +269,9 @@ class Data
      * @param array|null $pageIds
      * @return void
      * @throws AlgoliaException
+     * @throws NoSuchEntityException
      */
-    public function rebuildStorePageIndex($storeId, array $pageIds = null)
+    public function rebuildStorePageIndex($storeId, array $pageIds = null): void
     {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
@@ -281,7 +282,7 @@ class Data
             return;
         }
 
-        $indexName = $this->getIndexName($this->pageHelper->getIndexNameSuffix(), $storeId);
+        $indexName = $this->pageHelper->getIndexName($storeId);
 
         $this->startEmulation($storeId);
 

@@ -82,7 +82,7 @@ class IndicesConfigurator
      * @return void
      * @throws AlgoliaException
      * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function saveConfigurationToAlgolia(int $storeId, bool $useTmpIndex = false): void
     {
@@ -126,7 +126,7 @@ class IndicesConfigurator
     /**
      * @param int $storeId
      *
-     * @throws AlgoliaException|\Magento\Framework\Exception\NoSuchEntityException
+     * @throws AlgoliaException|NoSuchEntityException
      */
     protected function setCategoriesSettings(int $storeId): void
     {
@@ -146,13 +146,14 @@ class IndicesConfigurator
      * @param int $storeId
      *
      * @throws AlgoliaException
+     * @throws NoSuchEntityException
      */
-    protected function setPagesSettings($storeId)
+    protected function setPagesSettings(int $storeId): void
     {
         $this->logger->start('Pushing settings for CMS pages indices.');
 
         $settings = $this->pageHelper->getIndexSettings($storeId);
-        $indexName = $this->baseHelper->getIndexName($this->pageHelper->getIndexNameSuffix(), $storeId);
+        $indexName = $this->pageHelper->getIndexName($storeId);
 
         $this->algoliaHelper->setSettings($indexName, $settings, false, true);
 
@@ -216,7 +217,7 @@ class IndicesConfigurator
      * @return void
      * @throws AlgoliaException
      * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     protected function setProductsSettings(int $storeId, bool $useTmpIndex): void
     {
@@ -249,7 +250,7 @@ class IndicesConfigurator
         $sections = [
             'products' => $this->productHelper->getIndexName($storeId),
             'categories' => $this->categoryHelper->getIndexName($storeId),
-            'pages' => $this->baseHelper->getIndexName($this->pageHelper->getIndexNameSuffix(), $storeId),
+            'pages' => $this->pageHelper->getIndexName($storeId),
             'suggestions' => $this->baseHelper->getIndexName($this->suggestionHelper->getIndexNameSuffix(), $storeId),
             'additional_sections' => $this->baseHelper->getIndexName($additionalSectionsSuffix, $storeId),
         ];

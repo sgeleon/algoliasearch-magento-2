@@ -32,18 +32,19 @@ class CategoryHelper extends AbstractEntityHelper
     protected $categoryNames;
 
     public function __construct(
-        protected ManagerInterface $eventManager,
-        protected StoreManagerInterface $storeManager,
-        protected ResourceConnection $resourceConnection,
-        protected Config $eavConfig,
-        protected ConfigHelper $configHelper,
+        protected ManagerInterface          $eventManager,
+        protected StoreManagerInterface     $storeManager,
+        protected ResourceConnection        $resourceConnection,
+        protected Config                    $eavConfig,
+        protected ConfigHelper              $configHelper,
         protected CategoryCollectionFactory $categoryCollectionFactory,
-        protected Image $imageHelper,
-        protected CategoryResource $categoryResource,
-        protected CategoryRepository $categoryRepository,
-        protected Manager $moduleManager,
-        protected Data $baseHelper
-    ) {
+        protected Image                     $imageHelper,
+        protected CategoryResource          $categoryResource,
+        protected CategoryRepository        $categoryRepository,
+        protected Manager                   $moduleManager,
+        protected Data                      $baseHelper
+    )
+    {
         parent::__construct($baseHelper);
     }
 
