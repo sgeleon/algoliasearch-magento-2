@@ -64,7 +64,7 @@ class IndexEntityDataProvider
     {
         if (empty($this->entityIndexes)) {
             $this->entityIndexes = [
-                'products' => $this->dataHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId),
+                'products' => $this->productHelper->getIndexName($storeId),
                 'categories' => $this->dataHelper->getIndexName($this->categoryHelper->getIndexNameSuffix(), $storeId),
                 'pages' => $this->dataHelper->getIndexName($this->pageHelper->getIndexNameSuffix(), $storeId),
             ];

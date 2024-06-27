@@ -12,6 +12,7 @@ use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Helper\Data;
 use Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
 use Algolia\AlgoliaSearch\Helper\Image as ImageHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
@@ -38,7 +39,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\Store;
 use Magento\Store\Model\StoreManagerInterface;
 
-class ProductHelper
+class ProductHelper extends AbstractEntityHelper
 {
     /**
      * @var AbstractType[]
@@ -86,27 +87,6 @@ class ProductHelper
         'color',
     ];
 
-    /**
-     * ProductHelper constructor.
-     *
-     * @param Config $eavConfig
-     * @param ConfigHelper $configHelper
-     * @param AlgoliaHelper $algoliaHelper
-     * @param Logger $logger
-     * @param StoreManagerInterface $storeManager
-     * @param ManagerInterface $eventManager
-     * @param Visibility $visibility
-     * @param Stock $stockHelper
-     * @param StockRegistryInterface $stockRegistry
-     * @param CurrencyHelper $currencyManager
-     * @param CategoryHelper $categoryHelper
-     * @param PriceManager $priceManager
-     * @param Type $productType
-     * @param CollectionFactory $productCollectionFactory
-     * @param GroupCollection $groupCollection
-     * @param GroupExcludedWebsiteRepositoryInterface groupExcludedWebsiteRepository
-     * @param ImageHelper $imageHelper
-     */
     public function __construct(
         protected Config                                  $eavConfig,
         protected ConfigHelper                            $configHelper,
@@ -125,8 +105,11 @@ class ProductHelper
         protected GroupCollection                         $groupCollection,
         protected GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
         protected ImageHelper                             $imageHelper,
+        protected Data                                    $baseHelper,
         protected ReplicaManagerInterface                 $replicaManager
-    ) {}
+    ) {
+        parent::__construct($this->baseHelper);
+    }
 
     /**
      * @return string
@@ -1428,7 +1411,7 @@ class ProductHelper
      * @deprecated This function will be removed in a future release
      * @see Algolia::AlgoliaSearch::Api::Product::ReplicaManagerInterface
      */
-    public function handlingReplica(string $indexName, int $storeId, $sortingAttribute = false): void
+    public function handlingReplica(string $indexName, int $storeId, array|bool $sortingAttribute = false): void
     {
         $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId, null, $sortingAttribute);
         if ($this->configHelper->isInstantEnabled($storeId)) {

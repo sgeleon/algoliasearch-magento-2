@@ -221,8 +221,8 @@ class IndicesConfigurator
     {
         $this->logger->start('Pushing settings for products indices.');
 
-        $indexName = $this->baseHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
-        $indexNameTmp = $this->baseHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId, true);
+        $indexName = $this->productHelper->getIndexName($storeId);
+        $indexNameTmp = $this->productHelper->getTempIndexName($storeId);
 
         $this->logger->log('Index name: ' . $indexName);
         $this->logger->log('TMP Index name: ' . $indexNameTmp);
@@ -245,7 +245,7 @@ class IndicesConfigurator
         $additionalSectionsSuffix = $this->additionalSectionHelper->getIndexNameSuffix();
 
         $sections = [
-            'products' => $this->baseHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId),
+            'products' => $this->productHelper->getIndexName($storeId),
             'categories' => $this->baseHelper->getIndexName($this->categoryHelper->getIndexNameSuffix(), $storeId),
             'pages' => $this->baseHelper->getIndexName($this->pageHelper->getIndexNameSuffix(), $storeId),
             'suggestions' => $this->baseHelper->getIndexName($this->suggestionHelper->getIndexNameSuffix(), $storeId),

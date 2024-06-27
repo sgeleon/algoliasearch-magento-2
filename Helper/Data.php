@@ -169,7 +169,7 @@ class Data
     {
         $indexName = $targetedIndex !== null ?
             $targetedIndex :
-            $this->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
+            $this->productHelper->getIndexName($storeId);
 
         $numberOfResults = 1000;
         if ($this->configHelper->isInstantEnabled()) {
@@ -774,7 +774,7 @@ class Data
         $collection->load();
         $this->logger->log('Loaded ' . count($collection) . ' products');
         $this->logger->stop($logMessage);
-        $indexName = $this->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId, $useTmpIndex);
+        $indexName = $this->productHelper->getIndexName($storeId, $useTmpIndex);
         $indexData = $this->getProductsRecords($storeId, $collection, $productIds);
         if (!empty($indexData['toIndex'])) {
             $this->logger->start('ADD/UPDATE TO ALGOLIA');
@@ -911,7 +911,7 @@ class Data
      */
     public function deleteInactiveProducts($storeId): void
     {
-        $indexName = $this->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
+        $indexName = $this->productHelper->getIndexName($storeId);
         $client = $this->algoliaHelper->getClient();
         $objectIds = [];
         $counter = 0;
