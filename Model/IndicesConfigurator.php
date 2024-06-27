@@ -12,6 +12,7 @@ use Algolia\AlgoliaSearch\Helper\Entity\PageHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\SuggestionHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 class IndicesConfigurator
 {
@@ -125,13 +126,13 @@ class IndicesConfigurator
     /**
      * @param int $storeId
      *
-     * @throws AlgoliaException
+     * @throws AlgoliaException|\Magento\Framework\Exception\NoSuchEntityException
      */
-    protected function setCategoriesSettings($storeId)
+    protected function setCategoriesSettings(int $storeId): void
     {
         $this->logger->start('Pushing settings for categories indices.');
 
-        $indexName = $this->baseHelper->getIndexName($this->categoryHelper->getIndexNameSuffix(), $storeId);
+        $indexName = $this->categoryHelper->getIndexName($storeId);
         $settings = $this->categoryHelper->getIndexSettings($storeId);
 
         $this->algoliaHelper->setSettings($indexName, $settings, false, true);
@@ -237,8 +238,9 @@ class IndicesConfigurator
      * @param bool $saveToTmpIndicesToo
      *
      * @throws AlgoliaException
+     * @throws NoSuchEntityException
      */
-    protected function setExtraSettings($storeId, $saveToTmpIndicesToo)
+    protected function setExtraSettings(int $storeId, bool $saveToTmpIndicesToo): void
     {
         $this->logger->start('Pushing extra settings.');
 
@@ -246,7 +248,7 @@ class IndicesConfigurator
 
         $sections = [
             'products' => $this->productHelper->getIndexName($storeId),
-            'categories' => $this->baseHelper->getIndexName($this->categoryHelper->getIndexNameSuffix(), $storeId),
+            'categories' => $this->categoryHelper->getIndexName($storeId),
             'pages' => $this->baseHelper->getIndexName($this->pageHelper->getIndexNameSuffix(), $storeId),
             'suggestions' => $this->baseHelper->getIndexName($this->suggestionHelper->getIndexNameSuffix(), $storeId),
             'additional_sections' => $this->baseHelper->getIndexName($additionalSectionsSuffix, $storeId),

@@ -9,6 +9,7 @@ use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Magento\Catalog\Model\ResourceModel\Category\CollectionFactory as CategoryCollection;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollection;
 use Magento\Cms\Model\ResourceModel\Page\CollectionFactory as PageCollection;
+use Magento\Framework\Exception\NoSuchEntityException;
 
 class IndexEntityDataProvider
 {
@@ -59,13 +60,14 @@ class IndexEntityDataProvider
      * @param $storeId
      *
      * @return array
+     * @throws NoSuchEntityException
      */
     public function getEntityIndexes($storeId)
     {
         if (empty($this->entityIndexes)) {
             $this->entityIndexes = [
                 'products' => $this->productHelper->getIndexName($storeId),
-                'categories' => $this->dataHelper->getIndexName($this->categoryHelper->getIndexNameSuffix(), $storeId),
+                'categories' => $this->categoryHelper->getIndexName($storeId),
                 'pages' => $this->dataHelper->getIndexName($this->pageHelper->getIndexNameSuffix(), $storeId),
             ];
         }

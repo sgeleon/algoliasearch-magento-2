@@ -11,6 +11,10 @@ abstract class AbstractEntityHelper
         protected Data $baseHelper
     ) {}
 
+    /**
+     * Get the index suffix for this entity type (used to distinguish Magento managed indices in Algolia by entity)
+     * @return string
+     */
     abstract public function getIndexNameSuffix(): string;
 
     /**

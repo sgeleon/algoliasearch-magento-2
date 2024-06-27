@@ -17,6 +17,7 @@ use Magento\Framework\App\Area;
 use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Search\Model\Query;
 use Magento\Store\Model\App\Emulation;
@@ -546,14 +547,18 @@ class Data
         unset($collection);
     }
 
-    public function rebuildStoreCategoryIndexPage($storeId, $collection, $page, $pageSize, $categoryIds = null)
+    /**
+     * @throws NoSuchEntityException
+     * @throws AlgoliaException
+     */
+    public function rebuildStoreCategoryIndexPage($storeId, $collection, $page, $pageSize, $categoryIds = null): void
     {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
         }
         $collection->setCurPage($page)->setPageSize($pageSize);
         $collection->load();
-        $indexName = $this->getIndexName($this->categoryHelper->getIndexNameSuffix(), $storeId);
+        $indexName = $this->categoryHelper->getIndexName($storeId);
         $indexData = $this->getCategoryRecords($storeId, $collection, $categoryIds);
         if (!empty($indexData['toIndex'])) {
             $this->logger->start('ADD/UPDATE TO ALGOLIA');

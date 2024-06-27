@@ -107,12 +107,13 @@ class ProductHelper extends AbstractEntityHelper
         protected ImageHelper                             $imageHelper,
         protected Data                                    $baseHelper,
         protected ReplicaManagerInterface                 $replicaManager
-    ) {
-        parent::__construct($this->baseHelper);
+    )
+    {
+        parent::__construct($baseHelper);
     }
 
     /**
-     * @return string
+     * @inheritDoc
      */
     public function getIndexNameSuffix(): string
     {
