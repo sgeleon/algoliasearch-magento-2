@@ -128,12 +128,11 @@ class SuggestionHelper extends AbstractEntityHelper
     }
 
     /**
-     * @param $storeId
+     * @param int $storeId
      * @return QueryCollection
      */
-    public function getSuggestionCollectionQuery($storeId)
+    public function getSuggestionCollectionQuery(int $storeId): QueryCollection
     {
-        /** @var QueryCollection $collection */
         $collection = $this->queryCollectionFactory->create()
             ->addStoreFilter($storeId)
             ->setStoreId($storeId);

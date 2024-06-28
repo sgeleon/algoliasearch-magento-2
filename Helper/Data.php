@@ -23,6 +23,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Search\Model\Query;
+use Magento\Search\Model\ResourceModel\Query\Collection as QueryCollection;
 use Magento\Store\Model\App\Emulation;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -292,10 +293,13 @@ class Data
     }
 
     /**
-     * @param $storeId
+     * @param int $storeId
      * @return void
+     * @throws AlgoliaException
+     * @throws ExceededRetriesException
+     * @throws NoSuchEntityException
      */
-    public function rebuildStoreSuggestionIndex($storeId)
+    public function rebuildStoreSuggestionIndex(int $storeId): void
     {
         if ($this->isIndexingEnabled($storeId) === false || !$this->configHelper->isQuerySuggestionsIndexEnabled($storeId)) {
             return;
@@ -435,23 +439,24 @@ class Data
     }
 
     /**
-     * @param $storeId
-     * @param $collectionDefault
-     * @param $page
-     * @param $pageSize
+     * @param int $storeId
+     * @param QueryCollection $collectionDefault
+     * @param int $page
+     * @param int $pageSize
      * @return void
+     * @throws NoSuchEntityException
+     * @throws \Exception
      */
-    public function rebuildStoreSuggestionIndexPage($storeId, $collectionDefault, $page, $pageSize)
+    public function rebuildStoreSuggestionIndexPage(int $storeId, QueryCollection $collectionDefault, int $page, int $pageSize): void
     {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
         }
 
-        /** @var \Magento\CatalogSearch\Model\ResourceModel\Fulltext\Collection $collection */
         $collection = clone $collectionDefault;
         $collection->setCurPage($page)->setPageSize($pageSize);
         $collection->load();
-        $indexName = $this->getIndexName($this->suggestionHelper->getIndexNameSuffix(), $storeId, true);
+        $indexName = $this->suggestionHelper->getTempIndexName($storeId);
         $indexData = [];
 
         /** @var Query $suggestion */
