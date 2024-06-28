@@ -19,6 +19,7 @@ use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Event\ManagerInterface;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Search\Model\Query;
 use Magento\Store\Model\App\Emulation;
@@ -26,130 +27,47 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class Data
 {
-    /**
-     * @var AlgoliaHelper
-     */
-    protected $algoliaHelper;
-    /**
-     * @var PageHelper
-     */
-    protected $pageHelper;
-    /**
-     * @var CategoryHelper
-     */
-    protected $categoryHelper;
-    /**
-     * @var ProductHelper
-     */
-    protected $productHelper;
-    /**
-     * @var SuggestionHelper
-     */
-    protected $suggestionHelper;
-    /**
-     * @var AdditionalSectionHelper
-     */
-    protected $additionalSectionHelper;
-    /**
-     * @var Logger
-     */
-    protected $logger;
-    /**
-     * @var ConfigHelper
-     */
-    protected $configHelper;
-    /**
-     * @var Emulation
-     */
-    protected $emulation;
-    /**
-     * @var ResourceConnection
-     */
-    protected $resource;
-    /**
-     * @var ManagerInterface
-     */
-    protected $eventManager;
-    /**
-     * @var ScopeCodeResolver
-     */
-    protected $scopeCodeResolver;
-    /**
-     * @var StoreManagerInterface
-     */
-    protected $storeManager;
+    protected bool $emulationRuns = false;
 
-    protected $emulationRuns = false;
+    protected IndexerInterface $priceIndexer;
 
-    /** @var \Magento\Framework\Indexer\IndexerInterface */
-    protected $priceIndexer;
-
-
-    /**
-     * @param AlgoliaHelper $algoliaHelper
-     * @param ConfigHelper $configHelper
-     * @param ProductHelper $producthelper
-     * @param CategoryHelper $categoryHelper
-     * @param PageHelper $pageHelper
-     * @param SuggestionHelper $suggestionHelper
-     * @param AdditionalSectionHelper $additionalSectionHelper
-     * @param Emulation $emulation
-     * @param Logger $logger
-     * @param ResourceConnection $resource
-     * @param ManagerInterface $eventManager
-     * @param ScopeCodeResolver $scopeCodeResolver
-     * @param StoreManagerInterface $storeManager
-     */
     public function __construct(
-        AlgoliaHelper           $algoliaHelper,
-        ConfigHelper            $configHelper,
-        ProductHelper           $producthelper,
-        CategoryHelper          $categoryHelper,
-        PageHelper              $pageHelper,
-        SuggestionHelper        $suggestionHelper,
-        AdditionalSectionHelper $additionalSectionHelper,
-        Emulation               $emulation,
-        Logger                  $logger,
-        ResourceConnection      $resource,
-        ManagerInterface        $eventManager,
-        ScopeCodeResolver       $scopeCodeResolver,
-        StoreManagerInterface   $storeManager,
-        IndexerRegistry         $indexerRegistry
-
+        protected AlgoliaHelper           $algoliaHelper,
+        protected ConfigHelper            $configHelper,
+        protected ProductHelper           $productHelper,
+        protected CategoryHelper          $categoryHelper,
+        protected PageHelper              $pageHelper,
+        protected SuggestionHelper        $suggestionHelper,
+        protected AdditionalSectionHelper $additionalSectionHelper,
+        protected Emulation               $emulation,
+        protected Logger                  $logger,
+        protected ResourceConnection      $resource,
+        protected ManagerInterface        $eventManager,
+        protected ScopeCodeResolver       $scopeCodeResolver,
+        protected StoreManagerInterface   $storeManager,
+        protected IndexHelper             $indexHelper,
+        IndexerRegistry                   $indexerRegistry
     )
     {
-        $this->algoliaHelper = $algoliaHelper;
-        $this->pageHelper = $pageHelper;
-        $this->categoryHelper = $categoryHelper;
-        $this->productHelper = $producthelper;
-        $this->suggestionHelper = $suggestionHelper;
-        $this->additionalSectionHelper = $additionalSectionHelper;
-        $this->configHelper = $configHelper;
-        $this->logger = $logger;
-        $this->emulation = $emulation;
-        $this->resource = $resource;
-        $this->eventManager = $eventManager;
-        $this->scopeCodeResolver = $scopeCodeResolver;
-        $this->storeManager = $storeManager;
-
         $this->priceIndexer = $indexerRegistry->get('catalog_product_price');
     }
 
     /**
      * @return ConfigHelper
      */
-    public function getConfigHelper()
+    public function getConfigHelper(): ConfigHelper
     {
         return $this->configHelper;
     }
 
     /**
-     * @param $storeId
-     * @param $ids
-     * @param $indexName
+     * @param int $storeId
+     * @param array $ids
+     * @param string $indexName
      * @return void
+     * @throws AlgoliaException
      */
-    public function deleteObjects($storeId, $ids, $indexName)
+    public function deleteObjects(int $storeId, array $ids, string $indexName): void
     {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
@@ -948,27 +866,28 @@ class Data
      * @param int|null $storeId
      * @param bool $tmp
      * @return string
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getIndexName(string $indexSuffix, int $storeId = null, bool $tmp = false): string
     {
-        return $this->getBaseIndexName($storeId) . $indexSuffix . ($tmp ? '_tmp' : '');
+        return $this->indexHelper->getIndexName($indexSuffix, $storeId, $tmp);
     }
 
     /**
      * @param int|null $storeId
      * @return string
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      */
     public function getBaseIndexName(int $storeId = null): string
     {
-        return $this->configHelper->getIndexPrefix($storeId) . $this->storeManager->getStore($storeId)->getCode();
+        return $this->indexHelper->getBaseIndexName($storeId);
     }
 
     /**
-     * @return array
+     * @return array<int, array<string, mixed>>
+     * @throws NoSuchEntityException
      */
-    public function getIndexDataByStoreIds()
+    public function getIndexDataByStoreIds(): array
     {
         $indexNames = [];
         $indexNames[0] = [

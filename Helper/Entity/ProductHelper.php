@@ -12,9 +12,9 @@ use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
-use Algolia\AlgoliaSearch\Helper\Data;
 use Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
 use Algolia\AlgoliaSearch\Helper\Image as ImageHelper;
+use Algolia\AlgoliaSearch\Helper\IndexHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
 use Magento\Catalog\Model\Product;
@@ -105,11 +105,11 @@ class ProductHelper extends AbstractEntityHelper
         protected GroupCollection                         $groupCollection,
         protected GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
         protected ImageHelper                             $imageHelper,
-        protected Data                                    $baseHelper,
+        protected IndexHelper                             $indexHelper,
         protected ReplicaManagerInterface                 $replicaManager
     )
     {
-        parent::__construct($baseHelper);
+        parent::__construct($indexHelper);
     }
 
     /**

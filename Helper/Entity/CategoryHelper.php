@@ -6,8 +6,8 @@ use Algolia\AlgoliaSearch\Exception\CategoryEmptyException;
 use Algolia\AlgoliaSearch\Exception\CategoryNotActiveException;
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
-use Algolia\AlgoliaSearch\Helper\Data;
 use Algolia\AlgoliaSearch\Helper\Image;
+use Algolia\AlgoliaSearch\Helper\IndexHelper;
 use Magento\Catalog\Model\Category;
 use Magento\Catalog\Model\Category as MagentoCategory;
 use Magento\Catalog\Model\CategoryRepository;
@@ -42,10 +42,10 @@ class CategoryHelper extends AbstractEntityHelper
         protected CategoryResource          $categoryResource,
         protected CategoryRepository        $categoryRepository,
         protected Manager                   $moduleManager,
-        protected Data                      $baseHelper
+        protected IndexHelper               $indexHelper
     )
     {
-        parent::__construct($baseHelper);
+        parent::__construct($indexHelper);
     }
 
     /**
