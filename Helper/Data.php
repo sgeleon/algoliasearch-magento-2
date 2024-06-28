@@ -5,6 +5,7 @@ namespace Algolia\AlgoliaSearch\Helper;
 use Algolia\AlgoliaSearch\Exception\CategoryReindexingException;
 use Algolia\AlgoliaSearch\Exception\ProductReindexingException;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
+use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Helper\Entity\AdditionalSectionHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\CategoryHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\PageHelper;
@@ -163,7 +164,7 @@ class Data
      * @param string|null $targetedIndex
      * @return array
      * @throws AlgoliaException
-     * @internal This method is currently unstable and should not be used. It may be revisited ar fixed in a future version.
+     * @internal This method is currently unstable and should not be used. It may be revisited or fixed in a future version.
      *
      */
     public function getSearchResult($query, $storeId, $searchParams = null, $targetedIndex = null): array
@@ -409,18 +410,20 @@ class Data
     }
 
     /**
-     * @param $storeId
+     * @param int $storeId
      * @return void
+     * @throws AlgoliaException
+     * @throws NoSuchEntityException
+     * @throws ExceededRetriesException
      */
-    public function moveStoreSuggestionIndex($storeId)
+    public function moveStoreSuggestionIndex(int $storeId): void
     {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
         }
 
-        $indexNameSuffix = $this->suggestionHelper->getIndexNameSuffix();
-        $tmpIndexName = $this->getIndexName($indexNameSuffix, $storeId, true);
-        $indexName = $this->getIndexName($indexNameSuffix, $storeId);
+        $tmpIndexName = $this->suggestionHelper->getTempIndexName($storeId);
+        $indexName = $this->suggestionHelper->getIndexName($storeId);
         $this->algoliaHelper->copyQueryRules($indexName, $tmpIndexName);
         $this->algoliaHelper->moveIndex($tmpIndexName, $indexName);
     }

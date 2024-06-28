@@ -171,7 +171,7 @@ class IndicesConfigurator
     {
         $this->logger->start('Pushing settings for query suggestions indices.');
 
-        $indexName = $this->baseHelper->getIndexName($this->suggestionHelper->getIndexNameSuffix(), $storeId);
+        $indexName = $this->suggestionHelper->getIndexName($storeId);
         $settings = $this->suggestionHelper->getIndexSettings($storeId);
 
         $this->algoliaHelper->setSettings($indexName, $settings, false, true);
@@ -251,7 +251,7 @@ class IndicesConfigurator
             'products' => $this->productHelper->getIndexName($storeId),
             'categories' => $this->categoryHelper->getIndexName($storeId),
             'pages' => $this->pageHelper->getIndexName($storeId),
-            'suggestions' => $this->baseHelper->getIndexName($this->suggestionHelper->getIndexNameSuffix(), $storeId),
+            'suggestions' => $this->suggestionHelper->getIndexName($storeId),
             'additional_sections' => $this->baseHelper->getIndexName($additionalSectionsSuffix, $storeId),
         ];
 
