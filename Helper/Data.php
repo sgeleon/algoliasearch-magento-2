@@ -18,6 +18,7 @@ use Magento\Framework\App\Area;
 use Magento\Framework\App\Config\ScopeCodeResolver;
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Event\ManagerInterface;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Indexer\IndexerInterface;
 use Magento\Framework\Indexer\IndexerRegistry;
@@ -81,11 +82,11 @@ class Data
      * @param array|null $searchParams
      * @param string|null $targetedIndex
      * @return array
-     * @throws AlgoliaException
+     * @throws AlgoliaException|NoSuchEntityException
      * @internal This method is currently unstable and should not be used. It may be revisited or fixed in a future version.
      *
      */
-    public function getSearchResult($query, $storeId, $searchParams = null, $targetedIndex = null): array
+    public function getSearchResult(string $query, int $storeId, ?array $searchParams = null, ?string $targetedIndex = null): array
     {
         $indexName = $targetedIndex !== null ?
             $targetedIndex :
@@ -249,8 +250,8 @@ class Data
      * @param $storeId
      * @param $categoryIds
      * @return void
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     public function rebuildStoreCategoryIndex($storeId, $categoryIds = null)
     {
@@ -347,12 +348,12 @@ class Data
     }
 
     /**
-     * @param $storeId
-     * @param $productIds
+     * @param int $storeId
+     * @param string[] $productIds
      * @return void
      * @throws \Exception
      */
-    public function rebuildStoreProductIndex($storeId, $productIds)
+    public function rebuildStoreProductIndex(int $storeId, array $productIds): void
     {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
@@ -395,14 +396,15 @@ class Data
     }
 
     /**
-     * @param $storeId
-     * @param $productIds
-     * @param $page
-     * @param $pageSize
-     * @param $useTmpIndex
+     * @param int $storeId
+     * @param array|null $productIds
+     * @param int $page
+     * @param int $pageSize
+     * @param bool $useTmpIndex
      * @return void
+     * @throws \Exception
      */
-    public function rebuildProductIndex($storeId, $productIds, $page, $pageSize, $useTmpIndex)
+    public function rebuildProductIndex(int $storeId, ?array $productIds, int $page, int $pageSize, bool $useTmpIndex): void
     {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
@@ -416,10 +418,11 @@ class Data
      * @param $page
      * @param $pageSize
      * @return void
-     * @throws \Magento\Framework\Exception\LocalizedException
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     * @throws \Exception
      */
-    public function rebuildCategoryIndex($storeId, $page, $pageSize)
+    public function rebuildCategoryIndex(int $storeId, int $page, int $pageSize): void
     {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
@@ -590,7 +593,7 @@ class Data
      * @param array|null $potentiallyDeletedCategoriesIds
      *
      * @return array
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      *
      */
     protected function getCategoryRecords($storeId, $collection, $potentiallyDeletedCategoriesIds = null)
@@ -730,11 +733,11 @@ class Data
     }
 
     /**
-     * @param $storeId
+     * @param int $storeId
      * @return void
      * @throws \Exception
      */
-    public function startEmulation($storeId)
+    public function startEmulation(int $storeId): void
     {
         if ($this->emulationRuns === true) {
             return;
@@ -751,7 +754,7 @@ class Data
      * @return void
      * @throws \Exception
      */
-    public function stopEmulation()
+    public function stopEmulation(): void
     {
         $this->logger->start('STOP EMULATION');
         $this->emulation->stopEnvironmentEmulation();
@@ -833,7 +836,7 @@ class Data
     /**
      * @param $storeId
      * @return void
-     * @throws \Magento\Framework\Exception\NoSuchEntityException
+     * @throws NoSuchEntityException
      * @throws AlgoliaException
      */
     public function deleteInactiveProducts($storeId): void
