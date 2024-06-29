@@ -885,7 +885,7 @@ class Data
      */
     public function getIndexName(string $indexSuffix, int $storeId = null, bool $tmp = false): string
     {
-        return $this->indexHelper->getIndexName($indexSuffix, $storeId, $tmp);
+        return $this->indexNameFetcher->getIndexName($indexSuffix, $storeId, $tmp);
     }
 
     /**
@@ -895,7 +895,7 @@ class Data
      */
     public function getBaseIndexName(int $storeId = null): string
     {
-        return $this->indexHelper->getBaseIndexName($storeId);
+        return $this->indexNameFetcher->getBaseIndexName($storeId);
     }
 
     /**

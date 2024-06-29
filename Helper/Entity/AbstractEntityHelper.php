@@ -25,7 +25,7 @@ abstract class AbstractEntityHelper
      */
     public function getIndexName(int $storeId, bool $tmp = false): string
     {
-        return $this->indexHelper->getIndexName($this->getIndexNameSuffix(), $storeId, $tmp);
+        return $this->indexNameFetcher->getIndexName($this->getIndexNameSuffix(), $storeId, $tmp);
     }
 
     /**
