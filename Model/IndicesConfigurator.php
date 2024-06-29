@@ -12,6 +12,7 @@ use Algolia\AlgoliaSearch\Helper\Entity\PageHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\SuggestionHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
+use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Framework\Exception\NoSuchEntityException;
 
 class IndicesConfigurator
@@ -265,11 +266,12 @@ class IndicesConfigurator
                     $this->logger->log('Extra settings: ' . json_encode($extraSettings));
                     $this->algoliaHelper->setSettings($indexName, $extraSettings, true);
 
-                    if ($section === 'products' && $saveToTmpIndicesToo === true) {
-                        $this->logger->log('Index name: ' . $indexName . '_tmp');
+                    if ($section === 'products' && $saveToTmpIndicesToo) {
+                        $tempIndexName = $indexName . IndexNameFetcher::INDEX_TEMP_SUFFIX;
+                        $this->logger->log('Index name: ' . $tempIndexName);
                         $this->logger->log('Extra settings: ' . json_encode($extraSettings));
 
-                        $this->algoliaHelper->setSettings($indexName . '_tmp', $extraSettings, true);
+                        $this->algoliaHelper->setSettings($tempIndexName, $extraSettings, true);
                     }
                 }
             } catch (AlgoliaException $e) {

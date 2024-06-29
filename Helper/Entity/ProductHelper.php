@@ -1211,7 +1211,7 @@ class ProductHelper extends AbstractEntityHelper
                 continue;
             }
 
-            if (mb_strpos($indexInfo['name'], '_tmp') === false && in_array($indexInfo['name'], $replicas) === false) {
+            if (mb_strpos($indexInfo['name'], IndexNameFetcher::INDEX_TEMP_SUFFIX) === false && in_array($indexInfo['name'], $replicas) === false) {
                 $indicesToDelete[] = $indexInfo['name'];
             }
         }

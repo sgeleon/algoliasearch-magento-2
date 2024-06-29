@@ -152,11 +152,14 @@ class Data
     }
 
     /**
-     * @param $storeId
+     * @param int $storeId
      * @return void
      * @throws AlgoliaException
+     * @throws ExceededRetriesException
+     * @throws NoSuchEntityException
+     * @throws \Exception
      */
-    public function rebuildStoreAdditionalSectionsIndex($storeId)
+    public function rebuildStoreAdditionalSectionsIndex(int $storeId): void
     {
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
@@ -175,12 +178,14 @@ class Data
 
             $attributeValues = $this->additionalSectionHelper->getAttributeValues($storeId, $section);
 
+            $tempIndexName = $indexName . IndexNameFetcher::INDEX_TEMP_SUFFIX;
+
             foreach (array_chunk($attributeValues, 100) as $chunk) {
-                $this->saveObjects($chunk, $indexName . '_tmp');
+                $this->saveObjects($chunk, $tempIndexName);
             }
 
-            $this->algoliaHelper->copyQueryRules($indexName, $indexName . '_tmp');
-            $this->algoliaHelper->moveIndex($indexName . '_tmp', $indexName);
+            $this->algoliaHelper->copyQueryRules($indexName, $tempIndexName);
+            $this->algoliaHelper->moveIndex($tempIndexName, $indexName);
 
             $this->algoliaHelper->setSettings($indexName, $this->additionalSectionHelper->getIndexSettings($storeId));
         }
@@ -217,7 +222,7 @@ class Data
 
         if (isset($pages['toIndex']) && count($pages['toIndex'])) {
             $pagesToIndex = $pages['toIndex'];
-            $toIndexName = $indexName . ($isFullReindex ? '_tmp' : '');
+            $toIndexName = $indexName . ($isFullReindex ? IndexNameFetcher::INDEX_TEMP_SUFFIX : '');
 
             foreach (array_chunk($pagesToIndex, 100) as $chunk) {
                 try {
@@ -242,8 +247,9 @@ class Data
         }
 
         if ($isFullReindex) {
-            $this->algoliaHelper->copyQueryRules($indexName, $indexName . '_tmp');
-            $this->algoliaHelper->moveIndex($indexName . '_tmp', $indexName);
+            $tempIndexName = $this->pageHelper->getTempIndexName($storeId);
+            $this->algoliaHelper->copyQueryRules($indexName, $tempIndexName);
+            $this->algoliaHelper->moveIndex($tempIndexName, $indexName);
         }
         $this->algoliaHelper->setSettings($indexName, $this->pageHelper->getIndexSettings($storeId));
     }
