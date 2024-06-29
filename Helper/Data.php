@@ -169,7 +169,7 @@ class Data
                 continue;
             }
 
-            $indexName = $this->getIndexName($this->additionalSectionHelper->getIndexNameSuffix(), $storeId);
+            $indexName = $this->additionalSectionHelper->getIndexName($storeId);
             $indexName = $indexName . '_' . $section['name'];
 
             $attributeValues = $this->additionalSectionHelper->getAttributeValues($storeId, $section);

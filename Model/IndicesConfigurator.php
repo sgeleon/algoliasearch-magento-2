@@ -196,7 +196,7 @@ class IndicesConfigurator
                 continue;
             }
 
-            $indexName = $this->baseHelper->getIndexName($this->additionalSectionHelper->getIndexNameSuffix(), $storeId);
+            $indexName = $this->additionalSectionHelper->getIndexName($storeId);
             $indexName = $indexName . '_' . $section['name'];
 
             $settings = $this->additionalSectionHelper->getIndexSettings($storeId);
@@ -245,14 +245,12 @@ class IndicesConfigurator
     {
         $this->logger->start('Pushing extra settings.');
 
-        $additionalSectionsSuffix = $this->additionalSectionHelper->getIndexNameSuffix();
-
         $sections = [
             'products' => $this->productHelper->getIndexName($storeId),
             'categories' => $this->categoryHelper->getIndexName($storeId),
             'pages' => $this->pageHelper->getIndexName($storeId),
             'suggestions' => $this->suggestionHelper->getIndexName($storeId),
-            'additional_sections' => $this->baseHelper->getIndexName($additionalSectionsSuffix, $storeId),
+            'additional_sections' => $this->additionalSectionHelper->getIndexName($storeId)
         ];
 
         $error = [];

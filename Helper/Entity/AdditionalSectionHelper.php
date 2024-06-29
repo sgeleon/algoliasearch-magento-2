@@ -3,51 +3,33 @@
 namespace Algolia\AlgoliaSearch\Helper\Entity;
 
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
+use Algolia\AlgoliaSearch\Helper\IndexHelper;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Eav\Model\Config;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
 
-class AdditionalSectionHelper
+class AdditionalSectionHelper extends AbstractEntityHelper
 {
-    /**
-     * @var ManagerInterface
-     */
-    private $eventManager;
-
-    /**
-     * @var CollectionFactory
-     */
-    private $collectionFactory;
-
-    /**
-     * @var Config
-     */
-    private $eavConfig;
-
-    /**
-     * AdditionalSectionHelper constructor.
-     *
-     * @param ManagerInterface $eventManager
-     * @param CollectionFactory $collectionFactory
-     * @param Config $eavConfig
-     */
     public function __construct(
-        ManagerInterface $eventManager,
-        CollectionFactory $collectionFactory,
-        Config $eavConfig
-    ) {
-        $this->eventManager = $eventManager;
-        $this->collectionFactory = $collectionFactory;
-        $this->eavConfig = $eavConfig;
+        protected ManagerInterface  $eventManager,
+        protected CollectionFactory $collectionFactory,
+        protected Config            $eavConfig,
+        protected IndexHelper       $indexHelper,
+    )
+    {
+        parent::__construct($indexHelper);
     }
 
-    public function getIndexNameSuffix()
+    /**
+     * @inheritDoc
+     */
+    public function getIndexNameSuffix(): string
     {
         return '_section';
     }
 
-    public function getIndexSettings($storeId)
+    public function getIndexSettings($storeId): array
     {
         $indexSettings = [
             'searchableAttributes' => ['unordered(value)'],
@@ -63,7 +45,7 @@ class AdditionalSectionHelper
         return $indexSettings;
     }
 
-    public function getAttributeValues($storeId, $section)
+    public function getAttributeValues($storeId, $section): array
     {
         $attributeCode = $section['name'];
 
