@@ -11,6 +11,7 @@ use Algolia\AlgoliaSearch\Helper\Entity\CategoryHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\PageHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\SuggestionHelper;
+use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Catalog\Model\Category;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\ResourceModel\Product\Collection;
@@ -47,7 +48,7 @@ class Data
         protected ManagerInterface        $eventManager,
         protected ScopeCodeResolver       $scopeCodeResolver,
         protected StoreManagerInterface   $storeManager,
-        protected IndexHelper             $indexHelper,
+        protected IndexNameFetcher        $indexNameFetcher,
         IndexerRegistry                   $indexerRegistry
     )
     {

@@ -2,13 +2,13 @@
 
 namespace Algolia\AlgoliaSearch\Helper\Entity;
 
-use Algolia\AlgoliaSearch\Helper\IndexHelper;
+use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Framework\Exception\NoSuchEntityException;
 
 abstract class AbstractEntityHelper
 {
     public function __construct(
-        protected IndexHelper $indexHelper
+        protected IndexNameFetcher $indexNameFetcher
     ) {}
 
     /**

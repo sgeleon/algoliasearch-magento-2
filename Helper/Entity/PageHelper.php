@@ -4,7 +4,7 @@ namespace Algolia\AlgoliaSearch\Helper\Entity;
 
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
-use Algolia\AlgoliaSearch\Helper\IndexHelper;
+use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Cms\Model\Page;
 use Magento\Cms\Model\ResourceModel\Page\CollectionFactory as PageCollectionFactory;
 use Magento\Cms\Model\Template\FilterProvider;
@@ -22,10 +22,10 @@ class PageHelper extends AbstractEntityHelper
         protected FilterProvider        $filterProvider,
         protected StoreManagerInterface $storeManager,
         protected UrlFactory            $frontendUrlFactory,
-        protected IndexHelper           $indexHelper,
+        protected IndexNameFetcher      $indexNameFetcher,
     )
     {
-        parent::__construct($indexHelper);
+        parent::__construct($indexNameFetcher);
     }
 
     /**

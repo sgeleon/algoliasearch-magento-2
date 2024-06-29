@@ -1,11 +1,12 @@
 <?php
 
-namespace Algolia\AlgoliaSearch\Helper;
+namespace Algolia\AlgoliaSearch\Service;
 
+use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 
-class IndexHelper
+class IndexNameFetcher
 {
     public function __construct(
         protected ConfigHelper          $configHelper,

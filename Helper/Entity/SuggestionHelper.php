@@ -4,7 +4,7 @@ namespace Algolia\AlgoliaSearch\Helper\Entity;
 
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
-use Algolia\AlgoliaSearch\Helper\IndexHelper;
+use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Framework\App\Cache\Type\Config as ConfigCache;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
@@ -26,10 +26,10 @@ class SuggestionHelper extends AbstractEntityHelper
         protected ConfigCache            $cache,
         protected ConfigHelper           $configHelper,
         protected SerializerInterface    $serializer,
-        protected IndexHelper            $indexHelper,
+        protected IndexNameFetcher       $indexNameFetcher,
     )
     {
-        parent::__construct($indexHelper);
+        parent::__construct($indexNameFetcher);
     }
 
     /**

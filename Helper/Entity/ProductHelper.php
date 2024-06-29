@@ -14,8 +14,8 @@ use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\Product\PriceManager;
 use Algolia\AlgoliaSearch\Helper\Image as ImageHelper;
-use Algolia\AlgoliaSearch\Helper\IndexHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
+use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
@@ -105,11 +105,11 @@ class ProductHelper extends AbstractEntityHelper
         protected GroupCollection                         $groupCollection,
         protected GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
         protected ImageHelper                             $imageHelper,
-        protected IndexHelper                             $indexHelper,
+        protected IndexNameFetcher                        $indexNameFetcher,
         protected ReplicaManagerInterface                 $replicaManager
     )
     {
-        parent::__construct($indexHelper);
+        parent::__construct($indexNameFetcher);
     }
 
     /**

@@ -3,7 +3,7 @@
 namespace Algolia\AlgoliaSearch\Helper\Entity;
 
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
-use Algolia\AlgoliaSearch\Helper\IndexHelper;
+use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory;
 use Magento\Eav\Model\Config;
 use Magento\Framework\DataObject;
@@ -15,10 +15,10 @@ class AdditionalSectionHelper extends AbstractEntityHelper
         protected ManagerInterface  $eventManager,
         protected CollectionFactory $collectionFactory,
         protected Config            $eavConfig,
-        protected IndexHelper       $indexHelper,
+        protected IndexNameFetcher  $indexNameFetcher,
     )
     {
-        parent::__construct($indexHelper);
+        parent::__construct($indexNameFetcher);
     }
 
     /**
