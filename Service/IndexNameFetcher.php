@@ -24,7 +24,7 @@ class IndexNameFetcher
      * @return string
      * @throws NoSuchEntityException
      */
-    public function getIndexName(string $indexSuffix, int $storeId = null, bool $tmp = false): string
+    public function getIndexName(string $indexSuffix, ?int $storeId = null, bool $tmp = false): string
     {
         return $this->getBaseIndexName($storeId) . $indexSuffix . ($tmp ? self::INDEX_TEMP_SUFFIX : '');
     }
@@ -34,7 +34,7 @@ class IndexNameFetcher
      * @return string
      * @throws NoSuchEntityException
      */
-    public function getBaseIndexName(int $storeId = null): string
+    public function getBaseIndexName(?int $storeId = null): string
     {
         return $this->configHelper->getIndexPrefix($storeId) . $this->storeManager->getStore($storeId)->getCode();
     }
