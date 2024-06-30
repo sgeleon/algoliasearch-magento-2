@@ -23,7 +23,7 @@ use Magento\Framework\Locale\Currency;
 use Magento\Framework\Locale\Format;
 use Algolia\AlgoliaSearch\Registry\CurrentProduct;
 use Magento\Framework\Stdlib\DateTime\DateTime;
-use Magento\Framework\Url\Helper\Data;
+use Magento\Framework\Url\Helper\Data as UrlHelper;
 use Magento\Framework\View\Element\Template;
 use Magento\Framework\View\Element\Template\Context;
 use Magento\Sales\Model\Order;
@@ -31,145 +31,32 @@ use Magento\Search\Helper\Data as CatalogSearchHelper;
 
 class Algolia extends Template implements CollectionDataSourceInterface
 {
-    /**
-     * @var ConfigHelper
-     */
-    protected $config;
-    /**
-     * @var CatalogSearchHelper
-     */
-    protected $catalogSearchHelper;
-    /**
-     * @var CurrentProduct
-     */
-    protected $currentProduct;
-    /**
-     * @var ProductHelper
-     */
-    protected $productHelper;
-    /**
-     * @var Currency
-     */
-    protected $currency;
-    /**
-     * @var Format
-     */
-    protected $format;
-    /**
-     * @var AlgoliaHelper
-     */
-    protected $algoliaHelper;
-    /**
-     * @var Data
-     */
-    protected $urlHelper;
-    /**
-     * @var FormKey
-     */
-    protected $formKey;
-    /**
-     * @var HttpContext
-     */
-    protected $httpContext;
-    /**
-     * @var CoreHelper
-     */
-    protected $coreHelper;
-    /**
-     * @var CategoryHelper
-     */
-    protected $categoryHelper;
-    /**
-     * @var SuggestionHelper
-     */
-    protected $suggestionHelper;
-    /**
-     * @var LandingPageHelper
-     */
-    protected $landingPageHelper;
-    /**
-     * @var PersonalizationHelper
-     */
-    protected $personalizationHelper;
-    /**
-     * @var CheckoutSession
-     */
-    protected $checkoutSession;
-    /**
-     * @var DateTime
-     */
-    protected $date;
-
-    /** @var CurrentCategory  */
-    protected CurrentCategory $currentCategory;
-
     protected $priceKey;
 
-    /**
-     * @param SortingTransformer $sortingTransformer
-     * @param Context $context
-     * @param ConfigHelper $config
-     * @param CatalogSearchHelper $catalogSearchHelper
-     * @param ProductHelper $productHelper
-     * @param Currency $currency
-     * @param Format $format
-     * @param CurrentProduct $currentProduct
-     * @param AlgoliaHelper $algoliaHelper
-     * @param Data $urlHelper
-     * @param FormKey $formKey
-     * @param HttpContext $httpContext
-     * @param CoreHelper $coreHelper
-     * @param CategoryHelper $categoryHelper
-     * @param SuggestionHelper $suggestionHelper
-     * @param LandingPageHelper $landingPageHelper
-     * @param PersonalizationHelper $personalizationHelper
-     * @param CheckoutSession $checkoutSession
-     * @param DateTime $date
-     * @param CurrentCategory $currentCategory
-     * @param array $data
-     */
     public function __construct(
-        protected SortingTransformer $sortingTransformer,
-        Template\Context $context,
-        ConfigHelper $config,
-        CatalogSearchHelper $catalogSearchHelper,
-        ProductHelper $productHelper,
-        Currency $currency,
-        Format $format,
-        CurrentProduct $currentProduct,
-        AlgoliaHelper $algoliaHelper,
-        Data $urlHelper,
-        FormKey $formKey,
-        HttpContext $httpContext,
-        CoreHelper $coreHelper,
-        CategoryHelper $categoryHelper,
-        SuggestionHelper $suggestionHelper,
-        LandingPageHelper $landingPageHelper,
-        PersonalizationHelper $personalizationHelper,
-        CheckoutSession $checkoutSession,
-        DateTime $date,
-        CurrentCategory $currentCategory,
-        array $data = []
-    ) {
-        $this->config = $config;
-        $this->catalogSearchHelper = $catalogSearchHelper;
-        $this->productHelper = $productHelper;
-        $this->currency = $currency;
-        $this->format = $format;
-        $this->currentProduct = $currentProduct;
-        $this->algoliaHelper = $algoliaHelper;
-        $this->urlHelper = $urlHelper;
-        $this->formKey = $formKey;
-        $this->httpContext = $httpContext;
-        $this->coreHelper = $coreHelper;
-        $this->categoryHelper = $categoryHelper;
-        $this->suggestionHelper = $suggestionHelper;
-        $this->landingPageHelper = $landingPageHelper;
-        $this->personalizationHelper = $personalizationHelper;
-        $this->checkoutSession = $checkoutSession;
-        $this->date = $date;
-        $this->currentCategory = $currentCategory;
-
+        protected ConfigHelper          $config,
+        protected CatalogSearchHelper   $catalogSearchHelper,
+        protected ProductHelper         $productHelper,
+        protected Currency              $currency,
+        protected Format                $format,
+        protected CurrentProduct        $currentProduct,
+        protected AlgoliaHelper         $algoliaHelper,
+        protected UrlHelper             $urlHelper,
+        protected FormKey               $formKey,
+        protected HttpContext           $httpContext,
+        protected CoreHelper            $coreHelper,
+        protected CategoryHelper        $categoryHelper,
+        protected SuggestionHelper      $suggestionHelper,
+        protected LandingPageHelper     $landingPageHelper,
+        protected PersonalizationHelper $personalizationHelper,
+        protected CheckoutSession       $checkoutSession,
+        protected DateTime              $date,
+        protected CurrentCategory       $currentCategory,
+        protected SortingTransformer    $sortingTransformer,
+        Template\Context                $context,
+        array                           $data = []
+    )
+    {
         parent::__construct($context, $data);
     }
 
