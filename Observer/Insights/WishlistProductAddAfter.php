@@ -3,7 +3,7 @@
 namespace Algolia\AlgoliaSearch\Observer\Insights;
 
 use Algolia\AlgoliaSearch\Helper\Configuration\PersonalizationHelper;
-use Algolia\AlgoliaSearch\Helper\Data;
+use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Helper\InsightsHelper;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
@@ -13,16 +13,8 @@ use Psr\Log\LoggerInterface;
 class WishlistProductAddAfter implements ObserverInterface
 {
 
-    /**
-     * CheckoutCartProductAddAfter constructor.
-     *
-     * @param Data $dataHelper
-     * @param PersonalizationHelper $personalisationHelper
-     * @param InsightsHelper $insightsHelper
-     * @param LoggerInterface $logger
-     */
     public function __construct(
-        protected Data                  $dataHelper,
+        protected ProductHelper         $productHelper,
         protected PersonalizationHelper $personalisationHelper,
         protected InsightsHelper        $insightsHelper,
         protected LoggerInterface       $logger
@@ -51,7 +43,7 @@ class WishlistProductAddAfter implements ObserverInterface
         try {
             $eventsModel->convertedObjectIDs(
                 __('Added to Wishlist'),
-                $this->dataHelper->getIndexName('_products', $firstItem->getStoreId()),
+                $this->productHelper->getIndexName($firstItem->getStoreId()),
                 $productIds
             );
         } catch (\Exception $e) {

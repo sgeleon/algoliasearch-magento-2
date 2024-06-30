@@ -5,7 +5,7 @@ namespace Algolia\AlgoliaSearch\Observer\Insights;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Configuration\PersonalizationHelper;
-use Algolia\AlgoliaSearch\Helper\Data;
+use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Helper\InsightsHelper;
 use Magento\Catalog\Model\Product;
 use Magento\Framework\App\RequestInterface;
@@ -20,14 +20,8 @@ class CheckoutCartProductAddAfter implements ObserverInterface
     protected ConfigHelper $configHelper;
     protected PersonalizationHelper $personalizationHelper;
 
-    /**
-     * @param Data $dataHelper
-     * @param InsightsHelper $insightsHelper
-     * @param RequestInterface $request
-     * @param LoggerInterface $logger
-     */
     public function __construct(
-        protected Data $dataHelper,
+        protected ProductHelper $productHelper,
         protected InsightsHelper $insightsHelper,
         protected RequestInterface $request,
         protected LoggerInterface $logger
@@ -86,7 +80,7 @@ class CheckoutCartProductAddAfter implements ObserverInterface
             try {
                 $eventsModel->convertAddToCart(
                     __('Added to Cart'),
-                    $this->dataHelper->getIndexName('_products', $storeId),
+                    $this->productHelper->getIndexName($storeId),
                     $quoteItem,
                     // A queryID should *only* be sent for conversions
                     // See https://www.algolia.com/doc/guides/sending-events/concepts/event-types/
