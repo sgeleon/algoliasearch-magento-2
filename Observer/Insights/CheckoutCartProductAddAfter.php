@@ -21,11 +21,12 @@ class CheckoutCartProductAddAfter implements ObserverInterface
     protected PersonalizationHelper $personalizationHelper;
 
     public function __construct(
-        protected ProductHelper $productHelper,
-        protected InsightsHelper $insightsHelper,
+        protected ProductHelper    $productHelper,
+        protected InsightsHelper   $insightsHelper,
         protected RequestInterface $request,
-        protected LoggerInterface $logger
-    ) {
+        protected LoggerInterface  $logger
+    )
+    {
         $this->configHelper = $this->insightsHelper->getConfigHelper();
         $this->personalizationHelper = $this->insightsHelper->getPersonalizationHelper();
     }
@@ -66,7 +67,7 @@ class CheckoutCartProductAddAfter implements ObserverInterface
             return;
         }
 
-        $eventsModel = $this->insightsHelper->getEventsModel();
+        $eventsProcessor = $this->insightsHelper->getEventsProcessor();
 
         $queryId = $this->request->getParam('queryID');
 
@@ -78,7 +79,7 @@ class CheckoutCartProductAddAfter implements ObserverInterface
         // This logic handles both perso and conversion tracking
         if ($isAddToCartTracked) {
             try {
-                $eventsModel->convertAddToCart(
+                $eventsProcessor->convertAddToCart(
                     __('Added to Cart'),
                     $this->productHelper->getIndexName($storeId),
                     $quoteItem,

@@ -19,11 +19,12 @@ class CheckoutOnePageControllerSuccessAction implements ObserverInterface
     public const PLACE_ORDER_EVENT_NAME = 'Placed order';
 
     public function __construct(
-        protected ProductHelper $productHelper,
-        protected InsightsHelper $insightsHelper,
-        protected OrderFactory $orderFactory,
+        protected ProductHelper   $productHelper,
+        protected InsightsHelper  $insightsHelper,
+        protected OrderFactory    $orderFactory,
         protected LoggerInterface $logger
-    ) {}
+    )
+    {}
 
     /**
      * @param Observer $observer
@@ -52,10 +53,10 @@ class CheckoutOnePageControllerSuccessAction implements ObserverInterface
             return;
         }
 
-        $eventsModel = $this->insightsHelper->getEventsModel();
+        $eventsProcessor = $this->insightsHelper->getEventsProcessor();
 
         try {
-            $eventsModel->convertPurchase(
+            $eventsProcessor->convertPurchase(
                 __(self::PLACE_ORDER_EVENT_NAME),
                 $indexName,
                 $order

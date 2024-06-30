@@ -2,8 +2,8 @@
 
 namespace Algolia\AlgoliaSearch\Helper;
 
-use Algolia\AlgoliaSearch\Api\Insights\EventsInterface;
-use Algolia\AlgoliaSearch\Api\Insights\EventsInterfaceFactory;
+use Algolia\AlgoliaSearch\Api\Insights\EventsProcessorInterface;
+use Algolia\AlgoliaSearch\Api\Insights\EventsProcessorInterfaceFactory;
 use Algolia\AlgoliaSearch\Api\InsightsClient;
 use Algolia\AlgoliaSearch\Helper\Configuration\PersonalizationHelper;
 use Magento\Customer\Model\Customer;
@@ -40,31 +40,20 @@ class InsightsHelper
     /** @var InsightsClient|null */
     protected ?InsightsClient $insightsClient = null;
 
-    /** @var EventsInterface|null  */
-    protected ?EventsInterface $eventsModel = null;
+    /** @var EventsProcessorInterface|null  */
+    protected ?EventsProcessorInterface $eventsProcessor = null;
 
-    /**
-     * InsightsHelper constructor.
-     *
-     * @param ConfigHelper $configHelper
-     * @param PersonalizationHelper $personalizationHelper
-     * @param CookieManagerInterface $cookieManager
-     * @param CookieMetadataFactory $cookieMetadataFactory
-     * @param CustomerSession $customerSession
-     * @param EventsInterfaceFactory $eventsFactory
-     * @param StoreManagerInterface $storeManager
-     * @param Logger $logger
-     */
     public function __construct(
-        private readonly ConfigHelper           $configHelper,
-        private readonly PersonalizationHelper  $personalizationHelper,
-        private readonly CookieManagerInterface $cookieManager,
-        private readonly CookieMetadataFactory  $cookieMetadataFactory,
-        private readonly CustomerSession        $customerSession,
-        private readonly EventsInterfaceFactory $eventsFactory,
-        private readonly StoreManagerInterface  $storeManager,
-        private readonly Logger                 $logger
-    ) { }
+        private readonly ConfigHelper                    $configHelper,
+        private readonly PersonalizationHelper           $personalizationHelper,
+        private readonly CookieManagerInterface          $cookieManager,
+        private readonly CookieMetadataFactory           $cookieMetadataFactory,
+        private readonly CustomerSession                 $customerSession,
+        private readonly EventsProcessorInterfaceFactory $eventsProcessorFactory,
+        private readonly StoreManagerInterface           $storeManager,
+        private readonly Logger                          $logger
+    )
+    {}
 
     public function getPersonalizationHelper(): PersonalizationHelper
     {
@@ -93,19 +82,19 @@ class InsightsHelper
     }
 
     /**
-     * @return EventsInterface
+     * @return EventsProcessorInterface
      */
-    public function getEventsModel(): EventsInterface
+    public function getEventsProcessor(): EventsProcessorInterface
     {
-        if (!$this->eventsModel) {
-            $this->eventsModel = $this->eventsFactory->create([
+        if (!$this->eventsProcessor) {
+            $this->eventsProcessor = $this->eventsProcessorFactory->create([
                 'client'                 => $this->getInsightsClient(),
                 'userToken'              => $this->getAnonymousUserToken(),
                 'authenticatedUserToken' => $this->getAuthenticatedUserToken(),
                 'storeManager'           => $this->storeManager
             ]);
         }
-        return $this->eventsModel;
+        return $this->eventsProcessor;
     }
 
     public function getAnonymousUserToken(): string
