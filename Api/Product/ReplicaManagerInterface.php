@@ -15,11 +15,9 @@ interface ReplicaManagerInterface
     public const SORT_KEY_VIRTUAL_REPLICA = 'virtualReplica';
     public const MAX_VIRTUAL_REPLICA_LIMIT = 20;
 
-
     /**
      * Configure replicas in Algolia based on the sorting configuration in Magento
      *
-     * @param string $primaryIndexName Could be tmp (legacy impl)
      * @param int $storeId
      * @param array<string, mixed> $primaryIndexSettings
      * @return void
@@ -29,8 +27,7 @@ interface ReplicaManagerInterface
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    public function syncReplicasToAlgolia(string $primaryIndexName, int $storeId, array $primaryIndexSettings): void;
-
+    public function syncReplicasToAlgolia(int $storeId, array $primaryIndexSettings): void;
 
     /**
      * For standard Magento front end (e.g. Luma) replicas will likely only be needed if InstantSearch is enabled

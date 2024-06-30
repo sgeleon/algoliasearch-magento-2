@@ -3,6 +3,7 @@
 namespace Algolia\AlgoliaSearch\Helper;
 
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
+use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento;
 use Magento\Cookie\Helper\Cookie as CookieHelper;
 use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
@@ -11,6 +12,7 @@ use Magento\Directory\Model\Currency as DirCurrency;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\DataObject;
 use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\Currency;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\ScopeInterface;
@@ -186,7 +188,8 @@ class ConfigHelper
         protected SerializerInterface                                  $serializer,
         protected GroupCollection                                      $groupCollection,
         protected GroupExcludedWebsiteRepositoryInterface              $groupExcludedWebsiteRepository,
-        protected CookieHelper                                         $cookieHelper
+        protected CookieHelper                                         $cookieHelper,
+        protected IndexNameFetcher                                     $indexNameFetcher
     )
     {}
 
@@ -1103,21 +1106,18 @@ class ConfigHelper
     /**
      * Augment sorting configuration with corresponding replica indices, ranking,
      * and (as needed) customer group pricing
-     * TODO: MAGE-941 Remove the $originalIndexName param - this should never be needed as tmp indices cannot have attached replicas
      *
-     * @param string $originalIndexName
      * @param ?int $storeId
      * @param ?int $currentCustomerGroupId
      * @param ?array $attrs - serialized array of sorting attributes to transform (defaults to saved sorting config)
      * @return array of transformed sorting / replica objects
-     * @throws Magento\Framework\Exception\LocalizedException
-     * @throws Magento\Framework\Exception\NoSuchEntityException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
      */
     public function getSortingIndices(
-        string $originalIndexName,
-        int $storeId = null,
-        int $currentCustomerGroupId = null,
-        array $attrs = null
+        ?int $storeId = null,
+        ?int $currentCustomerGroupId = null,
+        ?array $attrs = null
     ): array
     {
         // Selectively cache this result - only cache manipulation of saved settings per store
@@ -1134,6 +1134,7 @@ class ConfigHelper
             $attrs = $this->getSorting($storeId);
         }
 
+        $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
         $currency = $this->getCurrencyCode($storeId);
         $attributesToAdd = [];
         foreach ($attrs as $key => $attr) {
@@ -1149,17 +1150,17 @@ class ConfigHelper
                 foreach ($groupCollection as $group) {
                     $customerGroupId = (int) $group->getData('customer_group_id');
                     if (!$this->isGroupPricingExcludedFromWebsite($customerGroupId, $websiteId)) {
-                        $newAttr = $this->getCustomerGroupSortPriceOverride($originalIndexName, $customerGroupId, $currency, $attr);;
+                        $newAttr = $this->getCustomerGroupSortPriceOverride($primaryIndexName, $customerGroupId, $currency, $attr);;
                         $attributesToAdd[$newAttr['sort']][] = $this->decorateSortAttribute($newAttr);
                     }
                 }
             // Regular pricing
             } elseif ($attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] === ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE) {
-                $indexName = $originalIndexName . '_' . $attr['attribute'] . '_' . 'default' . '_' . $attr['sort'];
+                $indexName = $primaryIndexName . '_' . $attr['attribute'] . '_' . 'default' . '_' . $attr['sort'];
                 $sortAttribute = $attr['attribute'] . '.' . $currency . '.' . 'default';
             // All other sort attributes
             } else {
-                $indexName = $originalIndexName . '_' . $attr['attribute'] . '_' . $attr['sort'];
+                $indexName = $primaryIndexName . '_' . $attr['attribute'] . '_' . $attr['sort'];
                 $sortAttribute = $attr['attribute'];
             }
 
@@ -1190,10 +1191,10 @@ class ConfigHelper
     }
 
     /***
-     * @param $storeId
+     * @param int|null $storeId
      * @return array<string,<array<string, mixed>>>
      */
-    public function getSorting($storeId = null): array
+    public function getSorting(?int $storeId = null): array
     {
         return $this->unserialize($this->getRawSortingValue($storeId));
     }

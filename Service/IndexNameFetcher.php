@@ -3,6 +3,7 @@
 namespace Algolia\AlgoliaSearch\Service;
 
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 
@@ -37,6 +38,14 @@ class IndexNameFetcher
     public function getBaseIndexName(?int $storeId = null): string
     {
         return $this->configHelper->getIndexPrefix($storeId) . $this->storeManager->getStore($storeId)->getCode();
+    }
+
+    /**
+     * @throws NoSuchEntityException
+     */
+    public function getProductIndexName(int $storeId, bool $tmp = false): string
+    {
+        return $this->getIndexName(ProductHelper::INDEX_NAME_SUFFIX, $storeId, $tmp);
     }
 
 }

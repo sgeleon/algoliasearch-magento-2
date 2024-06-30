@@ -41,6 +41,7 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class ProductHelper extends AbstractEntityHelper
 {
+    public const INDEX_NAME_SUFFIX = '_products';
     /**
      * @var AbstractType[]
      */
@@ -117,7 +118,7 @@ class ProductHelper extends AbstractEntityHelper
      */
     public function getIndexNameSuffix(): string
     {
-        return '_products';
+        return self::INDEX_NAME_SUFFIX;
     }
 
     /**
@@ -355,7 +356,7 @@ class ProductHelper extends AbstractEntityHelper
             $this->setFacetsQueryRules($indexNameTmp);
         }
 
-        $this->replicaManager->syncReplicasToAlgolia($indexName, $storeId, $indexSettings);
+        $this->replicaManager->syncReplicasToAlgolia($storeId, $indexSettings);
 
         if ($saveToTmpIndicesToo) {
             try {
@@ -1415,7 +1416,7 @@ class ProductHelper extends AbstractEntityHelper
      */
     public function handlingReplica(string $indexName, int $storeId, array|bool $sortingAttribute = false): void
     {
-        $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId, null, $sortingAttribute);
+        $sortingIndices = $this->configHelper->getSortingIndices($storeId, null, $sortingAttribute);
         if ($this->configHelper->isInstantEnabled($storeId)) {
             $newReplicas = $this->decorateReplicasSetting($sortingIndices);
 
