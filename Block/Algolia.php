@@ -11,27 +11,31 @@ use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\SuggestionHelper;
 use Algolia\AlgoliaSearch\Helper\LandingPageHelper;
 use Algolia\AlgoliaSearch\Registry\CurrentCategory;
+use Algolia\AlgoliaSearch\Registry\CurrentProduct;
 use Algolia\AlgoliaSearch\Service\Product\SortingTransformer;
-use Magento\Catalog\Model\Product;
+use Magento\Catalog\Api\Data\CategoryInterface;
+use Magento\Catalog\Api\Data\ProductInterface;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Context as CustomerContext;
 use Magento\Framework\App\ActionInterface;
 use Magento\Framework\App\Http\Context as HttpContext;
+use Magento\Framework\Currency\Exception\CurrencyException;
 use Magento\Framework\Data\CollectionDataSourceInterface;
 use Magento\Framework\Data\Form\FormKey;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\Currency;
 use Magento\Framework\Locale\Format;
-use Algolia\AlgoliaSearch\Registry\CurrentProduct;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\Url\Helper\Data as UrlHelper;
 use Magento\Framework\View\Element\Template;
-use Magento\Framework\View\Element\Template\Context;
 use Magento\Sales\Model\Order;
 use Magento\Search\Helper\Data as CatalogSearchHelper;
+use Magento\Store\Api\Data\StoreInterface;
 
 class Algolia extends Template implements CollectionDataSourceInterface
 {
-    protected $priceKey;
+    protected ?string $priceKey = null;
 
     public function __construct(
         protected ConfigHelper          $config,
@@ -61,66 +65,70 @@ class Algolia extends Template implements CollectionDataSourceInterface
     }
 
     /**
-     * @return \Magento\Store\Model\Store
+     * @throws NoSuchEntityException
      */
-    public function getStore()
+    public function getStore(): StoreInterface
     {
-        /** @var \Magento\Store\Model\Store $store */
-        $store = $this->_storeManager->getStore();
-
-        return $store;
+        return $this->_storeManager->getStore();
     }
 
-    public function getConfigHelper()
+    public function getConfigHelper(): ConfigHelper
     {
         return $this->config;
     }
 
-    public function getCoreHelper()
+    public function getCoreHelper(): CoreHelper
     {
         return $this->coreHelper;
     }
 
-    public function getProductHelper()
+    public function getProductHelper(): ProductHelper
     {
         return $this->productHelper;
     }
 
-    public function getCategoryHelper()
+    public function getCategoryHelper(): CategoryHelper
     {
         return $this->categoryHelper;
     }
 
-    public function getSuggestionHelper()
+    public function getSuggestionHelper(): SuggestionHelper
     {
         return $this->suggestionHelper;
     }
 
-    public function getCatalogSearchHelper()
+    public function getCatalogSearchHelper(): CatalogSearchHelper
     {
         return $this->catalogSearchHelper;
     }
 
-    public function getAlgoliaHelper()
+    public function getAlgoliaHelper(): AlgoliaHelper
     {
         return $this->algoliaHelper;
     }
 
-    public function getPersonalizationHelper()
+    public function getPersonalizationHelper(): PersonalizationHelper
     {
         return $this->personalizationHelper;
     }
 
-    public function getCurrencySymbol()
+    /**
+     * @throws CurrencyException|NoSuchEntityException
+     */
+    public function getCurrencySymbol(): ?string
     {
         return $this->currency->getCurrency($this->getCurrencyCode())->getSymbol();
     }
-    public function getCurrencyCode()
+
+    /**
+     * @throws NoSuchEntityException
+     */
+    public function getCurrencyCode(): ?string
     {
         return $this->getStore()->getCurrentCurrencyCode();
     }
 
-    public function getPriceFormat()
+    public function getPriceFormat(): array
     {
         return $this->format->getPriceFormat();
     }
@@ -130,7 +138,10 @@ class Algolia extends Template implements CollectionDataSourceInterface
         return $this->httpContext->getValue(CustomerContext::CONTEXT_GROUP);
     }
 
-    public function getPriceKey()
+    /**
+     * @throws NoSuchEntityException
+     */
+    public function getPriceKey(): string
     {
         if ($this->priceKey === null) {
             $currencyCode = $this->getCurrencyCode();
@@ -146,29 +157,34 @@ class Algolia extends Template implements CollectionDataSourceInterface
         return $this->priceKey;
     }
 
-    public function getStoreId()
+    /**
+     * @throws NoSuchEntityException
+     */
+    public function getStoreId(): int
     {
         return $this->getStore()->getStoreId();
     }
 
-    public function getCurrentCategory()
+    public function getCurrentCategory(): CategoryInterface
     {
         return $this->currentCategory->get();
     }
 
-    /** @return Product */
-    public function getCurrentProduct()
+    public function getCurrentProduct(): ProductInterface
     {
         return $this->currentProduct->get();
     }
 
-    /** @return Order */
-    public function getLastOrder()
+    public function getLastOrder(): Order
     {
         return $this->checkoutSession->getLastRealOrder();
     }
 
-    public function getAddToCartParams() : array
+    /**
+     * @return array<string, string>
+     * @throws LocalizedException
+     */
+    public function getAddToCartParams(): array
     {
         return [
             'action' => $this->_urlBuilder->getUrl('checkout/cart/add', []),
@@ -177,7 +193,7 @@ class Algolia extends Template implements CollectionDataSourceInterface
         ];
     }
 
-    public function getTimestamp()
+    public function getTimestamp(): int|false
     {
         return $this->date->gmtTimestamp('today midnight');
     }
@@ -185,7 +201,7 @@ class Algolia extends Template implements CollectionDataSourceInterface
     /**
      * @deprecated This function is deprecated as redirect routes must be derived on the frontend not backend
      */
-    protected function getAddToCartUrl($additional = [])
+    protected function getAddToCartUrl($additional = []): string
     {
         $continueUrl = $this->urlHelper->getEncodedUrl($this->_urlBuilder->getCurrentUrl());
         $urlParamName = ActionInterface::PARAM_NAME_URL_ENCODED;
@@ -199,7 +215,7 @@ class Algolia extends Template implements CollectionDataSourceInterface
         return $this->_urlBuilder->getUrl('checkout/cart/add', $routeParams);
     }
 
-    protected function getCurrentLandingPage()
+    protected function getCurrentLandingPage(): LandingPage|null|false
     {
         $landingPageId = $this->getRequest()->getParam('landing_page_id');
         if (!$landingPageId) {
