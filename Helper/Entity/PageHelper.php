@@ -15,6 +15,9 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class PageHelper extends AbstractEntityHelper
 {
+    use EntityHelperTrait;
+    public const INDEX_NAME_SUFFIX = '_pages';
+
     public function __construct(
         protected ManagerInterface      $eventManager,
         protected PageCollectionFactory $pageCollectionFactory,
@@ -26,14 +29,6 @@ class PageHelper extends AbstractEntityHelper
     )
     {
         parent::__construct($indexNameFetcher);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getIndexNameSuffix(): string
-    {
-        return '_pages';
     }
 
     public function getIndexSettings($storeId)

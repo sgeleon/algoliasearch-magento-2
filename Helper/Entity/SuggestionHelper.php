@@ -15,6 +15,9 @@ use Magento\Search\Model\ResourceModel\Query\CollectionFactory as QueryCollectio
 
 class SuggestionHelper extends AbstractEntityHelper
 {
+    use EntityHelperTrait;
+    public const INDEX_NAME_SUFFIX = '_suggestions';
+
     /**
      * @var string
      */
@@ -30,14 +33,6 @@ class SuggestionHelper extends AbstractEntityHelper
     )
     {
         parent::__construct($indexNameFetcher);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getIndexNameSuffix(): string
-    {
-        return '_suggestions';
     }
 
     /**

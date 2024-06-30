@@ -11,6 +11,9 @@ use Magento\Framework\Event\ManagerInterface;
 
 class AdditionalSectionHelper extends AbstractEntityHelper
 {
+    use EntityHelperTrait;
+    public const INDEX_NAME_SUFFIX = '_section';
+
     public function __construct(
         protected ManagerInterface  $eventManager,
         protected CollectionFactory $collectionFactory,
@@ -19,14 +22,6 @@ class AdditionalSectionHelper extends AbstractEntityHelper
     )
     {
         parent::__construct($indexNameFetcher);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getIndexNameSuffix(): string
-    {
-        return '_section';
     }
 
     public function getIndexSettings($storeId): array

@@ -41,6 +41,7 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class ProductHelper extends AbstractEntityHelper
 {
+    use EntityHelperTrait;
     public const INDEX_NAME_SUFFIX = '_products';
     /**
      * @var AbstractType[]
@@ -111,14 +112,6 @@ class ProductHelper extends AbstractEntityHelper
     )
     {
         parent::__construct($indexNameFetcher);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getIndexNameSuffix(): string
-    {
-        return self::INDEX_NAME_SUFFIX;
     }
 
     /**

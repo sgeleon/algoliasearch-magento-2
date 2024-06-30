@@ -24,6 +24,8 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class CategoryHelper extends AbstractEntityHelper
 {
+    use EntityHelperTrait;
+    public const INDEX_NAME_SUFFIX = '_categories';
     protected $isCategoryVisibleInMenuCache;
     protected $coreCategories;
     protected $idColumn;
@@ -46,14 +48,6 @@ class CategoryHelper extends AbstractEntityHelper
     )
     {
         parent::__construct($indexNameFetcher);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getIndexNameSuffix(): string
-    {
-        return '_categories';
     }
 
     /**
