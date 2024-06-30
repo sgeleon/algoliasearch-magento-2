@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Algolia\AlgoliaSearch\Model\Product;
+namespace Algolia\AlgoliaSearch\Service\Product;
 
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
 use Algolia\AlgoliaSearch\Exception\ReplicaLimitExceededException;
@@ -11,8 +11,8 @@ use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
-use Algolia\AlgoliaSearch\Validator\VirtualReplicaValidatorFactory;
 use Algolia\AlgoliaSearch\Registry\ReplicaState;
+use Algolia\AlgoliaSearch\Validator\VirtualReplicaValidatorFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 
