@@ -38,12 +38,7 @@ use Magento\Framework\Exception\NoSuchEntityException;
  */
 class ReplicaManager implements ReplicaManagerInterface
 {
-    public const REPLICA_TRANSFORM_MODE_STANDARD = 1;
-    public const REPLICA_TRANSFORM_MODE_VIRTUAL = 2;
-    public const REPLICA_TRANSFORM_MODE_ACTUAL = 3;
-
     protected const _DEBUG = true;
-
     protected array $_algoliaReplicaConfig = [];
     protected array $_magentoReplicaPossibleConfig = [];
 
@@ -53,6 +48,7 @@ class ReplicaManager implements ReplicaManagerInterface
         protected ReplicaState                   $replicaState,
         protected VirtualReplicaValidatorFactory $validatorFactory,
         protected IndexNameFetcher               $indexNameFetcher,
+        protected SortingTransformer             $sortingTransformer,
         protected Logger                         $logger
     )
     {}
@@ -61,7 +57,7 @@ class ReplicaManager implements ReplicaManagerInterface
      * Evaluate the replica state of the index for a given store and determine
      * if Algolia and Magento are no longer in sync
      *
-     * @return bool Returns true if Magento and Algolia are out of sync, otherwise false if they are up-to-date
+     * @return bool Returns true if replica state has changed or if unknown then result is determined based on whether Magento and Algolia have fallen out of sync
      * @throws NoSuchEntityException
      * @throws LocalizedException
      */
@@ -76,7 +72,7 @@ class ReplicaManager implements ReplicaManagerInterface
             default:
                 $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
                 $old = $this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName);
-                $new = $this->transformSortingIndicesToReplicaSetting($this->configHelper->getSortingIndices($storeId));
+                $new = $this->sortingTransformer->transformSortingIndicesToReplicaSetting($this->sortingTransformer->getSortingIndices($storeId));
                 sort($old);
                 sort($new);
                 return $old !== $new;
@@ -160,31 +156,6 @@ class ReplicaManager implements ReplicaManagerInterface
     }
 
     /**
-     * @param array $sortingIndices - array of sortingIndices objects
-     * @param int $mode Use REPLICA_TRANSFORM_MODE_ constant - defaults to _ACTUAL which will give the configuration defined in the admin panel
-     * @return string[]
-     */
-    protected function transformSortingIndicesToReplicaSetting(
-        array $sortingIndices,
-        int   $mode = self::REPLICA_TRANSFORM_MODE_ACTUAL
-    ): array
-    {
-        return array_map(
-            function ($sort) use ($mode) {
-                $replica = $sort['name'];
-                if (
-                    $mode === self::REPLICA_TRANSFORM_MODE_VIRTUAL
-                    || !empty($sort[self::SORT_KEY_VIRTUAL_REPLICA]) && $mode === self::REPLICA_TRANSFORM_MODE_ACTUAL
-                ) {
-                    $replica = "virtual($replica)";
-                }
-                return $replica;
-            },
-            $sortingIndices
-        );
-    }
-
-    /**
      * In order to avoid interfering with replicas configured directly in the Algolia dashboard,
      * we must know which replica indices are Magento managed and which are not.
      *
@@ -200,10 +171,10 @@ class ReplicaManager implements ReplicaManagerInterface
             $sortConfig = $this->replicaState->getChangeState($storeId) === ReplicaState::REPLICA_STATE_CHANGED
                 ? array_merge($this->replicaState->getOriginalSortConfiguration($storeId), $this->replicaState->getUpdatedSortConfiguration($storeId))
                 : null;
-            $sortingIndices = $this->configHelper->getSortingIndices($storeId, null, $sortConfig);
+            $sortingIndices = $this->sortingTransformer->getSortingIndices($storeId, null, $sortConfig);
             $this->_magentoReplicaPossibleConfig[$storeId] = array_merge(
-                $this->transformSortingIndicesToReplicaSetting($sortingIndices, self::REPLICA_TRANSFORM_MODE_STANDARD),
-                $this->transformSortingIndicesToReplicaSetting($sortingIndices, self::REPLICA_TRANSFORM_MODE_VIRTUAL)
+                $this->sortingTransformer->transformSortingIndicesToReplicaSetting($sortingIndices, SortingTransformer::REPLICA_TRANSFORM_MODE_STANDARD),
+                $this->sortingTransformer->transformSortingIndicesToReplicaSetting($sortingIndices, SortingTransformer::REPLICA_TRANSFORM_MODE_VIRTUAL)
             );
         }
         return $this->_magentoReplicaPossibleConfig[$storeId];
@@ -233,8 +204,8 @@ class ReplicaManager implements ReplicaManagerInterface
     protected function setReplicasOnPrimaryIndex(int $storeId): array
     {
         $indexName = $this->indexNameFetcher->getProductIndexName($storeId);
-        $sortingIndices = $this->configHelper->getSortingIndices($storeId);
-        $newMagentoReplicasSetting = $this->transformSortingIndicesToReplicaSetting($sortingIndices);
+        $sortingIndices = $this->sortingTransformer->getSortingIndices($storeId);
+        $newMagentoReplicasSetting = $this->sortingTransformer->transformSortingIndicesToReplicaSetting($sortingIndices);
         $oldMagentoReplicasSetting = $this->getMagentoReplicaConfigurationFromAlgolia($indexName);
         $nonMagentoReplicasSetting = $this->getNonMagentoReplicaConfigurationFromAlgolia($indexName);
         $oldMagentoReplicaIndices = $this->getBareIndexNamesFromReplicaSetting($oldMagentoReplicasSetting);
@@ -277,7 +248,7 @@ class ReplicaManager implements ReplicaManagerInterface
      */
     protected function isReplicaConfigurationValid(int $storeId): bool
     {
-        $sortingIndices = $this->configHelper->getSortingIndices($storeId);
+        $sortingIndices = $this->sortingTransformer->getSortingIndices($storeId);
         $validator = $this->validatorFactory->create();
         if (!$validator->isReplicaConfigurationValid($sortingIndices)) {
             $postfix = "Please note that there can be no more than " . $this->getMaxVirtualReplicasPerIndex() . " virtual replicas per index.";
@@ -362,7 +333,7 @@ class ReplicaManager implements ReplicaManagerInterface
      */
     protected function configureRanking(int $storeId, array $replicas, array $primaryIndexSettings): void
     {
-        $sortingIndices = $this->configHelper->getSortingIndices($storeId);
+        $sortingIndices = $this->sortingTransformer->getSortingIndices($storeId);
         $replicaDetails = array_filter(
             $sortingIndices,
             function($replica) use ($replicas) {

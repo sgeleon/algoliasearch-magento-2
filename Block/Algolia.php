@@ -11,6 +11,7 @@ use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\SuggestionHelper;
 use Algolia\AlgoliaSearch\Helper\LandingPageHelper;
 use Algolia\AlgoliaSearch\Registry\CurrentCategory;
+use Algolia\AlgoliaSearch\Service\Product\SortingTransformer;
 use Magento\Catalog\Model\Product;
 use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Customer\Model\Context as CustomerContext;
@@ -24,6 +25,7 @@ use Algolia\AlgoliaSearch\Registry\CurrentProduct;
 use Magento\Framework\Stdlib\DateTime\DateTime;
 use Magento\Framework\Url\Helper\Data;
 use Magento\Framework\View\Element\Template;
+use Magento\Framework\View\Element\Template\Context;
 use Magento\Sales\Model\Order;
 use Magento\Search\Helper\Data as CatalogSearchHelper;
 
@@ -104,7 +106,8 @@ class Algolia extends Template implements CollectionDataSourceInterface
     protected $priceKey;
 
     /**
-     * @param Template\Context $context
+     * @param SortingTransformer $sortingTransformer
+     * @param Context $context
      * @param ConfigHelper $config
      * @param CatalogSearchHelper $catalogSearchHelper
      * @param ProductHelper $productHelper
@@ -122,9 +125,11 @@ class Algolia extends Template implements CollectionDataSourceInterface
      * @param PersonalizationHelper $personalizationHelper
      * @param CheckoutSession $checkoutSession
      * @param DateTime $date
+     * @param CurrentCategory $currentCategory
      * @param array $data
      */
     public function __construct(
+        protected SortingTransformer $sortingTransformer,
         Template\Context $context,
         ConfigHelper $config,
         CatalogSearchHelper $catalogSearchHelper,

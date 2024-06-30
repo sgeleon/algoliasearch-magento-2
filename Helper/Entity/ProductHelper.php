@@ -1409,7 +1409,7 @@ class ProductHelper extends AbstractEntityHelper
      */
     public function handlingReplica(string $indexName, int $storeId, array|bool $sortingAttribute = false): void
     {
-        $sortingIndices = $this->configHelper->getSortingIndices($storeId, null, $sortingAttribute);
+        $sortingIndices = $this->configHelper->getSortingIndices($indexName, $storeId, null, $sortingAttribute);
         if ($this->configHelper->isInstantEnabled($storeId)) {
             $newReplicas = $this->decorateReplicasSetting($sortingIndices);
 

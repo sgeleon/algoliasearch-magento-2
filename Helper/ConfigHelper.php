@@ -3,20 +3,17 @@
 namespace Algolia\AlgoliaSearch\Helper;
 
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
-use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento;
 use Magento\Cookie\Helper\Cookie as CookieHelper;
-use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
-use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
 use Magento\Directory\Model\Currency as DirCurrency;
 use Magento\Framework\App\Filesystem\DirectoryList;
 use Magento\Framework\DataObject;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Locale\Currency;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\Store\Model\ScopeInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Customer\Api\GroupExcludedWebsiteRepositoryInterface;
+use Magento\Customer\Model\ResourceModel\Group\Collection as GroupCollection;
 
 class ConfigHelper
 {
@@ -155,26 +152,6 @@ class ConfigHelper
     public const NUMBER_OF_ELEMENT_BY_PAGE = 'algoliasearch_advanced/queue/number_of_element_by_page';
     public const ARCHIVE_LOG_CLEAR_LIMIT = 'algoliasearch_advanced/queue/archive_clear_limit';
 
-    /**
-     * @var array<int,<array<string, mixed>>>
-     */
-    protected array $_sortingIndices = [];
-
-    /**
-     * @param Magento\Framework\App\Config\ScopeConfigInterface $configInterface
-     * @param StoreManagerInterface $storeManager
-     * @param Currency $currency
-     * @param DirCurrency $dirCurrency
-     * @param DirectoryList $directoryList
-     * @param Magento\Framework\Module\ResourceInterface $moduleResource
-     * @param Magento\Framework\App\ProductMetadataInterface $productMetadata
-     * @param Magento\Framework\Event\ManagerInterface $eventManager
-     * @param SerializerInterface $serializer
-     * @param GroupCollection $groupCollection
-     * @param GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository
-     * @param CookieHelper $cookieHelper
-
-     */
     public function __construct(
         protected Magento\Framework\App\Config\ScopeConfigInterface    $configInterface,
         protected Magento\Framework\App\Config\Storage\WriterInterface $configWriter,
@@ -189,7 +166,6 @@ class ConfigHelper
         protected GroupCollection                                      $groupCollection,
         protected GroupExcludedWebsiteRepositoryInterface              $groupExcludedWebsiteRepository,
         protected CookieHelper                                         $cookieHelper,
-        protected IndexNameFetcher                                     $indexNameFetcher
     )
     {}
 
@@ -1034,160 +1010,106 @@ class ConfigHelper
     }
 
     /**
-     * When group pricing is enabled a replica must be created for each possible sort
-     *
-     * @param string $originalIndexName
-     * @param int $customerGroupId
-     * @param string $currency
-     * @param array $origAttr
+     * @param $originalIndexName
+     * @param $storeId
+     * @param $currentCustomerGroupId
+     * @param $attrs
      * @return array
+     * @throws Magento\Framework\Exception\LocalizedException
+     * @throws Magento\Framework\Exception\NoSuchEntityException
+     * @deprecated This method has been deprecated and should no longer be used
+     * @see \Algolia\AlgoliaSearch\Service\Product\SortingTransformer
      */
-    protected function getCustomerGroupSortPriceOverride(
-        string $originalIndexName,
-        int    $customerGroupId,
-        string $currency,
-        array  $origAttr): array
+    public function getSortingIndices($originalIndexName, $storeId = null, $currentCustomerGroupId = null, $attrs = null)
     {
-        $attrName = $origAttr['attribute'];
-        $sortDir = $origAttr['sort'];
-        $groupIndexNameSuffix = 'group_' . $customerGroupId;
-        $groupIndexName = $originalIndexName . '_' . $attrName . '_' . $groupIndexNameSuffix . '_' . $sortDir;
-
-        $newAttr = array_merge(
-            $origAttr,
-            ['name' => $groupIndexName]
-        );
-
-        $groupSortAttribute = $attrName . '.' . $currency . '.' . $groupIndexNameSuffix;
-        $newAttr['ranking'] = $this->getSortAttributingRankingSetting($groupSortAttribute, $sortDir);
-        return $this->decorateSortAttribute($newAttr);
-    }
-
-    /*
-     * Add data to the sort attribute object
-     */
-    protected function decorateSortAttribute(array $attr): array {
-        if (!array_key_exists('label', $attr) && array_key_exists('sortLabel', $attr)) {
-            $attr['label'] = $attr['sortLabel'];
-        }
-        return $attr;
-    }
-
-    /**
-     * Get ranking setting to be used for the standard sorting replica
-     * @param string $attrName
-     * @param string $sortDir
-     * @return string[]
-     */
-    protected function getSortAttributingRankingSetting(string $attrName, string $sortDir): array
-    {
-        return [
-            $sortDir . '(' . $attrName . ')',
-            'typo',
-            'geo',
-            'words',
-            'filters',
-            'proximity',
-            'attribute',
-            'exact',
-            'custom',
-        ];
-    }
-
-    /**
-     * @throws LocalizedException
-     */
-    protected function isGroupPricingExcludedFromWebsite(int $customerGroupId, int $websiteId): bool
-    {
-        $excludedWebsites = $this->groupExcludedWebsiteRepository->getCustomerGroupExcludedWebsites($customerGroupId);
-        return in_array($websiteId, $excludedWebsites);
-    }
-
-    /**
-     * Augment sorting configuration with corresponding replica indices, ranking,
-     * and (as needed) customer group pricing
-     *
-     * @param ?int $storeId
-     * @param ?int $currentCustomerGroupId
-     * @param ?array $attrs - serialized array of sorting attributes to transform (defaults to saved sorting config)
-     * @return array of transformed sorting / replica objects
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
-     */
-    public function getSortingIndices(
-        ?int $storeId = null,
-        ?int $currentCustomerGroupId = null,
-        ?array $attrs = null
-    ): array
-    {
-        // Selectively cache this result - only cache manipulation of saved settings per store
-        $useCache = is_null($currentCustomerGroupId) && is_null($attrs);
-
-        if ($useCache
-            && array_key_exists($storeId, $this->_sortingIndices)
-            && is_array($this->_sortingIndices[$storeId])) {
-            return $this->_sortingIndices[$storeId];
-        }
-
-        // If no sorting configuration is supplied - obtain from the saved configuration
-        if (!$attrs) {
+        if (!$attrs){
             $attrs = $this->getSorting($storeId);
         }
 
-        $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
         $currency = $this->getCurrencyCode($storeId);
         $attributesToAdd = [];
         foreach ($attrs as $key => $attr) {
             $indexName = false;
             $sortAttribute = false;
-            // Group pricing
-            if ($this->isCustomerGroupsEnabled($storeId) && $attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] === ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE) {
-                $websiteId = (int) $this->storeManager->getStore($storeId)->getWebsiteId();
+            if ($this->isCustomerGroupsEnabled($storeId) && $attr['attribute'] === 'price') {
+                $websiteId = (int)$this->storeManager->getStore($storeId)->getWebsiteId();
                 $groupCollection = $this->groupCollection;
                 if (!is_null($currentCustomerGroupId)) {
                     $groupCollection->addFilter('customer_group_id', $currentCustomerGroupId);
                 }
                 foreach ($groupCollection as $group) {
-                    $customerGroupId = (int) $group->getData('customer_group_id');
-                    if (!$this->isGroupPricingExcludedFromWebsite($customerGroupId, $websiteId)) {
-                        $newAttr = $this->getCustomerGroupSortPriceOverride($primaryIndexName, $customerGroupId, $currency, $attr);;
-                        $attributesToAdd[$newAttr['sort']][] = $this->decorateSortAttribute($newAttr);
+                    $customerGroupId = (int)$group->getData('customer_group_id');
+                    $excludedWebsites = $this->groupExcludedWebsiteRepository->getCustomerGroupExcludedWebsites($customerGroupId);
+                    if (in_array($websiteId, $excludedWebsites)) {
+                        continue;
                     }
+                    $groupIndexNameSuffix = 'group_' . $customerGroupId;
+                    $groupIndexName =
+                        $originalIndexName . '_' . $attr['attribute'] . '_' . $groupIndexNameSuffix . '_' . $attr['sort'];
+                    $groupSortAttribute = $attr['attribute'] . '.' . $currency . '.' . $groupIndexNameSuffix;
+                    $newAttr = [];
+                    $newAttr['name'] = $groupIndexName;
+                    $newAttr['attribute'] = $attr['attribute'];
+                    $newAttr['sort'] = $attr['sort'];
+                    $newAttr['sortLabel'] = $attr['sortLabel'];
+                    if (!array_key_exists('label', $newAttr) && array_key_exists('sortLabel', $newAttr)) {
+                        $newAttr['label'] = $newAttr['sortLabel'];
+                    }
+                    $newAttr['ranking'] = [
+                        $newAttr['sort'] . '(' . $groupSortAttribute . ')',
+                        'typo',
+                        'geo',
+                        'words',
+                        'filters',
+                        'proximity',
+                        'attribute',
+                        'exact',
+                        'custom',
+                    ];
+                    $attributesToAdd[$newAttr['sort']][] = $newAttr;
                 }
-            // Regular pricing
-            } elseif ($attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] === ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE) {
-                $indexName = $primaryIndexName . '_' . $attr['attribute'] . '_' . 'default' . '_' . $attr['sort'];
+            } elseif ($attr['attribute'] === 'price') {
+                $indexName = $originalIndexName . '_' . $attr['attribute'] . '_' . 'default' . '_' . $attr['sort'];
                 $sortAttribute = $attr['attribute'] . '.' . $currency . '.' . 'default';
-            // All other sort attributes
             } else {
-                $indexName = $primaryIndexName . '_' . $attr['attribute'] . '_' . $attr['sort'];
+                $indexName = $originalIndexName . '_' . $attr['attribute'] . '_' . $attr['sort'];
                 $sortAttribute = $attr['attribute'];
             }
-
-            // Decorate all non group pricing attributes
             if ($indexName && $sortAttribute) {
                 $attrs[$key]['name'] = $indexName;
-                $attrs[$key]['ranking'] = $this->getSortAttributingRankingSetting($sortAttribute, $attr['sort']);
-                $attrs[$key] = $this->decorateSortAttribute($attrs[$key]);
+                if (!array_key_exists('label', $attrs[$key]) && array_key_exists('sortLabel', $attrs[$key])) {
+                    $attrs[$key]['label'] = $attrs[$key]['sortLabel'];
+                }
+                $attrs[$key]['ranking'] = [
+                    $attr['sort'] . '(' . $sortAttribute . ')',
+                    'typo',
+                    'geo',
+                    'words',
+                    'filters',
+                    'proximity',
+                    'attribute',
+                    'exact',
+                    'custom',
+                ];
             }
         }
         $attrsToReturn = [];
-
-        foreach ($attrs as $attr) {
-            if ($attr[ReplicaManagerInterface::SORT_KEY_ATTRIBUTE_NAME] == ReplicaManagerInterface::SORT_ATTRIBUTE_PRICE
-                && count($attributesToAdd)
-                && isset($attributesToAdd[$attr['sort']])) {
-                $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
-            } else {
-                $attrsToReturn[] = $attr;
+        if (count($attributesToAdd) > 0) {
+            foreach ($attrs as $key => $attr) {
+                if ($attr['attribute'] == 'price' && isset($attributesToAdd[$attr['sort']])) {
+                    $attrsToReturn = array_merge($attrsToReturn, $attributesToAdd[$attr['sort']]);
+                } else {
+                    $attrsToReturn[] = $attr;
+                }
             }
         }
-
-        if ($useCache) {
-            $this->_sortingIndices[$storeId] = $attrsToReturn;
+        if (count($attrsToReturn) > 0) {
+            return $attrsToReturn;
         }
-
-        return $attrsToReturn;
+        if (is_array($attrs)) {
+            return $attrs;
+        }
+        return [];
     }
 
     /***
