@@ -9,7 +9,7 @@ use Magento\Quote\Model\Quote\Item;
 use Magento\Sales\Model\Order;
 use Magento\Store\Model\StoreManagerInterface;
 
-interface EventsProcessorInterface
+interface EventProcessorInterface
 {
     /** @var string */
     public const EVENT_KEY_SUBTYPE = 'eventSubtype';
@@ -37,13 +37,13 @@ interface EventsProcessorInterface
     /** @var int */
     public const MAX_EVENTS_PER_REQUEST = 1000;
 
-    public function setInsightsClient(InsightsClient $client): EventsProcessorInterface;
+    public function setInsightsClient(InsightsClient $client): EventProcessorInterface;
 
-    public function setAuthenticatedUserToken(string $token): EventsProcessorInterface;
+    public function setAuthenticatedUserToken(string $token): EventProcessorInterface;
 
-    public function setAnonymousUserToken(string $token): EventsProcessorInterface;
+    public function setAnonymousUserToken(string $token): EventProcessorInterface;
 
-    public function setStoreManager(StoreManagerInterface $storeManager): EventsProcessorInterface;
+    public function setStoreManager(StoreManagerInterface $storeManager): EventProcessorInterface;
 
     /**
      * @param string $eventName

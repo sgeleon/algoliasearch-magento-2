@@ -33,7 +33,7 @@
     <!-- Declare implementation for QueueArchiveInterface -->
     <preference for="Algolia\AlgoliaSearch\Api\Data\QueueArchiveInterface" type="Algolia\AlgoliaSearch\Model\QueueArchive" />
 
-    <preference for="Algolia\AlgoliaSearch\Api\Insights\EventsProcessorInterface" type="Algolia\AlgoliaSearch\Service\Insights\EventsProcessor"/>
+    <preference for="Algolia\AlgoliaSearch\Api\Insights\EventProcessorInterface" type="Algolia\AlgoliaSearch\Service\Insights\EventProcessor"/>
 
     <preference for="Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface" type="Algolia\AlgoliaSearch\Service\Product\ReplicaManager"/>
 

@@ -2,7 +2,7 @@
 
 namespace Algolia\AlgoliaSearch\Service\Insights;
 
-use Algolia\AlgoliaSearch\Api\Insights\EventsProcessorInterface;
+use Algolia\AlgoliaSearch\Api\Insights\EventProcessorInterface;
 use Algolia\AlgoliaSearch\Api\InsightsClient;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Helper\InsightsHelper;
@@ -12,7 +12,7 @@ use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\Item as OrderItem;
 use Magento\Store\Model\StoreManagerInterface;
 
-class EventsProcessor implements EventsProcessorInterface
+class EventProcessor implements EventProcessorInterface
 {
     /** @var string  */
     protected const NO_QUERY_ID_KEY = '__NO_QUERY_ID__';
@@ -24,25 +24,25 @@ class EventsProcessor implements EventsProcessorInterface
         protected ?StoreManagerInterface $storeManager = null
     ) {}
 
-    public function setInsightsClient(InsightsClient $client): EventsProcessorInterface
+    public function setInsightsClient(InsightsClient $client): EventProcessorInterface
     {
         $this->client = $client;
         return $this;
     }
 
-    public function setAnonymousUserToken(string $token): EventsProcessorInterface
+    public function setAnonymousUserToken(string $token): EventProcessorInterface
     {
         $this->userToken = $token;
         return $this;
     }
 
-    public function setAuthenticatedUserToken(string $token): EventsProcessorInterface
+    public function setAuthenticatedUserToken(string $token): EventProcessorInterface
     {
         $this->authenticatedUserToken = $token;
         return $this;
     }
 
-    public function setStoreManager(StoreManagerInterface $storeManager): EventsProcessorInterface
+    public function setStoreManager(StoreManagerInterface $storeManager): EventProcessorInterface
     {
         $this->storeManager = $storeManager;
         return $this;

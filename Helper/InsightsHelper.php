@@ -2,8 +2,8 @@
 
 namespace Algolia\AlgoliaSearch\Helper;
 
-use Algolia\AlgoliaSearch\Api\Insights\EventsProcessorInterface;
-use Algolia\AlgoliaSearch\Api\Insights\EventsProcessorInterfaceFactory;
+use Algolia\AlgoliaSearch\Api\Insights\EventProcessorInterface;
+use Algolia\AlgoliaSearch\Api\Insights\EventProcessorInterfaceFactory;
 use Algolia\AlgoliaSearch\Api\InsightsClient;
 use Algolia\AlgoliaSearch\Helper\Configuration\PersonalizationHelper;
 use Magento\Customer\Model\Customer;
@@ -40,18 +40,18 @@ class InsightsHelper
     /** @var InsightsClient|null */
     protected ?InsightsClient $insightsClient = null;
 
-    /** @var EventsProcessorInterface|null  */
-    protected ?EventsProcessorInterface $eventsProcessor = null;
+    /** @var EventProcessorInterface|null  */
+    protected ?EventProcessorInterface $eventProcessor = null;
 
     public function __construct(
-        private readonly ConfigHelper                    $configHelper,
-        private readonly PersonalizationHelper           $personalizationHelper,
-        private readonly CookieManagerInterface          $cookieManager,
-        private readonly CookieMetadataFactory           $cookieMetadataFactory,
-        private readonly CustomerSession                 $customerSession,
-        private readonly EventsProcessorInterfaceFactory $eventsProcessorFactory,
-        private readonly StoreManagerInterface           $storeManager,
-        private readonly Logger                          $logger
+        private readonly ConfigHelper                   $configHelper,
+        private readonly PersonalizationHelper          $personalizationHelper,
+        private readonly CookieManagerInterface         $cookieManager,
+        private readonly CookieMetadataFactory          $cookieMetadataFactory,
+        private readonly CustomerSession                $customerSession,
+        private readonly EventProcessorInterfaceFactory $eventProcessorFactory,
+        private readonly StoreManagerInterface          $storeManager,
+        private readonly Logger                         $logger
     )
     {}
 
@@ -82,19 +82,19 @@ class InsightsHelper
     }
 
     /**
-     * @return EventsProcessorInterface
+     * @return EventProcessorInterface
      */
-    public function getEventsProcessor(): EventsProcessorInterface
+    public function getEventProcessor(): EventProcessorInterface
     {
-        if (!$this->eventsProcessor) {
-            $this->eventsProcessor = $this->eventsProcessorFactory->create([
+        if (!$this->eventProcessor) {
+            $this->eventProcessor = $this->eventProcessorFactory->create([
                 'client'                 => $this->getInsightsClient(),
                 'userToken'              => $this->getAnonymousUserToken(),
                 'authenticatedUserToken' => $this->getAuthenticatedUserToken(),
                 'storeManager'           => $this->storeManager
             ]);
         }
-        return $this->eventsProcessor;
+        return $this->eventProcessor;
     }
 
     public function getAnonymousUserToken(): string

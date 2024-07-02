@@ -35,13 +35,13 @@ class WishlistProductAddAfter implements ObserverInterface
             return;
         }
 
-        $eventsProcessor = $this->insightsHelper->getEventsProcessor();
+        $eventProcessor = $this->insightsHelper->getEventProcessor();
         $productIds = array_map(function (Item $item) {
             return $item->getProductId();
         }, $items);
 
         try {
-            $eventsProcessor->convertedObjectIDs(
+            $eventProcessor->convertedObjectIDs(
                 __('Added to Wishlist'),
                 $this->productHelper->getIndexName($firstItem->getStoreId()),
                 $productIds

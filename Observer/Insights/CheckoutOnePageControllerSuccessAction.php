@@ -53,10 +53,10 @@ class CheckoutOnePageControllerSuccessAction implements ObserverInterface
             return;
         }
 
-        $eventsProcessor = $this->insightsHelper->getEventsProcessor();
+        $eventProcessor = $this->insightsHelper->getEventProcessor();
 
         try {
-            $eventsProcessor->convertPurchase(
+            $eventProcessor->convertPurchase(
                 __(self::PLACE_ORDER_EVENT_NAME),
                 $indexName,
                 $order

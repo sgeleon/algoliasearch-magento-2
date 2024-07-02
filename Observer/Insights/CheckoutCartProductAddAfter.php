@@ -67,7 +67,7 @@ class CheckoutCartProductAddAfter implements ObserverInterface
             return;
         }
 
-        $eventsProcessor = $this->insightsHelper->getEventsProcessor();
+        $eventProcessor = $this->insightsHelper->getEventProcessor();
 
         $queryId = $this->request->getParam('queryID');
 
@@ -79,7 +79,7 @@ class CheckoutCartProductAddAfter implements ObserverInterface
         // This logic handles both perso and conversion tracking
         if ($isAddToCartTracked) {
             try {
-                $eventsProcessor->convertAddToCart(
+                $eventProcessor->convertAddToCart(
                     __('Added to Cart'),
                     $this->productHelper->getIndexName($storeId),
                     $quoteItem,
