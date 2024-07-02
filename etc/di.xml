@@ -33,9 +33,9 @@
     <!-- Declare implementation for QueueArchiveInterface -->
     <preference for="Algolia\AlgoliaSearch\Api\Data\QueueArchiveInterface" type="Algolia\AlgoliaSearch\Model\QueueArchive" />
 
-    <preference for="Algolia\AlgoliaSearch\Api\Insights\EventsInterface" type="Algolia\AlgoliaSearch\Model\Insights\Events"/>
+    <preference for="Algolia\AlgoliaSearch\Api\Insights\EventProcessorInterface" type="Algolia\AlgoliaSearch\Service\Insights\EventProcessor"/>
 
-    <preference for="Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface" type="Algolia\AlgoliaSearch\Model\Product\ReplicaManager"/>
+    <preference for="Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface" type="Algolia\AlgoliaSearch\Service\Product\ReplicaManager"/>
 
     <type name="Magento\Framework\View\Element\UiComponent\DataProvider\CollectionFactory">
         <arguments>

@@ -47,7 +47,7 @@ class MerchandisingHelper
             return;
         }
 
-        $productsIndexName = $this->coreHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
+        $productsIndexName = $this->productHelper->getIndexName($storeId);
 
         $positions = $this->transformPositions($rawPositions);
         $condition = [
@@ -101,7 +101,7 @@ class MerchandisingHelper
             return;
         }
 
-        $productsIndexName = $this->coreHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
+        $productsIndexName = $this->productHelper->getIndexName($storeId);
         $ruleId = $this->getQueryRuleId($entityId, $entityType);
 
         // Not catching AlgoliaSearchException for disabled query rules on purpose
@@ -137,7 +137,7 @@ class MerchandisingHelper
      */
     public function copyQueryRules(int $storeId, int $entityIdFrom, int $entityIdTo, string $entityType): void
     {
-        $productsIndexName = $this->coreHelper->getIndexName($this->productHelper->getIndexNameSuffix(), $storeId);
+        $productsIndexName = $this->productHelper->getIndexName($storeId);
         $client = $this->algoliaHelper->getClient();
         $context = $this->getQueryRuleId($entityIdFrom, $entityType);
         $queryRulesToSet = [];

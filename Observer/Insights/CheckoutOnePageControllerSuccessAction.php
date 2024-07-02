@@ -3,7 +3,7 @@
 namespace Algolia\AlgoliaSearch\Observer\Insights;
 
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
-use Algolia\AlgoliaSearch\Helper\Data;
+use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Helper\InsightsHelper;
 use Magento\Framework\Event\Observer;
 use Magento\Framework\Event\ObserverInterface;
@@ -18,18 +18,13 @@ class CheckoutOnePageControllerSuccessAction implements ObserverInterface
     /** @var string  */
     public const PLACE_ORDER_EVENT_NAME = 'Placed order';
 
-    /**
-     * @param Data $dataHelper
-     * @param InsightsHelper $insightsHelper
-     * @param OrderFactory $orderFactory
-     * @param LoggerInterface $logger
-     */
     public function __construct(
-        protected Data $dataHelper,
-        protected InsightsHelper $insightsHelper,
-        protected OrderFactory $orderFactory,
+        protected ProductHelper   $productHelper,
+        protected InsightsHelper  $insightsHelper,
+        protected OrderFactory    $orderFactory,
         protected LoggerInterface $logger
-    ) {}
+    )
+    {}
 
     /**
      * @param Observer $observer
@@ -52,16 +47,16 @@ class CheckoutOnePageControllerSuccessAction implements ObserverInterface
 
         $indexName = "";
         try {
-            $indexName = $this->dataHelper->getIndexName('_products', $order->getStoreId());
+            $indexName = $this->productHelper->getIndexName($order->getStoreId());
         } catch (NoSuchEntityException $e) {
             $this->logger->error("No store found for order: " . $e->getMessage());
             return;
         }
 
-        $eventsModel = $this->insightsHelper->getEventsModel();
+        $eventProcessor = $this->insightsHelper->getEventProcessor();
 
         try {
-            $eventsModel->convertPurchase(
+            $eventProcessor->convertPurchase(
                 __(self::PLACE_ORDER_EVENT_NAME),
                 $indexName,
                 $order
