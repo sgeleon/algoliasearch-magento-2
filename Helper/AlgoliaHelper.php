@@ -585,8 +585,7 @@ class AlgoliaHelper extends AbstractHelper
      */
     protected function prepareRecords(array &$objects, string $indexName): void
     {
-        $currentCET = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
-        $currentCET = $currentCET->format('Y-m-d H:i:s');
+        $currentCET = strtotime('now');
 
         $modifiedIds = [];
         foreach ($objects as $key => &$object) {
