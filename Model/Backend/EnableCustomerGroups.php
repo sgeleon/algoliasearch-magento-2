@@ -4,18 +4,16 @@ namespace Algolia\AlgoliaSearch\Model\Backend;
 
 use Algolia\AlgoliaSearch\Helper\Configuration\ConfigChecker;
 use Algolia\AlgoliaSearch\Registry\ReplicaState;
-use Magento\Config\Model\Config\Backend\Serialized\ArraySerialized;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\App\ObjectManager;
+use Magento\Framework\App\Config\Value;
 use Magento\Framework\Data\Collection\AbstractDb;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Model\Context;
 use Magento\Framework\Model\ResourceModel\AbstractResource;
 use Magento\Framework\Registry;
-use Magento\Framework\Serialize\Serializer\Json;
 
-class Sorts extends ArraySerialized
+class EnableCustomerGroups extends Value
 {
     public function __construct(
         Context                 $context,
@@ -26,29 +24,20 @@ class Sorts extends ArraySerialized
         protected ConfigChecker $configChecker,
         AbstractResource        $resource = null,
         AbstractDb              $resourceCollection = null,
-        array                   $data = [],
-        Json                    $serializer = null
+        array                   $data = []
     )
     {
-        $this->serializer = $serializer ?: ObjectManager::getInstance()->get(Json::class);
-        parent::__construct(
-            $context,
-            $registry,
-            $config,
-            $cacheTypeList,
-            $resource,
-            $resourceCollection,
-            $data,
-            $serializer);
+        parent::__construct($context, $registry, $config, $cacheTypeList, $resource, $resourceCollection, $data);
     }
 
     /**
      * @return $this
      * @throws NoSuchEntityException
      */
-    public function afterSave(): \Magento\Framework\App\Config\Value
+    public function afterSave(): Value
     {
         $this->replicaState->setAppliedScope($this->getScope(), $this->getScopeId());
+        $this->replicaState->setCustomerGroupsEnabled((bool) $this->getValue());
 
         $storeIds = $this->configChecker->getAffectedStoreIds(
             $this->getPath(),
@@ -57,15 +46,14 @@ class Sorts extends ArraySerialized
         );
 
         foreach ($storeIds as $storeId) {
-            if ($this->isValueChanged()) {
-                $this->replicaState->setChangeState(ReplicaState::REPLICA_STATE_CHANGED, $storeId);
-                $this->replicaState->setOriginalSortConfiguration($this->serializer->unserialize($this->getOldValue()), $storeId);
-                $this->replicaState->setUpdatedSortConfiguration($this->serializer->unserialize($this->getValue()), $storeId);
-            } else {
-                $this->replicaState->setChangeState(ReplicaState::REPLICA_STATE_UNCHANGED, $storeId);
-            }
+            $this->replicaState->setChangeState(
+                $this->isValueChanged()
+                    ? ReplicaState::REPLICA_STATE_CHANGED
+                    : ReplicaState::REPLICA_STATE_UNCHANGED,
+                $storeId);
         }
 
         return parent::afterSave();
     }
 }
+

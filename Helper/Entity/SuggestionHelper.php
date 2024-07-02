@@ -4,6 +4,7 @@ namespace Algolia\AlgoliaSearch\Helper\Entity;
 
 use Algolia\AlgoliaSearch\Helper\AlgoliaHelper;
 use Algolia\AlgoliaSearch\Helper\ConfigHelper;
+use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Framework\App\Cache\Type\Config as ConfigCache;
 use Magento\Framework\DataObject;
 use Magento\Framework\Event\ManagerInterface;
@@ -12,65 +13,26 @@ use Magento\Search\Model\Query;
 use Magento\Search\Model\ResourceModel\Query\Collection as QueryCollection;
 use Magento\Search\Model\ResourceModel\Query\CollectionFactory as QueryCollectionFactory;
 
-class SuggestionHelper
+class SuggestionHelper extends AbstractEntityHelper
 {
-    /***
-     * @var ManagerInterface
-     */
-    private $eventManager;
-    /**
-     * @var QueryCollectionFactory
-     */
-    protected $queryCollectionFactory;
-    /**
-     * @var ConfigCache
-     */
-    private $cache;
-
-    /**
-     * @var ConfigHelper
-     */
-    private $configHelper;
-
-    /**
-     * @var SerializerInterface
-     */
-    private $serializer;
+    use EntityHelperTrait;
+    public const INDEX_NAME_SUFFIX = '_suggestions';
 
     /**
      * @var string
      */
     public const POPULAR_QUERIES_CACHE_TAG = 'algoliasearch_popular_queries_cache_tag';
 
-    /**
-     * SuggestionHelper constructor.
-     *
-     * @param ManagerInterface $eventManager
-     * @param QueryCollectionFactory $queryCollectionFactory
-     * @param ConfigCache $cache
-     * @param ConfigHelper $configHelper
-     * @param SerializerInterface $serializer
-     */
     public function __construct(
-        ManagerInterface $eventManager,
-        QueryCollectionFactory $queryCollectionFactory,
-        ConfigCache $cache,
-        ConfigHelper $configHelper,
-        SerializerInterface $serializer
-    ) {
-        $this->eventManager = $eventManager;
-        $this->queryCollectionFactory = $queryCollectionFactory;
-        $this->cache = $cache;
-        $this->configHelper = $configHelper;
-        $this->serializer = $serializer;
-    }
-
-    /**
-     * @return string
-     */
-    public function getIndexNameSuffix()
+        protected ManagerInterface       $eventManager,
+        protected QueryCollectionFactory $queryCollectionFactory,
+        protected ConfigCache            $cache,
+        protected ConfigHelper           $configHelper,
+        protected SerializerInterface    $serializer,
+        protected IndexNameFetcher       $indexNameFetcher,
+    )
     {
-        return '_suggestions';
+        parent::__construct($indexNameFetcher);
     }
 
     /**
@@ -161,12 +123,11 @@ class SuggestionHelper
     }
 
     /**
-     * @param $storeId
+     * @param int $storeId
      * @return QueryCollection
      */
-    public function getSuggestionCollectionQuery($storeId)
+    public function getSuggestionCollectionQuery(int $storeId): QueryCollection
     {
-        /** @var QueryCollection $collection */
         $collection = $this->queryCollectionFactory->create()
             ->addStoreFilter($storeId)
             ->setStoreId($storeId);

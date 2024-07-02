@@ -9,6 +9,7 @@ use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Model\IndexMover;
 use Algolia\AlgoliaSearch\Model\IndicesConfigurator;
 use Algolia\AlgoliaSearch\Model\Queue;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Message\ManagerInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -44,6 +45,9 @@ class Product implements \Magento\Framework\Indexer\ActionInterface, \Magento\Fr
         $this->output = $output;
     }
 
+    /**
+     * @throws NoSuchEntityException
+     */
     public function execute($productIds)
     {
         if (!$this->configHelper->getApplicationID()
@@ -115,12 +119,10 @@ class Product implements \Magento\Framework\Indexer\ActionInterface, \Magento\Fr
             }
 
             if ($useTmpIndex) {
-                $suffix = $this->productHelper->getIndexNameSuffix();
-
                 /** @uses IndexMover::moveIndexWithSetSettings() */
                 $this->queue->addToQueue(IndexMover::class, 'moveIndexWithSetSettings', [
-                    'tmpIndexName' => $this->fullAction->getIndexName($suffix, $storeId, true),
-                    'indexName' => $this->fullAction->getIndexName($suffix, $storeId),
+                    'tmpIndexName' => $this->productHelper->getTempIndexName($storeId),
+                    'indexName' => $this->productHelper->getIndexName($storeId),
                     'storeId' => $storeId,
                 ], 1, true);
             }

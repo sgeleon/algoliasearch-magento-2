@@ -10,7 +10,7 @@ use Magento\Framework\DataObject;
 
 class Configuration extends Algolia implements CollectionDataSourceInterface
 {
-    //Placeholder for future implementation (requires customer renderer for hierarchicalMenu widget)
+    //Placeholder for future implementation (requires custom renderer for hierarchicalMenu widget)
     private const IS_CATEGORY_NAVIGATION_ENABLED = false;
 
     public function isSearchPage()
@@ -255,9 +255,8 @@ class Configuration extends Algolia implements CollectionDataSourceInterface
             'facets' => $facets,
             'areCategoriesInFacets' => $areCategoriesInFacets,
             'hitsPerPage' => (int) $config->getNumberOfProductResults(),
-            'sortingIndices' => array_values($config->getSortingIndices(
-                $coreHelper->getIndexName($productHelper->getIndexNameSuffix()),
-                null,
+            'sortingIndices' => array_values($this->sortingTransformer->getSortingIndices(
+                $this->getStoreId(),
                 $customerGroupId
             )),
             'isSearchPage' => $this->isSearchPage(),
