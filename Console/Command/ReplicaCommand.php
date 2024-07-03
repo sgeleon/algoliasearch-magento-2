@@ -2,16 +2,28 @@
 
 namespace Algolia\AlgoliaSearch\Console\Command;
 
+use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
 use Magento\Framework\Console\Cli;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ReplicaCommand extends Command
 {
     const STORE_ARGUMENT = 'store';
+
+    /**
+     * @param ReplicaManagerInterface $replicaManager
+     * @param string|null $name
+     */
+    public function __construct(
+        protected ReplicaManagerInterface $replicaManager,
+        ?string $name = null
+    )
+    {
+        parent::__construct($name);
+    }
 
     /**
      * @inheritDoc
@@ -30,13 +42,15 @@ class ReplicaCommand extends Command
     /** @inheritDoc */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
-        $name = $input->getArgument(self::STORE_ARGUMENT);
+        $storeIds = $input->getArgument(self::STORE_ARGUMENT);
 
-        if ($name) {
-            $output->writeln('<info>Syncing store ' . $name . '!</info>');
+        if ($storeIds) {
+            $output->writeln('<info>Syncing store ' . $storeIds . '!</info>');
         } else {
             $output->writeln('<info>Syncing all stores</info>');
         }
+
+//        $this->replicaManager->syncReplicasToAlgolia();
 
         return Cli::RETURN_SUCCESS;
     }
