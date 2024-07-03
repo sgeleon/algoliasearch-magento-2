@@ -17,6 +17,7 @@ use Algolia\AlgoliaSearch\Helper\Image as ImageHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
 use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
+use Magento\Catalog\Api\Data\ProductInterfaceFactory;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
@@ -108,7 +109,8 @@ class ProductHelper extends AbstractEntityHelper
         protected GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
         protected ImageHelper                             $imageHelper,
         protected IndexNameFetcher                        $indexNameFetcher,
-        protected ReplicaManagerInterface                 $replicaManager
+        protected ReplicaManagerInterface                 $replicaManager,
+        protected ProductInterfaceFactory                 $productFactory
     )
     {
         parent::__construct($indexNameFetcher);
@@ -545,7 +547,7 @@ class ProductHelper extends AbstractEntityHelper
     protected function getCompositeTypes(): array
     {
         if ($this->compositeTypes === null) {
-            $productEmulator = new DataObject();
+            $productEmulator = $this->productFactory->create();
             foreach ($this->productType->getCompositeTypes() as $typeId) {
                 $productEmulator->setTypeId($typeId);
                 $this->compositeTypes[$typeId] = $this->productType->factory($productEmulator);
