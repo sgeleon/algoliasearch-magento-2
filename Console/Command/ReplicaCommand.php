@@ -3,7 +3,9 @@
 namespace Algolia\AlgoliaSearch\Console\Command;
 
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
+use Algolia\AlgoliaSearch\Exception\ReplicaLimitExceededException;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
+use Algolia\AlgoliaSearch\Exceptions\BadRequestException;
 use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Magento\Framework\App\Area;
@@ -91,7 +93,17 @@ class ReplicaCommand extends Command
 
         $this->output = $output;
         $this->state->setAreaCode(Area::AREA_ADMINHTML);
-        $this->syncReplicas($storeIds);
+        try {
+            $this->syncReplicas($storeIds);
+        } catch (BadRequestException $e) {
+            $this->output->writeln('<comment>You appear to have a corrupted replica configuration in Algolia for your Magento instance.</comment>');
+            $this->output->writeln('<comment>Run the "algolia:replicas:rebuild" command to correct this.</comment>');
+            return CLI::RETURN_FAILURE;
+        } catch (ReplicaLimitExceededException $e) {
+            $this->output->writeln('<error>' . $e->getMessage() . '</error>');
+            $this->output->writeln('<comment>Reduce the number of sorting attributes that have enabled virtual replicas and try again.</comment>');
+            return CLI::RETURN_FAILURE;
+        }
 
         return Cli::RETURN_SUCCESS;
     }
@@ -135,7 +147,13 @@ class ReplicaCommand extends Command
     protected function syncReplicasForStore(int $storeId): void
     {
         $this->output->writeln('<info>Syncing ' . $this->getStoreName($storeId) . '...</info>');
-        $this->replicaManager->syncReplicasToAlgolia($storeId, $this->productHelper->getIndexSettings($storeId));
+        try {
+            $this->replicaManager->syncReplicasToAlgolia($storeId, $this->productHelper->getIndexSettings($storeId));
+        }
+        catch (BadRequestException $e) {
+            $this->output->writeln('<error>Failed syncing replicas for store "' . $this->getStoreName($storeId) . '": ' . $e->getMessage() . '</error>');
+            throw $e;
+        }
     }
 
     /**
