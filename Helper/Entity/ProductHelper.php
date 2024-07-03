@@ -297,16 +297,12 @@ class ProductHelper extends AbstractEntityHelper
     }
 
     /**
-     * @param string $indexName
-     * @param string $indexNameTmp
-     * @param int $storeId
-     * @param bool $saveToTmpIndicesToo
-     * @return void
-     * @throws AlgoliaException
+     * @param int|null $storeId
+     * @return array<string, mixed>
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    public function setSettings(string $indexName, string $indexNameTmp, int $storeId, bool $saveToTmpIndicesToo = false): void
+    public function getIndexSettings(?int $storeId = null): array
     {
         $searchableAttributes = $this->getSearchableAttributes($storeId);
         $customRanking = $this->getCustomRanking($storeId);
@@ -338,6 +334,23 @@ class ProductHelper extends AbstractEntityHelper
         );
 
         $indexSettings = $transport->getData();
+
+        return $indexSettings;
+    }
+
+    /**
+     * @param string $indexName
+     * @param string $indexNameTmp
+     * @param int $storeId
+     * @param bool $saveToTmpIndicesToo
+     * @return void
+     * @throws AlgoliaException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     */
+    public function setSettings(string $indexName, string $indexNameTmp, int $storeId, bool $saveToTmpIndicesToo = false): void
+    {
+        $indexSettings = $this->getIndexSettings($storeId);
 
         $this->algoliaHelper->setSettings($indexName, $indexSettings, false, true);
         $this->logger->log('Settings: ' . json_encode($indexSettings));
