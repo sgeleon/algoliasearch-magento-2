@@ -8,6 +8,7 @@ use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Exceptions\BadRequestException;
 use Algolia\AlgoliaSearch\Exceptions\ExceededRetriesException;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
+use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
@@ -15,8 +16,8 @@ use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ReplicaCommand extends Command
@@ -24,9 +25,6 @@ class ReplicaCommand extends Command
     protected const STORE_ARGUMENT = 'store';
 
     protected ?OutputInterface $output = null;
-
-    /** @var string[] */
-    protected array $_storeNames = [];
 
     /**
      * @param ProductHelper $productHelper
@@ -39,6 +37,7 @@ class ReplicaCommand extends Command
         protected ProductHelper           $productHelper,
         protected ReplicaManagerInterface $replicaManager,
         protected StoreManagerInterface   $storeManager,
+        protected StoreNameFetcher        $storeNameFetcher,
         ?string                           $name = null
     )
     {
@@ -82,7 +81,7 @@ class ReplicaCommand extends Command
             /** @var string[] $storeNames */
             $storeNames = array_map(
                 function($storeId) {
-                    return $this->getStoreName($storeId);
+                    return $this->storeNameFetcher->getStoreName($storeId);
                 },
                 $storeIds
             );
@@ -106,17 +105,6 @@ class ReplicaCommand extends Command
         }
 
         return Cli::RETURN_SUCCESS;
-    }
-
-    /**
-     * @throws NoSuchEntityException
-     */
-    protected function getStoreName(int $storeId): string
-    {
-        if (!isset($this->_storeNames[$storeId])) {
-            $this->_storeNames[$storeId] = $this->storeManager->getStore($storeId)->getName();
-        }
-        return $this->_storeNames[$storeId];
     }
 
     /**
@@ -146,12 +134,12 @@ class ReplicaCommand extends Command
      */
     protected function syncReplicasForStore(int $storeId): void
     {
-        $this->output->writeln('<info>Syncing ' . $this->getStoreName($storeId) . '...</info>');
+        $this->output->writeln('<info>Syncing ' . $this->storeNameFetcher->getStoreName($storeId) . '...</info>');
         try {
             $this->replicaManager->syncReplicasToAlgolia($storeId, $this->productHelper->getIndexSettings($storeId));
         }
         catch (BadRequestException $e) {
-            $this->output->writeln('<error>Failed syncing replicas for store "' . $this->getStoreName($storeId) . '": ' . $e->getMessage() . '</error>');
+            $this->output->writeln('<error>Failed syncing replicas for store "' . $this->storeNameFetcher->getStoreName($storeId) . '": ' . $e->getMessage() . '</error>');
             throw $e;
         }
     }

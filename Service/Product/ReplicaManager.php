@@ -14,6 +14,7 @@ use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
 use Algolia\AlgoliaSearch\Registry\ReplicaState;
 use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
+use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
 use Algolia\AlgoliaSearch\Validator\VirtualReplicaValidatorFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
@@ -48,6 +49,7 @@ class ReplicaManager implements ReplicaManagerInterface
         protected ReplicaState                   $replicaState,
         protected VirtualReplicaValidatorFactory $validatorFactory,
         protected IndexNameFetcher               $indexNameFetcher,
+        protected StoreNameFetcher               $storeNameFetcher,
         protected SortingTransformer             $sortingTransformer,
         protected Logger                         $logger
     )
@@ -251,17 +253,18 @@ class ReplicaManager implements ReplicaManagerInterface
         $sortingIndices = $this->sortingTransformer->getSortingIndices($storeId);
         $validator = $this->validatorFactory->create();
         if (!$validator->isReplicaConfigurationValid($sortingIndices)) {
+            $storeName = $this->storeNameFetcher->getStoreName($storeId) . " (Store ID=$storeId)";
             $postfix = "Please note that there can be no more than " . $this->getMaxVirtualReplicasPerIndex() . " virtual replicas per index.";
             if ($this->revertReplicaConfig($storeId)) {
                 $postfix .= ' Reverting to previous configuration.';
             }
             if ($validator->isTooManyCustomerGroups()) {
-                throw (new TooManyCustomerGroupsAsReplicasException(__("You have too many customer groups to enable virtual replicas on the pricing sort for store $storeId. $postfix")))
+                throw (new TooManyCustomerGroupsAsReplicasException(__("You have too many customer groups to enable virtual replicas on the pricing sort for $storeName. $postfix")))
                     ->withReplicaCount($validator->getReplicaCount())
                     ->withPriceSortReplicaCount($validator->getPriceSortReplicaCount());
             }
             else {
-                throw (new ReplicaLimitExceededException(__("Replica limit exceeded for store ID $storeId. $postfix")))
+                throw (new ReplicaLimitExceededException(__("Replica limit exceeded for $storeName. $postfix")))
                     ->withReplicaCount($validator->getReplicaCount());
             }
         }
