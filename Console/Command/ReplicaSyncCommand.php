@@ -26,12 +26,6 @@ class ReplicaSyncCommand extends Command
 
     protected ?OutputInterface $output = null;
 
-    /**
-     * @param ProductHelper $productHelper
-     * @param ReplicaManagerInterface $replicaManager
-     * @param StoreManagerInterface $storeManager
-     * @param string|null $name
-     */
     public function __construct(
         protected State                   $state,
         protected ProductHelper           $productHelper,
@@ -74,6 +68,9 @@ class ReplicaSyncCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->output = $output;
+        $this->setAreaCode();
+
         $storeIds = (array) $input->getArgument(self::STORE_ARGUMENT);
 
         $msg = 'Syncing replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
@@ -83,11 +80,10 @@ class ReplicaSyncCommand extends Command
             $output->writeln("<info>$msg</info>");
         }
 
-        $this->output = $output;
-        $this->state->setAreaCode(Area::AREA_ADMINHTML);
+
         try {
             $this->syncReplicas($storeIds);
-        } catch (BadRequestException $e) {
+        } catch (BadRequestException) {
             $this->output->writeln('<comment>You appear to have a corrupted replica configuration in Algolia for your Magento instance.</comment>');
             $this->output->writeln('<comment>Run the "algolia:replicas:rebuild" command to correct this.</comment>');
             return CLI::RETURN_FAILURE;
@@ -98,6 +94,14 @@ class ReplicaSyncCommand extends Command
         }
 
         return Cli::RETURN_SUCCESS;
+    }
+
+    protected function setAreaCode(): void {
+        try {
+            $this->state->setAreaCode(Area::AREA_CRONTAB);
+        } catch (LocalizedException) {
+            // Area code is already set - nothing to do
+        }
     }
 
     /**

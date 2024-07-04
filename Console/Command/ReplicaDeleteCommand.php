@@ -60,6 +60,9 @@ class ReplicaDeleteCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $this->output = $output;
+        $this->input = $input;
+        
         $storeIds = (array) $input->getArgument(self::STORE_ARGUMENT);
         $unused = $input->getOption(self::UNUSED_OPTION);
 
@@ -70,8 +73,6 @@ class ReplicaDeleteCommand extends Command
             $output->writeln("<info>$msg</info>");
         }
 
-        $this->output = $output;
-        $this->input = $input;
 
         if ($unused) {
             $unusedReplicas = $this->getUnusedReplicas($storeIds);
