@@ -436,6 +436,10 @@ class ReplicaManager implements ReplicaManagerInterface
         }
 
         $this->deleteIndices($replicasToDelete);
+
+        if ($unused) {
+            $this->clearUnusedReplicaIndicesCache($storeId);
+        }
     }
 
     /**
@@ -472,6 +476,15 @@ class ReplicaManager implements ReplicaManagerInterface
 
 
         return $this->_unusedReplicaIndices[$storeId];
+    }
+
+    protected function clearUnusedReplicaIndicesCache(?int $storeId = null): void
+    {
+        if (is_null($storeId)) {
+            $this->_unusedReplicaIndices = [];
+        } else {
+            unset($this->_unusedReplicaIndices[$storeId]);
+        }
     }
 
     /**
