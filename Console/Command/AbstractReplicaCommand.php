@@ -7,6 +7,7 @@ use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
 
 abstract class AbstractReplicaCommand extends Command
 {
@@ -63,6 +64,11 @@ abstract class AbstractReplicaCommand extends Command
         } catch (LocalizedException) {
             // Area code is already set - nothing to do
         }
+    }
+
+    protected function getStoreIds(InputInterface $input): array
+    {
+        return (array) $input->getArgument(self::STORE_ARGUMENT);
     }
 
 }

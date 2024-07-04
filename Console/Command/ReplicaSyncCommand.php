@@ -70,7 +70,7 @@ class ReplicaSyncCommand extends AbstractReplicaCommand
         $this->output = $output;
         $this->setAreaCode();
 
-        $storeIds = (array) $input->getArgument(self::STORE_ARGUMENT);
+        $storeIds = $this->getStoreIds($input);
 
         $msg = 'Syncing replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
         if ($storeIds) {
@@ -78,7 +78,6 @@ class ReplicaSyncCommand extends AbstractReplicaCommand
         } else {
             $output->writeln("<info>$msg</info>");
         }
-
 
         try {
             $this->syncReplicas($storeIds);

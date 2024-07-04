@@ -18,8 +18,6 @@ use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 class ReplicaDeleteCommand extends AbstractReplicaCommand
 {
-    protected const STORE_ARGUMENT = 'store';
-
     protected const UNUSED_OPTION = 'unused';
     protected const UNUSED_OPTION_SHORTCUT = 'u';
 
@@ -70,7 +68,7 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand
         $this->output = $output;
         $this->input = $input;
 
-        $storeIds = (array) $input->getArgument(self::STORE_ARGUMENT);
+        $storeIds = $this->getStoreIds($input);
         $unused = $input->getOption(self::UNUSED_OPTION);
 
         $msg = 'Deleting' . ($unused ? ' unused ' : ' ') . 'replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
