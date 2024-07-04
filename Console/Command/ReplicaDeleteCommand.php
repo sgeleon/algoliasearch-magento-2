@@ -2,27 +2,25 @@
 
 namespace Algolia\AlgoliaSearch\Console\Command;
 
+use Algolia\AlgoliaSearch\Api\Console\ReplicaDeleteCommandInterface;
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
-use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
+use Algolia\AlgoliaSearch\Console\Traits\ReplicaDeleteCommandTrait;
 use Algolia\AlgoliaSearch\Exceptions\BadRequestException;
 use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
-use Magento\Framework\Exception\LocalizedException;
-use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
-class ReplicaDeleteCommand extends AbstractReplicaCommand
+class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDeleteCommandInterface
 {
+    use ReplicaDeleteCommandTrait;
+
     protected const UNUSED_OPTION = 'unused';
     protected const UNUSED_OPTION_SHORTCUT = 'u';
-
-    protected ?OutputInterface $output = null;
-    protected ?InputInterface $input = null;
 
     public function __construct(
         protected ReplicaManagerInterface $replicaManager,
@@ -61,7 +59,6 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand
             )
         ];
     }
-
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
@@ -141,43 +138,4 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand
         return true;
     }
 
-    /**
-     * @throws NoSuchEntityException
-     * @throws AlgoliaException
-     * @throws LocalizedException
-     */
-    protected function deleteReplicas(array $storeIds = [], bool $unused = false): void
-    {
-        if (count($storeIds)) {
-            foreach ($storeIds as $storeId) {
-                $this->deleteReplicasForStore($storeId, $unused);
-            }
-        } else {
-            $this->deleteReplicasForAllStores($unused);
-        }
-    }
-
-    /**
-     * @throws NoSuchEntityException
-     * @throws LocalizedException
-     * @throws AlgoliaException
-     */
-    protected function deleteReplicasForStore(int $storeId, bool $unused = false): void
-    {
-        $this->output->writeln('<info>Deleting' . ($unused ? ' unused ' : ' ') . 'replicas for ' . $this->storeNameFetcher->getStoreName($storeId) . '...</info>');
-        $this->replicaManager->deleteReplicasFromAlgolia($storeId, $unused);
-    }
-
-    /**
-     * @throws NoSuchEntityException
-     * @throws LocalizedException
-     * @throws AlgoliaException
-     */
-    protected function deleteReplicasForAllStores(bool $unused = false): void
-    {
-        $storeIds = array_keys($this->storeManager->getStores());
-        foreach ($storeIds as $storeId) {
-            $this->deleteReplicasForStore($storeId, $unused);
-        }
-    }
 }

@@ -2,6 +2,7 @@
 
 namespace Algolia\AlgoliaSearch\Console\Command;
 
+use Algolia\AlgoliaSearch\Api\Console\ReplicaSyncCommandInterface;
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
 use Algolia\AlgoliaSearch\Exception\ReplicaLimitExceededException;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
@@ -16,11 +17,11 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Algolia\AlgoliaSearch\Console\Traits\ReplicaSyncCommandTrait;
 
-class ReplicaSyncCommand extends AbstractReplicaCommand
+class ReplicaSyncCommand extends AbstractReplicaCommand implements ReplicaSyncCommandInterface
 {
-
-    protected ?OutputInterface $output = null;
+    use ReplicaSyncCommandTrait;
 
     public function __construct(
 
@@ -94,53 +95,4 @@ class ReplicaSyncCommand extends AbstractReplicaCommand
         return Cli::RETURN_SUCCESS;
     }
 
-    /**
-     * @param int[] $storeIds
-     * @return void
-     * @throws AlgoliaException
-     * @throws ExceededRetriesException
-     * @throws LocalizedException
-     * @throws NoSuchEntityException
-     */
-    protected function syncReplicas(array $storeIds = []): void
-    {
-        if (count($storeIds)) {
-            foreach ($storeIds as $storeId) {
-                $this->syncReplicasForStore($storeId);
-            }
-        } else {
-            $this->syncReplicasForAllStores();
-        }
-    }
-
-    /**
-     * @throws NoSuchEntityException
-     * @throws ExceededRetriesException
-     * @throws AlgoliaException
-     * @throws LocalizedException
-     */
-    protected function syncReplicasForStore(int $storeId): void
-    {
-        $this->output->writeln('<info>Syncing ' . $this->storeNameFetcher->getStoreName($storeId) . '...</info>');
-        try {
-            $this->replicaManager->syncReplicasToAlgolia($storeId, $this->productHelper->getIndexSettings($storeId));
-        } catch (BadRequestException $e) {
-            $this->output->writeln('<error>Failed syncing replicas for store "' . $this->storeNameFetcher->getStoreName($storeId) . '": ' . $e->getMessage() . '</error>');
-            throw $e;
-        }
-    }
-
-    /**
-     * @throws NoSuchEntityException
-     * @throws ExceededRetriesException
-     * @throws AlgoliaException
-     * @throws LocalizedException
-     */
-    protected function syncReplicasForAllStores(): void
-    {
-        $storeIds = array_keys($this->storeManager->getStores());
-        foreach ($storeIds as $storeId) {
-            $this->syncReplicasForStore($storeId);
-        }
-    }
 }
