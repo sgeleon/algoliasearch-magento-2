@@ -1203,38 +1203,6 @@ class ProductHelper extends AbstractEntityHelper
     }
 
     /**
-     * @param string $indexName
-     * @param array $replicas
-     * @param int $setReplicasTaskId
-     * @return void
-     * @throws AlgoliaException
-     * @throws ExceededRetriesException
-     */
-    protected function deleteUnusedReplicas(string $indexName, array $replicas, int $setReplicasTaskId): void
-    {
-        $indicesToDelete = [];
-
-        $allIndices = $this->algoliaHelper->listIndexes();
-        foreach ($allIndices['items'] as $indexInfo) {
-            if (mb_strpos($indexInfo['name'], $indexName) !== 0 || $indexInfo['name'] === $indexName) {
-                continue;
-            }
-
-            if (mb_strpos($indexInfo['name'], IndexNameFetcher::INDEX_TEMP_SUFFIX) === false && in_array($indexInfo['name'], $replicas) === false) {
-                $indicesToDelete[] = $indexInfo['name'];
-            }
-        }
-
-        if (count($indicesToDelete) > 0) {
-            $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
-
-            foreach ($indicesToDelete as $indexToDelete) {
-                $this->algoliaHelper->deleteIndex($indexToDelete);
-            }
-        }
-    }
-
-    /**
      * @param $indexName
      * @return void
      * @throws AlgoliaException

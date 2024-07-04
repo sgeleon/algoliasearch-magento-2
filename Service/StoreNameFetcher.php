@@ -25,4 +25,19 @@ class StoreNameFetcher
         }
         return $this->_storeNames[$storeId];
     }
+
+    /**
+     * @param int[] $storeIds
+     * @return string[]
+     * @throws NoSuchEntityException
+     */
+    public function getStoreNames(array $storeIds): array
+    {
+        return array_map(
+            function($storeId) {
+                return $this->getStoreName($storeId);
+            },
+            $storeIds
+        );
+    }
 }

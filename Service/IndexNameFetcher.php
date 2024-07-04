@@ -48,4 +48,9 @@ class IndexNameFetcher
         return $this->getIndexName(ProductHelper::INDEX_NAME_SUFFIX, $storeId, $tmp);
     }
 
+    public function isTempIndex($indexName): bool
+    {
+        return str_ends_with($indexName, self::INDEX_TEMP_SUFFIX);
+    }
+
 }

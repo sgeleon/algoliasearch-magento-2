@@ -20,7 +20,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class ReplicaCommand extends Command
+class ReplicaSyncCommand extends Command
 {
     protected const STORE_ARGUMENT = 'store';
 
@@ -55,7 +55,7 @@ class ReplicaCommand extends Command
                 new InputArgument(
                     self::STORE_ARGUMENT,
                     InputArgument::OPTIONAL | InputArgument::IS_ARRAY,
-                    'ID(s) for store to be synced with Algolia (optional), if not specified all stores will be synced'
+                    'ID(s) for store(s) to be synced with Algolia (optional), if not specified all stores will be synced'
                 )
             ]);
 
@@ -78,14 +78,7 @@ class ReplicaCommand extends Command
 
         $msg = 'Syncing replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
         if ($storeIds) {
-            /** @var string[] $storeNames */
-            $storeNames = array_map(
-                function($storeId) {
-                    return $this->storeNameFetcher->getStoreName($storeId);
-                },
-                $storeIds
-            );
-            $output->writeln("<info>$msg: " . join(", ", $storeNames) . '</info>');
+            $output->writeln("<info>$msg: " . join(", ", $this->storeNameFetcher->getStoreNames($storeIds)) . '</info>');
         } else {
             $output->writeln("<info>$msg</info>");
         }
@@ -156,6 +149,5 @@ class ReplicaCommand extends Command
         foreach ($storeIds as $storeId) {
             $this->syncReplicasForStore($storeId);
         }
-
     }
 }

@@ -39,6 +39,8 @@ use Magento\Framework\Exception\NoSuchEntityException;
  */
 class ReplicaManager implements ReplicaManagerInterface
 {
+    public const ALGOLIA_SETTINGS_KEY_REPLICAS = 'replicas';
+
     protected const _DEBUG = true;
     protected array $_algoliaReplicaConfig = [];
     protected array $_magentoReplicaPossibleConfig = [];
@@ -94,7 +96,7 @@ class ReplicaManager implements ReplicaManagerInterface
             try {
                 $currentSettings = $this->algoliaHelper->getSettings($primaryIndexName);
                 $this->_algoliaReplicaConfig[$primaryIndexName] = array_key_exists('replicas', $currentSettings)
-                    ? $currentSettings['replicas']
+                    ? $currentSettings[self::ALGOLIA_SETTINGS_KEY_REPLICAS]
                     : [];
             } catch (\Exception $e) {
                 $msg = "Unable to retrieve replica settings for $primaryIndexName: " . $e->getMessage();
@@ -119,7 +121,7 @@ class ReplicaManager implements ReplicaManagerInterface
      * relevant to the Magento integration
      *
      * @param string $primaryIndexName
-     * @return string[]
+     * @return string[] Array of replica index names
      * @throws LocalizedException
      */
     protected function getMagentoReplicaConfigurationFromAlgolia(string $primaryIndexName): array
@@ -130,19 +132,35 @@ class ReplicaManager implements ReplicaManagerInterface
     }
 
     /**
-     * Replicas will be considered Magento managed if they are prefixed with the primary index name
+     * Filter out non Magento managed replicas
      * @param string $baseIndexName
      * @param string[] $algoliaReplicas
      * @return string[]
+     * @throws NoSuchEntityException
      */
     protected function getMagentoReplicaSettings(string $baseIndexName, array $algoliaReplicas): array
     {
         return array_filter(
             $algoliaReplicas,
             function ($algoliaReplicaSetting) use ($baseIndexName) {
-                return str_starts_with($this->getBareIndexNameFromReplicaSetting($algoliaReplicaSetting), $baseIndexName);
+                return $this->isMagentoReplicaIndex($this->getBareIndexNameFromReplicaSetting($algoliaReplicaSetting), $baseIndexName);
             }
         );
+    }
+
+    /**
+     * Perform logic to determine if this is a Magento managed replica index
+     * (By default replicas will be considered Magento managed if they are prefixed with the primary index name)
+     *
+     * @param string $replicaIndexName
+     * @param int|string $storeIdOrIndex
+     * @return bool
+     * @throws NoSuchEntityException
+     */
+    protected function isMagentoReplicaIndex(string $replicaIndexName, int|string $storeIdOrIndex): bool
+    {
+        $primaryIndexName = is_string($storeIdOrIndex) ? $storeIdOrIndex : $this->indexNameFetcher->getProductIndexName($storeIdOrIndex);
+        return str_starts_with($replicaIndexName, $primaryIndexName);
     }
 
     /**
@@ -160,12 +178,15 @@ class ReplicaManager implements ReplicaManagerInterface
     /**
      * In order to avoid interfering with replicas configured directly in the Algolia dashboard,
      * we must know which replica indices are Magento managed and which are not.
+     * This method seeks to determine this based on Magento before/after state on a sorting config change
+     * The downside here is that it will not work if Magento and Algolia get out of sync
      *
      * @param int $storeId
      * @param bool $refreshCache
      * @return array
      * @throws LocalizedException
      * @throws NoSuchEntityException
+     * @deprecated This method has been supplanted by the much simpler getMagentoReplicaSettings() method
      */
     protected function getMagentoReplicaSettingsFromConfig(int $storeId, bool $refreshCache = false): array
     {
@@ -220,12 +241,12 @@ class ReplicaManager implements ReplicaManagerInterface
 
         $this->algoliaHelper->setSettings(
             $indexName,
-            ['replicas' => array_merge($newMagentoReplicasSetting, $nonMagentoReplicasSetting)]
+            [self::ALGOLIA_SETTINGS_KEY_REPLICAS => array_merge($newMagentoReplicasSetting, $nonMagentoReplicasSetting)]
         );
         $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
         $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
         $this->clearAlgoliaReplicaSettingCache($indexName);
-        $this->deleteReplicas($replicasToDelete);
+        $this->deleteReplicaIndices($replicasToDelete);
 
         if (self::_DEBUG) {
             $this->logger->log(
@@ -317,7 +338,7 @@ class ReplicaManager implements ReplicaManagerInterface
      * @return void
      * @throws AlgoliaException
      */
-    protected function deleteReplicas(array $replicasToDelete): void
+    protected function deleteReplicaIndices(array $replicasToDelete): void
     {
         foreach ($replicasToDelete as $deletedReplica) {
             $this->algoliaHelper->deleteIndex($deletedReplica);
@@ -380,5 +401,80 @@ class ReplicaManager implements ReplicaManagerInterface
     public function getMaxVirtualReplicasPerIndex() : int
     {
         return self::MAX_VIRTUAL_REPLICA_LIMIT;
+    }
+
+    /**
+     * @param string $indexName
+     * @param array $replicas
+     * @param int $setReplicasTaskId
+     * @return void
+     * @throws AlgoliaException
+     * @throws ExceededRetriesException
+     */
+    protected function deleteUnusedReplicas(string $indexName, array $replicas, int $setReplicasTaskId): void
+    {
+        $indicesToDelete = [];
+
+        $allIndices = $this->algoliaHelper->listIndexes();
+        foreach ($allIndices['items'] as $indexInfo) {
+            //skip any indices that don't match the primary index
+            if (mb_strpos($indexInfo['name'], $indexName) !== 0 || $indexInfo['name'] === $indexName) {
+                continue;
+            }
+
+            // skip temp indices and expected replicas
+            if (mb_strpos($indexInfo['name'], IndexNameFetcher::INDEX_TEMP_SUFFIX) === false && in_array($indexInfo['name'], $replicas) === false) {
+                $indicesToDelete[] = $indexInfo['name'];
+            }
+        }
+
+        if (count($indicesToDelete) > 0) {
+            $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
+
+            foreach ($indicesToDelete as $indexToDelete) {
+                $this->algoliaHelper->deleteIndex($indexToDelete);
+            }
+        }
+    }
+
+    /**
+     * @throws AlgoliaException
+     */
+    protected function clearReplicasSettingInAlgolia(string $primaryIndexName): void
+    {
+        $this->algoliaHelper->setSettings($primaryIndexName, [ self::ALGOLIA_SETTINGS_KEY_REPLICAS => []]);
+    }
+
+    /**
+     * @throws AlgoliaException
+     * @throws NoSuchEntityException
+     * @throws LocalizedException
+     */
+    public function deleteReplicasFromAlgolia(int $storeId, bool $unusedOnly = false): void
+    {
+        $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
+
+        // get all possible Magento managed product indices for this store
+        $allIndices = $this->algoliaHelper->listIndexes();
+
+        $currentReplicas = $this->getBareIndexNamesFromReplicaSetting($this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName));
+
+        if (!$unusedOnly) {
+            $this->clearReplicasSettingInAlgolia($primaryIndexName);
+        }
+
+        $replicasToDelete = [];
+
+        foreach ($allIndices['items'] as $indexInfo) {
+            $indexName = $indexInfo['name'];
+            if ($this->isMagentoReplicaIndex($indexName, $primaryIndexName)
+                && !$this->indexNameFetcher->isTempIndex($indexName)
+                && (!$unusedOnly || !array_search($indexName, $currentReplicas))
+            ) {
+                $replicasToDelete[] = $indexName;
+            }
+        }
+
+        $this->deleteReplicaIndices($replicasToDelete);
     }
 }
