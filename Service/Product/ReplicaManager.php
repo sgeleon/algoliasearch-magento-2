@@ -51,6 +51,9 @@ class ReplicaManager implements ReplicaManagerInterface
     /** @var array<int, string[]>  */
     protected array $_magentoReplicaPossibleConfig = [];
 
+    /** @var array<int, string[]>  */
+    protected array $_unusedReplicaIndices = [];
+
     public function __construct(
         protected ConfigHelper                   $configHelper,
         protected AlgoliaHelper                  $algoliaHelper,
@@ -253,7 +256,7 @@ class ReplicaManager implements ReplicaManagerInterface
         $setReplicasTaskId = $this->algoliaHelper->getLastTaskId();
         $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
         $this->clearAlgoliaReplicaSettingCache($indexName);
-        $this->deleteReplicaIndices($replicasToDelete);
+        $this->deleteIndices($replicasToDelete);
 
         if (self::_DEBUG) {
             $this->logger->log(
@@ -345,7 +348,7 @@ class ReplicaManager implements ReplicaManagerInterface
      * @return void
      * @throws AlgoliaException
      */
-    protected function deleteReplicaIndices(array $replicasToDelete): void
+    protected function deleteIndices(array $replicasToDelete): void
     {
         foreach ($replicasToDelete as $deletedReplica) {
             $this->algoliaHelper->deleteIndex($deletedReplica);
@@ -426,16 +429,15 @@ class ReplicaManager implements ReplicaManagerInterface
      */
     public function deleteReplicasFromAlgolia(int $storeId, bool $unused = false): void
     {
-        $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
-
         if ($unused) {
-            $replicasToDelete = $this->getUnusedReplicaIndices($primaryIndexName);
+            $replicasToDelete = $this->getUnusedReplicaIndices($storeId);
         } else {
+            $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
             $replicasToDelete = $this->getMagentoReplicaIndicesFromAlgolia($primaryIndexName);
             $this->clearReplicasSettingInAlgolia($primaryIndexName);
         }
 
-        $this->deleteReplicaIndices($replicasToDelete);
+        $this->deleteIndices($replicasToDelete);
     }
 
     /**
@@ -447,29 +449,31 @@ class ReplicaManager implements ReplicaManagerInterface
     }
 
     /**
-     * @return string[]
-     * @throws NoSuchEntityException
-     * @throws LocalizedException
-     * @throws AlgoliaException
+     * @inheritDoc
      */
-    protected function getUnusedReplicaIndices(string $primaryIndexName): array
+    public function getUnusedReplicaIndices(int $storeId): array
     {
-        $currentReplicas = $this->getMagentoReplicaIndicesFromAlgolia($primaryIndexName);
-        $unusedReplicas = [];
-        $allIndices = $this->algoliaHelper->listIndexes();
+        $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
+        if (!isset($this->_unusedReplicaIndices[$storeId])) {
+            $currentReplicas = $this->getMagentoReplicaIndicesFromAlgolia($primaryIndexName);
+            $unusedReplicas = [];
+            $allIndices = $this->algoliaHelper->listIndexes();
 
-        foreach ($allIndices['items'] as $indexInfo) {
-            $indexName = $indexInfo['name'];
-            if ($this->isMagentoReplicaIndex($indexName, $primaryIndexName)
-                && !$this->indexNameFetcher->isTempIndex($indexName)
-                && !$this->indexNameFetcher->isQuerySuggestionsIndex($indexName)
-                && !in_array($indexName, $currentReplicas))
-            {
-                $unusedReplicas[] = $indexName;
+            foreach ($allIndices['items'] as $indexInfo) {
+                $indexName = $indexInfo['name'];
+                if ($this->isMagentoReplicaIndex($indexName, $primaryIndexName)
+                    && !$this->indexNameFetcher->isTempIndex($indexName)
+                    && !$this->indexNameFetcher->isQuerySuggestionsIndex($indexName)
+                    && !in_array($indexName, $currentReplicas))
+                {
+                    $unusedReplicas[] = $indexName;
+                }
             }
+            $this->_unusedReplicaIndices[$storeId] = $unusedReplicas;
         }
 
-        return $unusedReplicas;
+
+        return $this->_unusedReplicaIndices[$storeId];
     }
 
     /**

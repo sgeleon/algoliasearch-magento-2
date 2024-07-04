@@ -25,7 +25,6 @@ interface ReplicaManagerInterface
      * @throws AlgoliaException
      * @throws ExceededRetriesException
      * @throws LocalizedException
-     * @throws NoSuchEntityException
      */
     public function syncReplicasToAlgolia(int $storeId, array $primaryIndexSettings): void;
 
@@ -46,4 +45,14 @@ interface ReplicaManagerInterface
      * @return int
      */
     public function getMaxVirtualReplicasPerIndex() : int;
+
+    /**
+     * For a given store return replicas that do not appear to be managed by Magento
+     * @param int $storeId
+     * @return string[]
+     * @throws NoSuchEntityException
+     * @throws LocalizedException
+     * @throws AlgoliaException
+     */
+    public function getUnusedReplicaIndices(int $storeId): array;
 }
