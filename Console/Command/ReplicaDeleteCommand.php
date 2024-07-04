@@ -61,8 +61,9 @@ class ReplicaDeleteCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $storeIds = (array) $input->getArgument(self::STORE_ARGUMENT);
+        $unused = $input->getOption(self::UNUSED_OPTION);
 
-        $msg = 'Deleting replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
+        $msg = 'Deleting' . ($unused ? ' unused ': ' ') . 'replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
         if ($storeIds) {
             $output->writeln("<info>$msg: " . join(", ", $this->storeNameFetcher->getStoreNames($storeIds)) . '</info>');
         } else {
@@ -72,34 +73,34 @@ class ReplicaDeleteCommand extends Command
         $this->output = $output;
 //        $this->state->setAreaCode(Area::AREA_ADMINHTML);
 
-        $this->deleteReplicas($storeIds);
+        $this->deleteReplicas($storeIds, $unused);
 
         return Cli::RETURN_SUCCESS;
     }
 
 
-    protected function deleteReplicas(array $storeIds = [], bool $unusedOnly = false): void
+    protected function deleteReplicas(array $storeIds = [], bool $unused = false): void
     {
         if (count($storeIds)) {
             foreach ($storeIds as $storeId) {
-                $this->deleteReplicasForStore($storeId);
+                $this->deleteReplicasForStore($storeId, $unused);
             }
         } else {
-            $this->deleteReplicasForAllStores();
+            $this->deleteReplicasForAllStores($unused);
         }
     }
 
-    protected function deleteReplicasForStore(int $storeId): void
+    protected function deleteReplicasForStore(int $storeId, bool $unused = false): void
     {
-        $this->output->writeln('<info>Deleting replicas for ' . $this->storeNameFetcher->getStoreName($storeId) . '...</info>');
-        $this->replicaManager->deleteReplicasFromAlgolia($storeId);
+        $this->output->writeln('<info>Deleting' . ($unused ? ' unused ': ' ') . 'replicas for ' . $this->storeNameFetcher->getStoreName($storeId) . '...</info>');
+        $this->replicaManager->deleteReplicasFromAlgolia($storeId, $unused);
     }
 
-    protected function deleteReplicasForAllStores(): void
+    protected function deleteReplicasForAllStores(bool $unused = false): void
     {
         $storeIds = array_keys($this->storeManager->getStores());
         foreach ($storeIds as $storeId) {
-            $this->deleteReplicasForStore($storeId);
+            $this->deleteReplicasForStore($storeId, $unused);
         }
     }
 }

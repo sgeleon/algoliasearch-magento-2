@@ -29,7 +29,7 @@ interface ReplicaManagerInterface
      */
     public function syncReplicasToAlgolia(int $storeId, array $primaryIndexSettings): void;
 
-    public function deleteReplicasFromAlgolia(int $storeId, bool $unusedOnly = false): void;
+    public function deleteReplicasFromAlgolia(int $storeId, bool $unused = false): void;
 
     /**
      * For standard Magento front end (e.g. Luma) replicas will likely only be needed if InstantSearch is enabled

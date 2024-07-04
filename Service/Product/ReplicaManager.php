@@ -18,6 +18,7 @@ use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
 use Algolia\AlgoliaSearch\Validator\VirtualReplicaValidatorFactory;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Store\Model\StoreManagerInterface;
 
 /**
  * This class is responsible for managing the business logic related to translating the
@@ -53,6 +54,7 @@ class ReplicaManager implements ReplicaManagerInterface
         protected IndexNameFetcher               $indexNameFetcher,
         protected StoreNameFetcher               $storeNameFetcher,
         protected SortingTransformer             $sortingTransformer,
+        protected StoreManagerInterface          $storeManager,
         protected Logger                         $logger
     )
     {}
@@ -160,7 +162,7 @@ class ReplicaManager implements ReplicaManagerInterface
     protected function isMagentoReplicaIndex(string $replicaIndexName, int|string $storeIdOrIndex): bool
     {
         $primaryIndexName = is_string($storeIdOrIndex) ? $storeIdOrIndex : $this->indexNameFetcher->getProductIndexName($storeIdOrIndex);
-        return str_starts_with($replicaIndexName, $primaryIndexName);
+        return $replicaIndexName !== $primaryIndexName && str_starts_with($replicaIndexName, $primaryIndexName);
     }
 
     /**
@@ -404,45 +406,12 @@ class ReplicaManager implements ReplicaManagerInterface
     }
 
     /**
-     * @param string $indexName
-     * @param array $replicas
-     * @param int $setReplicasTaskId
-     * @return void
-     * @throws AlgoliaException
-     * @throws ExceededRetriesException
-     */
-    protected function deleteUnusedReplicas(string $indexName, array $replicas, int $setReplicasTaskId): void
-    {
-        $indicesToDelete = [];
-
-        $allIndices = $this->algoliaHelper->listIndexes();
-        foreach ($allIndices['items'] as $indexInfo) {
-            //skip any indices that don't match the primary index
-            if (mb_strpos($indexInfo['name'], $indexName) !== 0 || $indexInfo['name'] === $indexName) {
-                continue;
-            }
-
-            // skip temp indices and expected replicas
-            if (mb_strpos($indexInfo['name'], IndexNameFetcher::INDEX_TEMP_SUFFIX) === false && in_array($indexInfo['name'], $replicas) === false) {
-                $indicesToDelete[] = $indexInfo['name'];
-            }
-        }
-
-        if (count($indicesToDelete) > 0) {
-            $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
-
-            foreach ($indicesToDelete as $indexToDelete) {
-                $this->algoliaHelper->deleteIndex($indexToDelete);
-            }
-        }
-    }
-
-    /**
      * @throws AlgoliaException
      */
     protected function clearReplicasSettingInAlgolia(string $primaryIndexName): void
     {
         $this->algoliaHelper->setSettings($primaryIndexName, [ self::ALGOLIA_SETTINGS_KEY_REPLICAS => []]);
+        $this->algoliaHelper->waitLastTask($primaryIndexName);
     }
 
     /**
@@ -450,31 +419,72 @@ class ReplicaManager implements ReplicaManagerInterface
      * @throws NoSuchEntityException
      * @throws LocalizedException
      */
-    public function deleteReplicasFromAlgolia(int $storeId, bool $unusedOnly = false): void
+    public function deleteReplicasFromAlgolia(int $storeId, bool $unused = false): void
     {
         $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
 
-        // get all possible Magento managed product indices for this store
-        $allIndices = $this->algoliaHelper->listIndexes();
-
-        $currentReplicas = $this->getBareIndexNamesFromReplicaSetting($this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName));
-
-        if (!$unusedOnly) {
+        if ($unused) {
+            $replicasToDelete = $this->getUnusedReplicaIndices($primaryIndexName);
+        } else {
+            $replicasToDelete = $this->getMagentoReplicaIndicesFromAlgolia($primaryIndexName);
             $this->clearReplicasSettingInAlgolia($primaryIndexName);
         }
 
-        $replicasToDelete = [];
+        $this->deleteReplicaIndices($replicasToDelete);
+    }
+
+    /**
+     * @throws LocalizedException
+     */
+    protected function getMagentoReplicaIndicesFromAlgolia(string $primaryIndexName): array
+    {
+        return $this->getBareIndexNamesFromReplicaSetting($this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName));
+    }
+
+    /**
+     * @return string[]
+     * @throws NoSuchEntityException
+     * @throws LocalizedException
+     * @throws AlgoliaException
+     */
+    protected function getUnusedReplicaIndices(string $primaryIndexName): array
+    {
+        $currentReplicas = $this->getMagentoReplicaIndicesFromAlgolia($primaryIndexName);
+        $unusedReplicas = [];
+        $allIndices = $this->algoliaHelper->listIndexes();
 
         foreach ($allIndices['items'] as $indexInfo) {
             $indexName = $indexInfo['name'];
             if ($this->isMagentoReplicaIndex($indexName, $primaryIndexName)
                 && !$this->indexNameFetcher->isTempIndex($indexName)
-                && (!$unusedOnly || !array_search($indexName, $currentReplicas))
-            ) {
-                $replicasToDelete[] = $indexName;
+                && !$this->indexNameFetcher->isQuerySuggestionsIndex($indexName)
+                && !in_array($indexName, $currentReplicas))
+            {
+                $unusedReplicas[] = $indexName;
             }
         }
 
-        $this->deleteReplicaIndices($replicasToDelete);
+        return $unusedReplicas;
+    }
+
+    /**
+     * Get a list of all replica indices for all Magento managed stores
+     * (This may be useful in case of cross store replica misconfiguration)
+     * @return string[]
+     * @throws NoSuchEntityException
+     * @throws LocalizedException
+     */
+    protected function getAllReplicaIndices(): array
+    {
+        $replicaIndices = [];
+        $storeIds = array_keys($this->storeManager->getStores());
+        foreach ($storeIds as $storeId) {
+            $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
+            $replicaIndices = array_merge(
+                $replicaIndices,
+                $this->getMagentoReplicaIndicesFromAlgolia($primaryIndexName)
+            );
+        }
+        return array_unique($replicaIndices);
     }
 }

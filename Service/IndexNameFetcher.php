@@ -18,6 +18,8 @@ class IndexNameFetcher
     /** @var string */
     public const INDEX_TEMP_SUFFIX = '_tmp';
 
+    public const INDEX_QUERY_SUGGESTIONS_SUFFIX = '_query_suggestions';
+
     /**
      * @param string $indexSuffix
      * @param int|null $storeId
@@ -51,6 +53,19 @@ class IndexNameFetcher
     public function isTempIndex($indexName): bool
     {
         return str_ends_with($indexName, self::INDEX_TEMP_SUFFIX);
+    }
+
+    /**
+     * This is the default index name format for query suggestions but it can be overridden
+     * This is a temporary workaround for delete index operations
+     * TODO: Revisit this approach when a QuerySuggestionsClient is implemented in algoliasearch-client-php
+     *
+     * @param $indexName
+     * @return bool
+     */
+    public function isQuerySuggestionsIndex($indexName): bool
+    {
+        return str_ends_with($indexName, self::INDEX_QUERY_SUGGESTIONS_SUFFIX);
     }
 
 }
