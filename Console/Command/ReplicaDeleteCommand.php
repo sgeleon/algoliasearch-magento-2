@@ -3,9 +3,12 @@
 namespace Algolia\AlgoliaSearch\Console\Command;
 
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
+use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Exceptions\BadRequestException;
 use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
 use Magento\Framework\Console\Cli;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -62,7 +65,7 @@ class ReplicaDeleteCommand extends Command
     {
         $this->output = $output;
         $this->input = $input;
-        
+
         $storeIds = (array) $input->getArgument(self::STORE_ARGUMENT);
         $unused = $input->getOption(self::UNUSED_OPTION);
 
@@ -136,6 +139,11 @@ class ReplicaDeleteCommand extends Command
         return true;
     }
 
+    /**
+     * @throws NoSuchEntityException
+     * @throws AlgoliaException
+     * @throws LocalizedException
+     */
     protected function deleteReplicas(array $storeIds = [], bool $unused = false): void
     {
         if (count($storeIds)) {
@@ -147,12 +155,22 @@ class ReplicaDeleteCommand extends Command
         }
     }
 
+    /**
+     * @throws NoSuchEntityException
+     * @throws LocalizedException
+     * @throws AlgoliaException
+     */
     protected function deleteReplicasForStore(int $storeId, bool $unused = false): void
     {
         $this->output->writeln('<info>Deleting' . ($unused ? ' unused ': ' ') . 'replicas for ' . $this->storeNameFetcher->getStoreName($storeId) . '...</info>');
         $this->replicaManager->deleteReplicasFromAlgolia($storeId, $unused);
     }
 
+    /**
+     * @throws NoSuchEntityException
+     * @throws LocalizedException
+     * @throws AlgoliaException
+     */
     protected function deleteReplicasForAllStores(bool $unused = false): void
     {
         $storeIds = array_keys($this->storeManager->getStores());

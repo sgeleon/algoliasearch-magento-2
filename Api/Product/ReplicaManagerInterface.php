@@ -28,6 +28,15 @@ interface ReplicaManagerInterface
      */
     public function syncReplicasToAlgolia(int $storeId, array $primaryIndexSettings): void;
 
+    /**
+     * Delete the replica indices on a store index
+     * @param int $storeId
+     * @param bool $unused Defaults to false - if true identifies any straggler indices and deletes those, otherwise deletes the replicas it knows aobut
+     * @return void
+     *
+     * @throws LocalizedException
+     * @throws AlgoliaException
+     */
     public function deleteReplicasFromAlgolia(int $storeId, bool $unused = false): void;
 
     /**

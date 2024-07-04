@@ -423,9 +423,7 @@ class ReplicaManager implements ReplicaManagerInterface
     }
 
     /**
-     * @throws AlgoliaException
-     * @throws NoSuchEntityException
-     * @throws LocalizedException
+     * @inheritDoc
      */
     public function deleteReplicasFromAlgolia(int $storeId, bool $unused = false): void
     {
