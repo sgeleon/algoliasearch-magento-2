@@ -43,7 +43,12 @@ class ReplicaManager implements ReplicaManagerInterface
     public const ALGOLIA_SETTINGS_KEY_REPLICAS = 'replicas';
 
     protected const _DEBUG = true;
+
+    // LOCAL CACHING VARIABLES
+    /** @var array<string, string[]> */
     protected array $_algoliaReplicaConfig = [];
+
+    /** @var array<int, string[]>  */
     protected array $_magentoReplicaPossibleConfig = [];
 
     public function __construct(
@@ -89,7 +94,7 @@ class ReplicaManager implements ReplicaManagerInterface
     /**
      * @param $primaryIndexName
      * @param bool $refreshCache
-     * @return array<string, mixed>
+     * @return string[]
      * @throws LocalizedException
      */
     protected function getReplicaConfigurationFromAlgolia($primaryIndexName, bool $refreshCache = false): array
@@ -97,7 +102,7 @@ class ReplicaManager implements ReplicaManagerInterface
         if ($refreshCache || !isset($this->_algoliaReplicaConfig[$primaryIndexName])) {
             try {
                 $currentSettings = $this->algoliaHelper->getSettings($primaryIndexName);
-                $this->_algoliaReplicaConfig[$primaryIndexName] = array_key_exists('replicas', $currentSettings)
+                $this->_algoliaReplicaConfig[$primaryIndexName] = array_key_exists(self::ALGOLIA_SETTINGS_KEY_REPLICAS, $currentSettings)
                     ? $currentSettings[self::ALGOLIA_SETTINGS_KEY_REPLICAS]
                     : [];
             } catch (\Exception $e) {
@@ -185,7 +190,7 @@ class ReplicaManager implements ReplicaManagerInterface
      *
      * @param int $storeId
      * @param bool $refreshCache
-     * @return array
+     * @return string[]
      * @throws LocalizedException
      * @throws NoSuchEntityException
      * @deprecated This method has been supplanted by the much simpler getMagentoReplicaSettings() method

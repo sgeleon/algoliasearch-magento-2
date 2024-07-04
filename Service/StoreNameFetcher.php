@@ -7,7 +7,7 @@ use Magento\Store\Model\StoreManagerInterface;
 
 class StoreNameFetcher
 {
-    /** @var string[] */
+    /** @var array<int, string> */
     protected array $_storeNames = [];
 
     public function __construct(
