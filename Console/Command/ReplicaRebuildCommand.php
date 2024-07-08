@@ -13,6 +13,7 @@ use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
 use Magento\Framework\App\State;
 use Magento\Framework\Console\Cli;
+use Magento\Store\Model\StoreManagerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -24,14 +25,15 @@ class ReplicaRebuildCommand
     use ReplicaDeleteCommandTrait;
 
     public function __construct(
-        protected ReplicaManagerInterface $replicaManager,
-        protected StoreNameFetcher        $storeNameFetcher,
         protected ProductHelper           $productHelper,
+        protected ReplicaManagerInterface $replicaManager,
+        protected StoreManagerInterface   $storeManager,
         State                             $state,
+        StoreNameFetcher                  $storeNameFetcher,
         ?string                           $name = null
     )
     {
-        parent::__construct($state, $name);
+        parent::__construct($state, $storeNameFetcher, $name);
     }
 
     protected function getReplicaCommandName(): string
@@ -61,12 +63,7 @@ class ReplicaRebuildCommand
 
         $storeIds = $this->getStoreIds($input);
 
-        $msg = 'Rebuilding replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
-        if ($storeIds) {
-            $output->writeln("<info>$msg: " . join(", ", $this->storeNameFetcher->getStoreNames($storeIds)) . '</info>');
-        } else {
-            $output->writeln("<info>$msg</info>");
-        }
+        $output->writeln($this->decorateOperationAnnouncementMessage('Rebuilding replicas for {{target}}', $storeIds));
 
         $this->deleteReplicas($storeIds);
         try {

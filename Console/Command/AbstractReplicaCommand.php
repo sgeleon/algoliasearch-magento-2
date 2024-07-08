@@ -2,6 +2,7 @@
 
 namespace Algolia\AlgoliaSearch\Console\Command;
 
+use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
 use Magento\Framework\App\Area;
 use Magento\Framework\App\State;
 use Magento\Framework\Exception\LocalizedException;
@@ -18,8 +19,9 @@ abstract class AbstractReplicaCommand extends Command
     protected ?InputInterface $input = null;
 
     public function __construct(
-        protected State $state,
-        ?string         $name = null
+        protected State            $state,
+        protected StoreNameFetcher $storeNameFetcher,
+        ?string                    $name = null
     )
     {
         parent::__construct($name);
@@ -70,9 +72,35 @@ abstract class AbstractReplicaCommand extends Command
         }
     }
 
+    /**
+     * @param InputInterface $input
+     * @return int[]
+     */
     protected function getStoreIds(InputInterface $input): array
     {
         return (array) $input->getArgument(self::STORE_ARGUMENT);
     }
 
+    /**
+     * @param int[] $storeIds
+     * @return string
+     */
+    protected function getOperationTargetLabel(array $storeIds): string
+    {
+        return ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
+    }
+
+    /**
+     * Generate a CLI operation announcement based on passed store arguments
+     * @param string $msg Use {{target} in message as a placeholder for inserting the generated target label
+     * @param int[] $storeIds
+     * @return string
+     */
+    protected function decorateOperationAnnouncementMessage(string $msg, array $storeIds): string
+    {
+        $msg = str_replace('{{target}}', $this->getOperationTargetLabel($storeIds), $msg);
+        return ($storeIds)
+            ? "<info>$msg: " . join(", ", $this->storeNameFetcher->getStoreNames($storeIds)) . '</info>'
+            : "<info>$msg</info>";
+    }
 }

@@ -4,6 +4,7 @@ namespace Algolia\AlgoliaSearch\Console\Command;
 
 use Algolia\AlgoliaSearch\Api\Console\ReplicaSyncCommandInterface;
 use Algolia\AlgoliaSearch\Api\Product\ReplicaManagerInterface;
+use Algolia\AlgoliaSearch\Console\Traits\ReplicaSyncCommandTrait;
 use Algolia\AlgoliaSearch\Exception\ReplicaLimitExceededException;
 use Algolia\AlgoliaSearch\Exceptions\AlgoliaException;
 use Algolia\AlgoliaSearch\Exceptions\BadRequestException;
@@ -17,7 +18,6 @@ use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Store\Model\StoreManagerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Algolia\AlgoliaSearch\Console\Traits\ReplicaSyncCommandTrait;
 
 class ReplicaSyncCommand extends AbstractReplicaCommand implements ReplicaSyncCommandInterface
 {
@@ -28,12 +28,12 @@ class ReplicaSyncCommand extends AbstractReplicaCommand implements ReplicaSyncCo
         protected ProductHelper           $productHelper,
         protected ReplicaManagerInterface $replicaManager,
         protected StoreManagerInterface   $storeManager,
-        protected StoreNameFetcher        $storeNameFetcher,
         State                             $state,
+        StoreNameFetcher                  $storeNameFetcher,
         ?string                           $name = null
     )
     {
-        parent::__construct($state, $name);
+        parent::__construct($state, $storeNameFetcher, $name);
     }
 
     protected function getReplicaCommandName(): string
@@ -41,14 +41,14 @@ class ReplicaSyncCommand extends AbstractReplicaCommand implements ReplicaSyncCo
         return 'sync';
     }
 
-    protected function getStoreArgumentDescription(): string
-    {
-        return 'ID(s) for store(s) to be synced with Algolia (optional), if not specified all stores will be synced';
-    }
-
     protected function getCommandDescription(): string
     {
         return 'Sync configured sorting attributes in Magento to Algolia replica indices';
+    }
+
+    protected function getStoreArgumentDescription(): string
+    {
+        return 'ID(s) for store(s) to be synced with Algolia (optional), if not specified all stores will be synced';
     }
 
     protected function getAdditionalDefinition(): array
@@ -73,12 +73,7 @@ class ReplicaSyncCommand extends AbstractReplicaCommand implements ReplicaSyncCo
 
         $storeIds = $this->getStoreIds($input);
 
-        $msg = 'Syncing replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
-        if ($storeIds) {
-            $output->writeln("<info>$msg: " . join(", ", $this->storeNameFetcher->getStoreNames($storeIds)) . '</info>');
-        } else {
-            $output->writeln("<info>$msg</info>");
-        }
+        $output->writeln($this->decorateOperationAnnouncementMessage('Syncing replicas for {{target}}', $storeIds));
 
         try {
             $this->syncReplicas($storeIds);
