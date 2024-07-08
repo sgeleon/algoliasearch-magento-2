@@ -10,6 +10,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 abstract class AbstractReplicaCommand extends Command
 {
@@ -102,5 +103,22 @@ abstract class AbstractReplicaCommand extends Command
         return ($storeIds)
             ? "<info>$msg: " . join(", ", $this->storeNameFetcher->getStoreNames($storeIds)) . '</info>'
             : "<info>$msg</info>";
+    }
+
+    protected function confirmOperation(string $okMessage = '', string $cancelMessage = 'Operation cancelled'): bool
+    {
+        $helper = $this->getHelper('question');
+        $question = new ConfirmationQuestion('<question>Are you sure wish to proceed? (y/n)</question> ', false);
+        if (!$helper->ask($this->input, $this->output, $question)) {
+            if ($cancelMessage) {
+                $this->output->writeln("<comment>$cancelMessage</comment>");
+            }
+            return false;
+        }
+
+        if ($okMessage) {
+            $this->output->writeln("<comment>$okMessage</comment>");
+        }
+        return true;
     }
 }

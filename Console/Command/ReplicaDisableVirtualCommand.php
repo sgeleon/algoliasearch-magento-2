@@ -43,23 +43,12 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
 
         $output->writeln($this->decorateOperationAnnouncementMessage('Disabling virtual replicas for {{target}}', $storeIds));
 
-        if (!$this->confirmOperation()) {
+        $okMsg = 'Configure virtual replicas by attribute under: Stores > Configuration > Algolia Search > InstantSearch Results Page > Sorting';
+        if (!$this->confirmOperation($okMsg)) {
             return CLI::RETURN_SUCCESS;
         }
 
         return Cli::RETURN_SUCCESS;
     }
 
-    protected function confirmOperation(): bool
-    {
-        $helper = $this->getHelper('question');
-        $question = new ConfirmationQuestion('<question>Are you sure wish to proceed? (y/n)</question> ', false);
-        if (!$helper->ask($this->input, $this->output, $question)) {
-            $this->output->writeln('<comment>Operation cancelled.</comment>');
-            return false;
-        }
-
-        $this->output->writeln('<comment>Configure virtual replicas by attribute under: Stores > Configuration > Algolia Search > InstantSearch Results Page > Sorting</comment>');
-        return true;
-    }
 }

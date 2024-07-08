@@ -143,18 +143,10 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDele
         return true;
     }
 
-
     protected function confirmDelete(): bool
     {
-        $helper = $this->getHelper('question');
-        $question = new ConfirmationQuestion('<question>Are you sure wish to proceed? (y/n)</question> ', false);
-        if (!$helper->ask($this->input, $this->output, $question)) {
-            $this->output->writeln('<comment>Operation cancelled.</comment>');
-            return false;
-        }
-
-        $this->output->writeln('<comment>Please note that you can restore these deleted replicas by running "algolia:replicas:sync".</comment>');
-        return true;
+        $okMsg = 'Please note that you can restore these deleted replicas by running "algolia:replicas:sync".';
+        return $this->confirmOperation($okMsg);
     }
 
 }
