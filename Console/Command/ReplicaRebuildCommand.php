@@ -41,7 +41,7 @@ class ReplicaRebuildCommand
 
     protected function getCommandDescription(): string
     {
-        return 'Rebuild replica configuration for Magento sorting attributes';
+        return "Delete and rebuild replica configuration for Magento sorting attributes (only run this operation if errors are encountered during regular sync)";
     }
 
     protected function getStoreArgumentDescription(): string

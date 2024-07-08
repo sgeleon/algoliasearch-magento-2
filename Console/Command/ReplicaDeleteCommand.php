@@ -75,7 +75,6 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDele
             $output->writeln("<info>$msg</info>");
         }
 
-
         if ($unused) {
             $unusedReplicas = $this->getUnusedReplicas($storeIds);
             if (!$unusedReplicas) {
@@ -85,6 +84,8 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDele
             if (!$this->confirmDeleteUnused($unusedReplicas)) {
                 return Cli::RETURN_SUCCESS;
             }
+        } else if (!$this->confirmDelete()) {
+            return Cli::RETURN_SUCCESS;
         }
 
         try {
@@ -98,6 +99,10 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDele
         return Cli::RETURN_SUCCESS;
     }
 
+    /**
+     * @param int[] $storeIds
+     * @return string[]
+     */
     protected function getUnusedReplicas(array $storeIds): array
     {
         return array_reduce(
@@ -119,7 +124,7 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDele
      * Deleting unused replica indices is potentially risky, especially if they have enabled query suggestions on their index
      * Verify with the end user first!
      *
-     * @param array $unusedReplicas
+     * @param string[] $unusedReplicas
      * @return bool
      */
     protected function confirmDeleteUnused(array $unusedReplicas): bool
@@ -135,6 +140,20 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDele
             $this->output->writeln('<comment>Operation cancelled.</comment>');
             return false;
         }
+        return true;
+    }
+
+
+    protected function confirmDelete(): bool
+    {
+        $helper = $this->getHelper('question');
+        $question = new ConfirmationQuestion('<question>Are you sure wish to proceed? (y/n)</question> ', false);
+        if (!$helper->ask($this->input, $this->output, $question)) {
+            $this->output->writeln('<comment>Operation cancelled.</comment>');
+            return false;
+        }
+
+        $this->output->writeln('<comment>Please note that you can restore these deleted replicas by running "algolia:replicas:sync".</comment>');
         return true;
     }
 

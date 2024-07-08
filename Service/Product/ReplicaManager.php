@@ -302,6 +302,12 @@ class ReplicaManager implements ReplicaManagerInterface
         return true;
     }
 
+    /**
+     * In the event of an invalid replica configuration, this provides the means to revert the
+     * configuration settings to the previous state (provided the ReplicaState has been utilized to track the change)
+     * @param int $storeId
+     * @return bool True if settings were reverted as a result of this function call
+     */
     protected function revertReplicaConfig(int $storeId): bool
     {
         if ($ogConfig = $this->replicaState->getOriginalSortConfiguration($storeId)) {
