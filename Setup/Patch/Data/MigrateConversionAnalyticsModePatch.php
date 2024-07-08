@@ -17,12 +17,21 @@ class MigrateConversionAnalyticsModePatch implements DataPatchInterface
 {
     public function __construct(
         protected ModuleDataSetupInterface $moduleDataSetup,
-        protected WriterInterface $configWriter,
-        protected ConfigInterface $config,
-        protected ScopeConfigInterface $scopeConfig,
-        protected ConfigChecker $configChecker,
-        protected StoreManagerInterface $storeManager
-    ) {}
+        protected WriterInterface          $configWriter,
+        protected ConfigInterface          $config,
+        protected ScopeConfigInterface     $scopeConfig,
+        protected ConfigChecker            $configChecker,
+        protected StoreManagerInterface    $storeManager
+    )
+    {}
+
+    /**
+     * @inheritDoc
+     */
+    public static function getDependencies(): array
+    {
+        return [];
+    }
 
     /**
      * @inheritDoc
@@ -60,14 +69,6 @@ class MigrateConversionAnalyticsModePatch implements DataPatchInterface
                 $scope,
                 $scopeId);
         }
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public static function getDependencies(): array
-    {
-        return [];
     }
 
     /**
