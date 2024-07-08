@@ -17,6 +17,7 @@ use Algolia\AlgoliaSearch\Helper\Image as ImageHelper;
 use Algolia\AlgoliaSearch\Helper\Logger;
 use Algolia\AlgoliaSearch\Service\IndexNameFetcher;
 use Magento\Bundle\Model\Product\Type as BundleProductType;
+use Magento\Catalog\Api\Data\ProductInterfaceFactory;
 use Magento\Catalog\Model\Product;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Type;
@@ -108,7 +109,8 @@ class ProductHelper extends AbstractEntityHelper
         protected GroupExcludedWebsiteRepositoryInterface $groupExcludedWebsiteRepository,
         protected ImageHelper                             $imageHelper,
         protected IndexNameFetcher                        $indexNameFetcher,
-        protected ReplicaManagerInterface                 $replicaManager
+        protected ReplicaManagerInterface                 $replicaManager,
+        protected ProductInterfaceFactory                 $productFactory
     )
     {
         parent::__construct($indexNameFetcher);
@@ -295,16 +297,12 @@ class ProductHelper extends AbstractEntityHelper
     }
 
     /**
-     * @param string $indexName
-     * @param string $indexNameTmp
-     * @param int $storeId
-     * @param bool $saveToTmpIndicesToo
-     * @return void
-     * @throws AlgoliaException
+     * @param int|null $storeId
+     * @return array<string, mixed>
      * @throws LocalizedException
      * @throws NoSuchEntityException
      */
-    public function setSettings(string $indexName, string $indexNameTmp, int $storeId, bool $saveToTmpIndicesToo = false): void
+    public function getIndexSettings(?int $storeId = null): array
     {
         $searchableAttributes = $this->getSearchableAttributes($storeId);
         $customRanking = $this->getCustomRanking($storeId);
@@ -336,6 +334,23 @@ class ProductHelper extends AbstractEntityHelper
         );
 
         $indexSettings = $transport->getData();
+
+        return $indexSettings;
+    }
+
+    /**
+     * @param string $indexName
+     * @param string $indexNameTmp
+     * @param int $storeId
+     * @param bool $saveToTmpIndicesToo
+     * @return void
+     * @throws AlgoliaException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     */
+    public function setSettings(string $indexName, string $indexNameTmp, int $storeId, bool $saveToTmpIndicesToo = false): void
+    {
+        $indexSettings = $this->getIndexSettings($storeId);
 
         $this->algoliaHelper->setSettings($indexName, $indexSettings, false, true);
         $this->logger->log('Settings: ' . json_encode($indexSettings));
@@ -545,7 +560,7 @@ class ProductHelper extends AbstractEntityHelper
     protected function getCompositeTypes(): array
     {
         if ($this->compositeTypes === null) {
-            $productEmulator = new DataObject();
+            $productEmulator = $this->productFactory->create();
             foreach ($this->productType->getCompositeTypes() as $typeId) {
                 $productEmulator->setTypeId($typeId);
                 $this->compositeTypes[$typeId] = $this->productType->factory($productEmulator);
@@ -1185,38 +1200,6 @@ class ProductHelper extends AbstractEntityHelper
         }
 
         return $attributesForFaceting;
-    }
-
-    /**
-     * @param string $indexName
-     * @param array $replicas
-     * @param int $setReplicasTaskId
-     * @return void
-     * @throws AlgoliaException
-     * @throws ExceededRetriesException
-     */
-    protected function deleteUnusedReplicas(string $indexName, array $replicas, int $setReplicasTaskId): void
-    {
-        $indicesToDelete = [];
-
-        $allIndices = $this->algoliaHelper->listIndexes();
-        foreach ($allIndices['items'] as $indexInfo) {
-            if (mb_strpos($indexInfo['name'], $indexName) !== 0 || $indexInfo['name'] === $indexName) {
-                continue;
-            }
-
-            if (mb_strpos($indexInfo['name'], IndexNameFetcher::INDEX_TEMP_SUFFIX) === false && in_array($indexInfo['name'], $replicas) === false) {
-                $indicesToDelete[] = $indexInfo['name'];
-            }
-        }
-
-        if (count($indicesToDelete) > 0) {
-            $this->algoliaHelper->waitLastTask($indexName, $setReplicasTaskId);
-
-            foreach ($indicesToDelete as $indexToDelete) {
-                $this->algoliaHelper->deleteIndex($indexToDelete);
-            }
-        }
     }
 
     /**
