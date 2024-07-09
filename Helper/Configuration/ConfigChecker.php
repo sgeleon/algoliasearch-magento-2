@@ -17,7 +17,7 @@ class ConfigChecker
     ) {}
 
     /**
-     * Is a scoped value different from the default?
+     * Is a scoped value different from its higher scope?
      * @param string $path
      * @param string $scope
      * @param mixed $code
@@ -26,7 +26,11 @@ class ConfigChecker
     public function isSettingAppliedForScopeAndCode(string $path, string $scope, mixed $code): bool
     {
         $value = $this->scopeConfig->getValue($path, $scope, $code);
-        $defaultValue = $this->scopeConfig->getValue($path);
+        if ($scope === ScopeInterface::SCOPE_STORES) {
+            $defaultValue = $this->scopeConfig->getValue($path, ScopeInterface::SCOPE_WEBSITES, $this->storeManager->getStore($code)->getWebsiteId());
+        } else {
+            $defaultValue = $this->scopeConfig->getValue($path);
+        }
         return ($value !== $defaultValue);
     }
 
@@ -57,17 +61,8 @@ class ConfigChecker
      */
     public function checkAndApplyAllScopes(string $path, callable $callback, bool $includeDefault = true): void
     {
-        // First update all the possible scoped configurations
-        foreach ($this->storeManager->getWebsites() as $website) {
-            if ($this->isSettingAppliedForScopeAndCode(
-                $path,
-                ScopeInterface::SCOPE_WEBSITES,
-                $website->getId()
-            )) {
-                $callback(ScopeInterface::SCOPE_WEBSITES, $website->getId());
-            }
-        }
-
+        // Progressively increase scope so that override comparisons work as expected
+        // Start with most specific (store scope) first
         foreach ($this->storeManager->getStores() as $store) {
             if ($this->isSettingAppliedForScopeAndCode(
                 $path,
@@ -78,7 +73,18 @@ class ConfigChecker
             }
         }
 
-        // Update the default configuration *last* so that initial scope comparisons work as expected
+        // Websites
+        foreach ($this->storeManager->getWebsites() as $website) {
+            if ($this->isSettingAppliedForScopeAndCode(
+                $path,
+                ScopeInterface::SCOPE_WEBSITES,
+                $website->getId()
+            )) {
+                $callback(ScopeInterface::SCOPE_WEBSITES, $website->getId());
+            }
+        }
+
+        // Update the default configuration *last* so that earlier scope comparisons work as expected
         if ($includeDefault) {
             $callback(ScopeConfigInterface::SCOPE_TYPE_DEFAULT);
         }
