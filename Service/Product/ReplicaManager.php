@@ -86,7 +86,9 @@ class ReplicaManager implements ReplicaManagerInterface
             default:
                 $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
                 $old = $this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName);
-                $new = $this->sortingTransformer->transformSortingIndicesToReplicaSetting($this->sortingTransformer->getSortingIndices($storeId));
+                $new = $this->sortingTransformer->transformSortingIndicesToReplicaSetting(
+                    $this->sortingTransformer->getSortingIndices($storeId, null, null, true)
+                );
                 sort($old);
                 sort($new);
                 return $old !== $new;
