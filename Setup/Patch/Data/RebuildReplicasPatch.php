@@ -3,8 +3,9 @@
 namespace Algolia\AlgoliaSearch\Setup\Patch\Data;
 
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
+use Algolia\AlgoliaSearch\Registry\ReplicaState;
 use Algolia\AlgoliaSearch\Service\Product\ReplicaManager;
-use Magento\Framework\App\State;
+use Magento\Framework\App\State as AppState;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Framework\Setup\Patch\PatchInterface;
@@ -17,7 +18,8 @@ class RebuildReplicasPatch implements DataPatchInterface
         protected StoreManagerInterface    $storeManager,
         protected ReplicaManager           $replicaManager,
         protected ProductHelper            $productHelper,
-        protected State                    $state
+        protected AppState                 $appState,
+        protected ReplicaState             $replicaState
     )
     {}
 
@@ -45,14 +47,16 @@ class RebuildReplicasPatch implements DataPatchInterface
     public function apply(): PatchInterface
     {
         $this->moduleDataSetup->getConnection()->startSetup();
-        $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_ADMINHTML);
+        $this->appState->setAreaCode(\Magento\Framework\App\Area::AREA_ADMINHTML);
 
         $storeIds = array_keys($this->storeManager->getStores());
         // Delete all replicas before resyncing in case of incorrect replica assignments
         foreach ($storeIds as $storeId) {
             $this->replicaManager->deleteReplicasFromAlgolia($storeId);
         }
+
         foreach ($storeIds as $storeId) {
+            $this->replicaState->setChangeState(ReplicaState::REPLICA_STATE_CHANGED, $storeId); // avoids latency
             $this->replicaManager->syncReplicasToAlgolia($storeId, $this->productHelper->getIndexSettings($storeId));
         }
 

@@ -351,13 +351,17 @@ class ReplicaManager implements ReplicaManagerInterface
 
     /**
      * @param array $replicasToDelete
+     * @param bool $waitLastTask
      * @return void
      * @throws AlgoliaException
      */
-    protected function deleteIndices(array $replicasToDelete): void
+    protected function deleteIndices(array $replicasToDelete, bool $waitLastTask = false): void
     {
         foreach ($replicasToDelete as $deletedReplica) {
             $this->algoliaHelper->deleteIndex($deletedReplica);
+            if ($waitLastTask) {
+                $this->algoliaHelper->waitLastTask($deletedReplica);
+            }
         }
     }
 
