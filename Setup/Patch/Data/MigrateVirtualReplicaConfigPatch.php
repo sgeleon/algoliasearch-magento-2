@@ -11,6 +11,7 @@ use Algolia\AlgoliaSearch\Service\Product\SortingTransformer;
 use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
 use Algolia\AlgoliaSearch\Validator\VirtualReplicaValidatorFactory;
 use Magento\Framework\App\Config\ConfigResource\ConfigInterface;
+use Magento\Framework\App\Config\ReinitableConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\Exception\LocalizedException;
@@ -28,7 +29,7 @@ class MigrateVirtualReplicaConfigPatch implements DataPatchInterface
         protected ModuleDataSetupInterface       $moduleDataSetup,
         protected WriterInterface                $configWriter,
         protected ConfigInterface                $config,
-        protected ScopeConfigInterface           $scopeConfig,
+        protected ReinitableConfigInterface      $scopeConfig,
         protected ConfigHelper                   $configHelper,
         protected ConfigChecker                  $configChecker,
         protected ReplicaManagerInterface        $replicaManager,
@@ -48,6 +49,8 @@ class MigrateVirtualReplicaConfigPatch implements DataPatchInterface
         $this->moduleDataSetup->getConnection()->startSetup();
 
         $this->configChecker->checkAndApplyAllScopes(ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED, [$this, 'migrateSetting']);
+
+        $this->scopeConfig->reinit();
 
         $this->moduleDataSetup->getConnection()->endSetup();
 
