@@ -48,8 +48,11 @@ class RebuildReplicasPatch implements DataPatchInterface
         $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_ADMINHTML);
 
         $storeIds = array_keys($this->storeManager->getStores());
+        // Delete all replicas before resyncing in case of incorrect replica assignments
         foreach ($storeIds as $storeId) {
             $this->replicaManager->deleteReplicasFromAlgolia($storeId);
+        }
+        foreach ($storeIds as $storeId) {
             $this->replicaManager->syncReplicasToAlgolia($storeId, $this->productHelper->getIndexSettings($storeId));
         }
 
