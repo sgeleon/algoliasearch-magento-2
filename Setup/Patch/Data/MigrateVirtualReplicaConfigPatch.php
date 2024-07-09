@@ -70,9 +70,6 @@ class MigrateVirtualReplicaConfigPatch implements DataPatchInterface
             return;
         }
 
-        // Replicate the global settings by turning on virtual replicas for all attributes
-        $virtualizedSorts = $this->simulateFullVirtualReplicas($scope, $scopeId);
-
         // Get all stores affected by this configuration
         $storeIds = $this->configChecker->getAffectedStoreIds(
             ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED,
@@ -80,8 +77,14 @@ class MigrateVirtualReplicaConfigPatch implements DataPatchInterface
             $scopeId
         );
 
+        // Replicate the global settings by turning on virtual replicas for all attributes and initialize based on current scope
+        $virtualizedSorts = $this->simulateFullVirtualReplicas($scope, $scopeId);
+
         // Retrieve the sorting config
         foreach ($storeIds as $storeId) {
+            // Get the store specific sorting configuration
+            $virtualizedSorts = $this->simulateFullVirtualReplicas(ScopeInterface::SCOPE_STORES, $storeId);
+
             $sortingIndices = $this->sortingTransformer->getSortingIndices($storeId, null, $virtualizedSorts);
 
             $validator = $this->validatorFactory->create();
@@ -103,10 +106,16 @@ class MigrateVirtualReplicaConfigPatch implements DataPatchInterface
             }
 
             // If all is copacetic then save the new sorting config
-            // Save to store scope if we are not already there or if a store scope override exists
+            // Save to store scope if we are not already there and a store scope override exists
             if ($scope != ScopeInterface::SCOPE_STORES
                 && $this->configChecker->isSettingAppliedForScopeAndCode(ConfigHelper::SORTING_INDICES, ScopeInterface::SCOPE_STORES, $storeId)) {
                 $this->configHelper->setSorting($virtualizedSorts, ScopeInterface::SCOPE_STORES, $storeId);
+            // If not overridden at store level next check for website overrides
+            } else if ($scope != ScopeInterface::SCOPE_WEBSITES) {
+                $websiteId = $this->storeManager->getStore($storeId)->getWebsiteId();
+                if ($this->configChecker->isSettingAppliedForScopeAndCode(ConfigHelper::SORTING_INDICES, ScopeInterface::SCOPE_WEBSITES, $websiteId)) {
+                    $this->configHelper->setSorting($virtualizedSorts, ScopeInterface::SCOPE_WEBSITES, $websiteId);
+                }
             }
         }
 
