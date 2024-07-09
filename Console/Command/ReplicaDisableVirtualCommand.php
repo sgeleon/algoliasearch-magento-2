@@ -10,6 +10,7 @@ use Algolia\AlgoliaSearch\Helper\Configuration\ConfigChecker;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
 use Magento\Framework\App\Cache\Manager as CacheManager;
+use Magento\Framework\App\Config\ReinitableConfigInterface;
 use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\App\State;
@@ -24,18 +25,18 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
     use ReplicaSyncCommandTrait;
 
     public function __construct(
-        protected WriterInterface         $configWriter,
-        protected ConfigChecker           $configChecker,
-        protected ScopeConfigInterface    $scopeConfig,
-        protected SerializerInterface     $serializer,
-        protected ConfigHelper            $configHelper,
-        protected CacheManager            $cacheManager,
-        protected ReplicaManagerInterface $replicaManager,
-        protected StoreManagerInterface   $storeManager,
-        protected ProductHelper           $productHelper,
-        State                             $state,
-        StoreNameFetcher                  $storeNameFetcher,
-        ?string                           $name = null
+        protected WriterInterface           $configWriter,
+        protected ConfigChecker             $configChecker,
+        protected ReinitableConfigInterface $scopeConfig,
+        protected SerializerInterface       $serializer,
+        protected ConfigHelper              $configHelper,
+        protected CacheManager              $cacheManager,
+        protected ReplicaManagerInterface   $replicaManager,
+        protected StoreManagerInterface     $storeManager,
+        protected ProductHelper             $productHelper,
+        State                               $state,
+        StoreNameFetcher                    $storeNameFetcher,
+        ?string                             $name = null
     )
     {
         parent::__construct($state, $storeNameFetcher, $name);
@@ -95,7 +96,7 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
                 }
             }
             if ($updates) {
-                $this->clearCache();
+                $this->scopeConfig->reinit();
                 foreach ($updates as $storeId) {
                     $this->syncReplicasForStore($storeId);
                 }
@@ -142,7 +143,7 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
 
         $this->configChecker->checkAndApplyAllScopes(ConfigHelper::SORTING_INDICES, [$this, 'disableVirtualReplicaSortConfig']);
 
-        $this->clearCache();
+        $this->scopeConfig->reinit();
 
         $this->syncReplicasForAllStores();
     }
@@ -172,11 +173,6 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
         );
         $this->output->writeln("<info>Disabling all virtual replicas in " . ConfigHelper::SORTING_INDICES . " for $scope scope" . ($scope != ScopeConfigInterface::SCOPE_TYPE_DEFAULT ? " (ID=$scopeId)" : "") . "</info>");
         $this->configHelper->setSorting($sorting, $scope, $scopeId);
-    }
-
-    protected function clearCache(): void
-    {
-        $this->cacheManager->clean(['config']);
     }
 
 }
