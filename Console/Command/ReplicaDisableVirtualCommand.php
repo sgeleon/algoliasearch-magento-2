@@ -111,7 +111,7 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
         $isStoreScoped = false;
 
         if ($this->configChecker->isSettingAppliedForScopeAndCode(
-            ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED,
+            ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED,
             ScopeInterface::SCOPE_STORES,
             $storeId)
         ) {
@@ -138,7 +138,7 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
 
     protected function disableVirtualReplicasForAllStores(): void
     {
-        $this->configChecker->checkAndApplyAllScopes(ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED, [$this, 'removeLegacyVirtualReplicaConfig']);
+        $this->configChecker->checkAndApplyAllScopes(ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED, [$this, 'removeLegacyVirtualReplicaConfig']);
 
         $this->configChecker->checkAndApplyAllScopes(ConfigHelper::SORTING_INDICES, [$this, 'disableVirtualReplicaSortConfig']);
 
@@ -149,12 +149,12 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
 
     public function removeLegacyVirtualReplicaConfig(string $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, int $scopeId = 0): void
     {
-        $value = $this->scopeConfig->getValue(ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED, $scope, $scopeId);
+        $value = $this->scopeConfig->getValue(ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED, $scope, $scopeId);
         if (is_null($value)) {
             return;
         }
-        $this->output->writeln("<info>Removing legacy configuration " . ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED . " for $scope scope" . ($scope != ScopeConfigInterface::SCOPE_TYPE_DEFAULT ? " (ID=$scopeId)" : "") . "</info>");
-        $this->configWriter->delete(ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED, $scope, $scopeId);
+        $this->output->writeln("<info>Removing legacy configuration " . ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED . " for $scope scope" . ($scope != ScopeConfigInterface::SCOPE_TYPE_DEFAULT ? " (ID=$scopeId)" : "") . "</info>");
+        $this->configWriter->delete(ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED, $scope, $scopeId);
     }
 
     public function disableVirtualReplicaSortConfig(string $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, int $scopeId = 0): void

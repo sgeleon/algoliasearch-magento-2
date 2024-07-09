@@ -47,7 +47,7 @@ class MigrateVirtualReplicaConfigPatch implements DataPatchInterface
     {
         $this->moduleDataSetup->getConnection()->startSetup();
 
-        $this->configChecker->checkAndApplyAllScopes(ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED, [$this, 'migrateSetting']);
+        $this->configChecker->checkAndApplyAllScopes(ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED, [$this, 'migrateSetting']);
 
         $this->moduleDataSetup->getConnection()->endSetup();
 
@@ -65,14 +65,14 @@ class MigrateVirtualReplicaConfigPatch implements DataPatchInterface
     public function migrateSetting(string $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT, int $scopeId = 0): void
     {
         // If not enabled - delete this old setting and move on...
-        if (!$this->scopeConfig->isSetFlag(ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED, $scope, $scopeId)) {
+        if (!$this->scopeConfig->isSetFlag(ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED, $scope, $scopeId)) {
             $this->deleteLegacyConfig($scope, $scopeId);
             return;
         }
 
         // Get all stores affected by this configuration
         $storeIds = $this->configChecker->getAffectedStoreIds(
-            ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED,
+            ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED,
             $scope,
             $scopeId
         );
@@ -126,7 +126,7 @@ class MigrateVirtualReplicaConfigPatch implements DataPatchInterface
 
     protected function deleteLegacyConfig($scope, $scopeId): void
     {
-        $this->configWriter->delete(ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED, $scope, $scopeId);
+        $this->configWriter->delete(ConfigHelper::LEGACY_USE_VIRTUAL_REPLICA_ENABLED, $scope, $scopeId);
     }
 
     protected function simulateFullVirtualReplicas(string $scope, int $scopeId): array
