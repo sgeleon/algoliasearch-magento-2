@@ -87,20 +87,53 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
      */
     protected function disableVirtualReplicas(array $storeIds = []): void
     {
+        $updates = [];
         if (count($storeIds)) {
             foreach ($storeIds as $storeId) {
-                $this->disableVirtualReplicasForStore($storeId);
+                if ($this->disableVirtualReplicasForStore($storeId)) {
+                    $updates[] = $storeId;
+                }
+            }
+            if ($updates) {
+                $this->clearCache();
+                foreach ($updates as $storeId) {
+                    $this->syncReplicasForStore($storeId);
+                }
             }
         } else {
             $this->disableVirtualReplicasForAllStores();
         }
     }
 
-    protected function disableVirtualReplicasForStore(int $storeId): void
+    protected function disableVirtualReplicasForStore(int $storeId): bool
     {
         $storeName = $this->storeNameFetcher->getStoreName($storeId);
         $isStoreScoped = false;
 
+        if ($this->configChecker->isSettingAppliedForScopeAndCode(
+            ConfigHelper::USE_VIRTUAL_REPLICA_ENABLED,
+            ScopeInterface::SCOPE_STORES,
+            $storeId)
+        ) {
+            $isStoreScoped = true;
+            $this->removeLegacyVirtualReplicaConfig(ScopeInterface::SCOPE_STORES, $storeId);
+        }
+
+        if ($this->configChecker->isSettingAppliedForScopeAndCode(
+            ConfigHelper::SORTING_INDICES,
+            ScopeInterface::SCOPE_STORES,
+            $storeId)
+        ) {
+            $isStoreScoped = true;
+            $this->disableVirtualReplicaSortConfig(ScopeInterface::SCOPE_STORES, $storeId);
+        }
+
+        if (!$isStoreScoped) {
+            $this->output->writeln("<info>Virtual replicas are not configured at the store level for $storeName. You will need to re-run this command for all stores.</info>");
+            return false;
+        }
+
+        return true;
     }
 
     protected function disableVirtualReplicasForAllStores(): void
@@ -109,7 +142,7 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
 
         $this->configChecker->checkAndApplyAllScopes(ConfigHelper::SORTING_INDICES, [$this, 'disableVirtualReplicaSortConfig']);
 
-        $this->cacheManager->clean(['config']);
+        $this->clearCache();
 
         $this->syncReplicasForAllStores();
     }
@@ -139,6 +172,11 @@ class ReplicaDisableVirtualCommand extends AbstractReplicaCommand implements Rep
         );
         $this->output->writeln("<info>Disabling all virtual replicas in " . ConfigHelper::SORTING_INDICES . " for $scope scope" . ($scope != ScopeConfigInterface::SCOPE_TYPE_DEFAULT ? " (ID=$scopeId)" : "") . "</info>");
         $this->configHelper->setSorting($sorting, $scope, $scopeId);
+    }
+
+    protected function clearCache(): void
+    {
+        $this->cacheManager->clean(['config']);
     }
 
 }
