@@ -376,7 +376,8 @@ class Data
         $this->logger->start('Indexing');
         try {
             $this->logger->start('ok');
-            $collection = $this->productHelper->getProductCollectionQuery($storeId, $productIds);
+            $onlyVisible = $this->configHelper->includeNonVisibleProductsInIndex();
+            $collection = $this->productHelper->getProductCollectionQuery($storeId, $productIds, $onlyVisible);
             $size = $collection->getSize();
             if (!empty($productIds)) {
                 $size = max(count($productIds), $size);
