@@ -8,8 +8,6 @@ use Magento\Framework\Setup\Patch\PatchInterface;
 
 class MigrateInstantSearchConfigPatch implements DataPatchInterface
 {
-
-
     public function __construct(
         protected ModuleDataSetupInterface $moduleDataSetup,
     ) {}

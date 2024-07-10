@@ -10,9 +10,11 @@ use Algolia\AlgoliaSearch\Console\Traits\ReplicaSyncCommandTrait;
 use Algolia\AlgoliaSearch\Exception\ReplicaLimitExceededException;
 use Algolia\AlgoliaSearch\Exceptions\BadRequestException;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
+use Algolia\AlgoliaSearch\Registry\ReplicaState;
 use Algolia\AlgoliaSearch\Service\StoreNameFetcher;
-use Magento\Framework\App\State;
+use Magento\Framework\App\State as AppState;
 use Magento\Framework\Console\Cli;
+use Magento\Store\Model\StoreManagerInterface;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -24,14 +26,16 @@ class ReplicaRebuildCommand
     use ReplicaDeleteCommandTrait;
 
     public function __construct(
-        protected ReplicaManagerInterface $replicaManager,
-        protected StoreNameFetcher        $storeNameFetcher,
         protected ProductHelper           $productHelper,
-        State                             $state,
+        protected ReplicaManagerInterface $replicaManager,
+        protected StoreManagerInterface   $storeManager,
+        protected ReplicaState            $replicaState,
+        AppState                          $appState,
+        StoreNameFetcher                  $storeNameFetcher,
         ?string                           $name = null
     )
     {
-        parent::__construct($state, $name);
+        parent::__construct($appState, $storeNameFetcher, $name);
     }
 
     protected function getReplicaCommandName(): string
@@ -61,14 +65,11 @@ class ReplicaRebuildCommand
 
         $storeIds = $this->getStoreIds($input);
 
-        $msg = 'Rebuilding replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
-        if ($storeIds) {
-            $output->writeln("<info>$msg: " . join(", ", $this->storeNameFetcher->getStoreNames($storeIds)) . '</info>');
-        } else {
-            $output->writeln("<info>$msg</info>");
-        }
+        $output->writeln($this->decorateOperationAnnouncementMessage('Rebuilding replicas for {{target}}', $storeIds));
 
         $this->deleteReplicas($storeIds);
+        $this->forceState($storeIds);
+
         try {
             $this->syncReplicas($storeIds);
         } catch (ReplicaLimitExceededException $e) {
@@ -84,6 +85,22 @@ class ReplicaRebuildCommand
         }
 
         return Cli::RETURN_SUCCESS;
+    }
+
+    /**
+     * Force the replica change state to always sync the replica configuration
+     * Also serves to avoid latency from Algolia API when reading replica configuration for comparison with local Magento config
+     * @param int[] $storeIds
+     * @return void
+     */
+    protected function forceState(array $storeIds): void
+    {
+        if (!count($storeIds)) {
+            $storeIds = array_keys($this->storeManager->getStores());
+        }
+        foreach ($storeIds as $storeId) {
+            $this->replicaState->setChangeState(ReplicaState::REPLICA_STATE_CHANGED, $storeId);
+        }
     }
 
 }

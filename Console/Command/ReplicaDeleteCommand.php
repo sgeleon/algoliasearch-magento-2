@@ -25,12 +25,12 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDele
     public function __construct(
         protected ReplicaManagerInterface $replicaManager,
         protected StoreManagerInterface   $storeManager,
-        protected StoreNameFetcher        $storeNameFetcher,
-        protected State                   $state,
+        State                             $state,
+        StoreNameFetcher                  $storeNameFetcher,
         ?string                           $name = null
     )
     {
-        parent::__construct($state, $name);
+        parent::__construct($state, $storeNameFetcher, $name);
     }
 
     protected function getReplicaCommandName(): string
@@ -68,12 +68,12 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDele
         $storeIds = $this->getStoreIds($input);
         $unused = $input->getOption(self::UNUSED_OPTION);
 
-        $msg = 'Deleting' . ($unused ? ' unused ' : ' ') . 'replicas for ' . ($storeIds ? count($storeIds) : 'all') . ' store' . (!$storeIds || count($storeIds) > 1 ? 's' : '');
-        if ($storeIds) {
-            $output->writeln("<info>$msg: " . join(", ", $this->storeNameFetcher->getStoreNames($storeIds)) . '</info>');
-        } else {
-            $output->writeln("<info>$msg</info>");
-        }
+        $output->writeln(
+            $this->decorateOperationAnnouncementMessage(
+                'Deleting' . ($unused ? ' unused ' : ' ') . 'replicas for {{target}}',
+                $storeIds
+            )
+        );
 
         if ($unused) {
             $unusedReplicas = $this->getUnusedReplicas($storeIds);
@@ -143,18 +143,10 @@ class ReplicaDeleteCommand extends AbstractReplicaCommand implements ReplicaDele
         return true;
     }
 
-
     protected function confirmDelete(): bool
     {
-        $helper = $this->getHelper('question');
-        $question = new ConfirmationQuestion('<question>Are you sure wish to proceed? (y/n)</question> ', false);
-        if (!$helper->ask($this->input, $this->output, $question)) {
-            $this->output->writeln('<comment>Operation cancelled.</comment>');
-            return false;
-        }
-
-        $this->output->writeln('<comment>Please note that you can restore these deleted replicas by running "algolia:replicas:sync".</comment>');
-        return true;
+        $okMsg = 'Please note that you can restore these deleted replicas by running "algolia:replicas:sync".';
+        return $this->confirmOperation($okMsg);
     }
 
 }

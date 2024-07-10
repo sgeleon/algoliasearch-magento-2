@@ -86,7 +86,9 @@ class ReplicaManager implements ReplicaManagerInterface
             default:
                 $primaryIndexName = $this->indexNameFetcher->getProductIndexName($storeId);
                 $old = $this->getMagentoReplicaConfigurationFromAlgolia($primaryIndexName);
-                $new = $this->sortingTransformer->transformSortingIndicesToReplicaSetting($this->sortingTransformer->getSortingIndices($storeId));
+                $new = $this->sortingTransformer->transformSortingIndicesToReplicaSetting(
+                    $this->sortingTransformer->getSortingIndices($storeId, null, null, true)
+                );
                 sort($old);
                 sort($new);
                 return $old !== $new;
@@ -351,13 +353,17 @@ class ReplicaManager implements ReplicaManagerInterface
 
     /**
      * @param array $replicasToDelete
+     * @param bool $waitLastTask
      * @return void
      * @throws AlgoliaException
      */
-    protected function deleteIndices(array $replicasToDelete): void
+    protected function deleteIndices(array $replicasToDelete, bool $waitLastTask = false): void
     {
         foreach ($replicasToDelete as $deletedReplica) {
             $this->algoliaHelper->deleteIndex($deletedReplica);
+            if ($waitLastTask) {
+                $this->algoliaHelper->waitLastTask($deletedReplica);
+            }
         }
     }
 
