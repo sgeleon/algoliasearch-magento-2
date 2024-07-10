@@ -64,7 +64,8 @@ class Cart implements ArgumentInterface
             $cartItems[] = $item->getProductId();
         }
         $storeId = $this->storeManager->getStore()->getId();
-        $cartProductCollection = $this->productHelper->getProductCollectionQuery($storeId, array_unique($cartItems));
+        $onlyVisible = !$this->configHelper->includeNonVisibleProductsInIndex();
+        $cartProductCollection = $this->productHelper->getProductCollectionQuery($storeId, array_unique($cartItems), $onlyVisible);
         if ($cartProductCollection->getSize() > 0 ){
             foreach ($cartProductCollection as $product) {
                 $visibleCartItem[] = $product->getId();

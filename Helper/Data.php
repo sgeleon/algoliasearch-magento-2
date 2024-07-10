@@ -376,7 +376,7 @@ class Data
         $this->logger->start('Indexing');
         try {
             $this->logger->start('ok');
-            $onlyVisible = $this->configHelper->includeNonVisibleProductsInIndex();
+            $onlyVisible = !$this->configHelper->includeNonVisibleProductsInIndex($storeId);
             $collection = $this->productHelper->getProductCollectionQuery($storeId, $productIds, $onlyVisible);
             $size = $collection->getSize();
             if (!empty($productIds)) {
@@ -421,7 +421,8 @@ class Data
         if ($this->isIndexingEnabled($storeId) === false) {
             return;
         }
-        $collection = $this->productHelper->getProductCollectionQuery($storeId, null, $useTmpIndex);
+        $onlyVisible = !$this->configHelper->includeNonVisibleProductsInIndex($storeId);
+        $collection = $this->productHelper->getProductCollectionQuery($storeId, null, $onlyVisible);
         $this->rebuildStoreProductIndexPage($storeId, $collection, $page, $pageSize, null, $productIds, $useTmpIndex);
     }
 
@@ -928,7 +929,8 @@ class Data
      */
     protected function deleteInactiveIds($storeId, $objectIds, $indexName): void
     {
-        $collection = $this->productHelper->getProductCollectionQuery($storeId, $objectIds);
+        $onlyVisible = !$this->configHelper->includeNonVisibleProductsInIndex($storeId);
+        $collection = $this->productHelper->getProductCollectionQuery($storeId, $objectIds, $onlyVisible);
         $dbIds = $collection->getAllIds();
         $collection = null;
         $idsToDeleteFromAlgolia = array_diff($objectIds, $dbIds);
