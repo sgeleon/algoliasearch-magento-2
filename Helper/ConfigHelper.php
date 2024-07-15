@@ -236,14 +236,14 @@ class ConfigHelper
     }
 
     /**
-     * Returns config value
+     * Returns config flag
      *
      * @param $storeId
-     * @return mixed
+     * @return bool
      */
-    public function includeNonVisibleProductsInIndex($storeId = null)
+    public function includeNonVisibleProductsInIndex($storeId = null): bool
     {
-        return $this->configInterface->getValue(
+        return $this->configInterface->isSetFlag(
             self::INCLUDE_NON_VISIBLE_PRODUCTS_IN_INDEX,
             ScopeInterface::SCOPE_STORE,
             $storeId
