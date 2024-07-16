@@ -17,6 +17,16 @@
 - Added logic to preserve replicas created outside of Magento such as Merchandising Studio "sorting strategies"
 - Introduced PHP 8 constructor property promotion on affected classes
 - Added stronger typing to affected classes and methods
+- Added Looking Similar recommendations
+
+## 3.13.5
+
+### Updates
+- Polyfill.io removed from CSP whitelist - Thank you @hostep
+- Hide Recommend Titles when not in use
+- Incorporate community fix for higher specificity CSS selectors on Recommend - Thank you @sgeleon
+### Bug Fixes
+- Incorporate community fix for missing DOM element selector - Thank you @sgeleon
 
 ## 3.13.4
 
