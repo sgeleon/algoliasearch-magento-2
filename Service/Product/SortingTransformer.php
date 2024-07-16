@@ -38,6 +38,7 @@ class SortingTransformer
      * @param ?int $storeId
      * @param ?int $currentCustomerGroupId
      * @param ?array $attrs - serialized array of sorting attributes to transform (defaults to saved sorting config)
+     * @param bool $clearCache - If set to true will update the cache
      * @return array of transformed sorting / replica objects
      * @throws LocalizedException
      * @throws NoSuchEntityException
@@ -45,11 +46,16 @@ class SortingTransformer
     public function getSortingIndices(
         ?int   $storeId = null,
         ?int   $currentCustomerGroupId = null,
-        ?array $attrs = null
+        ?array $attrs = null,
+        bool   $clearCache = false
     ): array
     {
         // Selectively cache this result - only cache manipulation of saved settings per store
         $useCache = is_null($currentCustomerGroupId) && is_null($attrs);
+
+        if ($clearCache) {
+            unset($this->_sortingIndices[$storeId]);
+        }
 
         if ($useCache
             && array_key_exists($storeId, $this->_sortingIndices)
