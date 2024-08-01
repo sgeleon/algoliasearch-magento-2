@@ -94,6 +94,7 @@ class ConfigHelper
     public const MAKE_SEO_REQUEST = 'algoliasearch_advanced/advanced/make_seo_request';
     public const REMOVE_BRANDING = 'algoliasearch_advanced/advanced/remove_branding';
     public const AUTOCOMPLETE_SELECTOR = 'algoliasearch_autocomplete/autocomplete/autocomplete_selector';
+    public const INCLUDE_NON_VISIBLE_PRODUCTS_IN_INDEX = 'algoliasearch_products/products/include_non_visible_products_in_index';
     public const IDX_PRODUCT_ON_CAT_PRODUCTS_UPD = 'algoliasearch_advanced/advanced/index_product_on_category_products_update';
     public const PREVENT_BACKEND_RENDERING = 'algoliasearch_advanced/advanced/prevent_backend_rendering';
     public const PREVENT_BACKEND_RENDERING_DISPLAY_MODE =
@@ -232,6 +233,21 @@ class ConfigHelper
     public function getAutocompleteSelector($storeId = null)
     {
         return $this->configInterface->getValue(self::AUTOCOMPLETE_SELECTOR, ScopeInterface::SCOPE_STORE, $storeId);
+    }
+
+    /**
+     * Returns config flag
+     *
+     * @param $storeId
+     * @return bool
+     */
+    public function includeNonVisibleProductsInIndex($storeId = null): bool
+    {
+        return $this->configInterface->isSetFlag(
+            self::INCLUDE_NON_VISIBLE_PRODUCTS_IN_INDEX,
+            ScopeInterface::SCOPE_STORE,
+            $storeId
+        );
     }
 
     /**

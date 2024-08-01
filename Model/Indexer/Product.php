@@ -95,7 +95,8 @@ class Product implements \Magento\Framework\Indexer\ActionInterface, \Magento\Fr
             }
 
             $useTmpIndex = $this->configHelper->isQueueActive($storeId);
-            $collection = $this->productHelper->getProductCollectionQuery($storeId, $productIds, $useTmpIndex);
+            $onlyVisible = !$this->configHelper->includeNonVisibleProductsInIndex();
+            $collection = $this->productHelper->getProductCollectionQuery($storeId, $productIds, $onlyVisible);
             $size = $collection->getSize();
 
             $pages = ceil($size / $productsPerPage);
