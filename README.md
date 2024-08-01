@@ -33,10 +33,10 @@ Try the autocomplete and the instantsearch results page on our [live demo](https
 
 We are happy to announce that version 3.x of our extension is now compatible with Magento 2.4. Review the [Customisation](https://github.com/algolia/algoliasearch-magento-2#customisation) section to learn more about the differences between our extension versions.
 
-| Extension Version | End of Life |
-|-------------------| --- |
-| v3.13.x           | N/A |
-| v3.14.x           | N/A |
+| Extension Version | End of Life | Magento  | PHP |
+|-------------------| --- |----------| ---------|
+| v3.13.x           | N/A | `2.4.x` | `^7.2 \|\| ^8.0` |
+| v3.14.x           | N/A | `2.4.x` | `>=8.1` |
 
 ## Documentation
 
@@ -87,10 +87,10 @@ The extension does most of the heavy lifting when it comes to gathering and prep
 
 Depending on the extension version you are using, you could have a different PHP API client version powering the extension's backend functionality.
 
-| Extension Version | API Client Version     | PHP              | Magento   |
-|-------------------|------------------------|------------------|-----------|
-| v3.13.x           | [3.3.2](https://github.com/algolia/algoliasearch-client-php/tree/3.3.2)           | `^7.2 \|\| ^8.0` | `2.4.x` |           
-| v3.14.x           | `4.0.x`                | `>=8.1`          | `2.4.x`   |
+| Extension Version | API Client Version     |
+|-------------------|------------------------|
+| v3.13.x           | [3.3.2](https://github.com/algolia/algoliasearch-client-php/tree/3.3.2)           |         
+| v3.14.x           | `4.0.x`                |
 
 Refer to these docs when customising your Algolia Magento extension backend:
 - [Indexing](https://www.algolia.com/doc/integration/magento-2/how-it-works/indexing/)
