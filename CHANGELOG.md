@@ -12,32 +12,36 @@ GA release
 - Support for event subtypes allowing the capture of conversion data for both "Add to cart" and "Place order" events
 - Increased protection of PII in the event data
 - Introduced new admin groups to InstantSearch for improved UX
-- Updated `ConfigHelper` to use new paths
+- Virtual replicas can now be configured granularly by attribute or store
+  - Added new sorting admin option via source model
+  - Added derived virtual replica enablement to `ConfigHelper` based on `ArraySerialized` 
+  - Intro’d simplified data structures to avoid array diff mismatches 
+  - Intro’d new `ReplicaManager` abstraction to map Magento sorting to Algolia replica configuration
+  - Removed dependencies in backend models to handle replica config updates in Algolia addressing stale data
+  - Added `ReplicaState` registry for tracking changes to sorting configuration to minimize number of replica build operations 
+  - Added logic to preserve replicas created outside of Magento such as Merchandising Studio "sorting strategies"
+  - Added handling for customer group pricing 
+  - Added error handling for replica limits 
+- Added Looking Similar recommendations
 - Added data patches to migrate old configurations
-- Bugfix for query rule disable on facets with new admin groupings
-- Added new sorting admin option via source model
-- Added derived virtual replica enablement to `ConfigHelper` based on `ArraySerialized`
-- Intro’d simplified data structures to avoid array diff mismatches
-- Intro’d new `ReplicaManager` abstraction to map Magento sorting to Algolia replica configuration
-- Removed dependencies in backend models to handle replica config updates in Algolia addressing stale data
-- Added `ReplicaState` registry for tracking changes to sorting configuration to minimize number of replica build operations
-- Added logic to preserve replicas created outside of Magento such as Merchandising Studio "sorting strategies"
 - Introduced PHP 8 constructor property promotion on affected classes
 - Added stronger typing to affected classes and methods
-- Added Looking Similar recommendations
+- Updated `ConfigHelper` to use new paths 
 
 ### Bug fixes
 
 - Fixed issue with how Algolia extension handles end user consent for allowing cookies
 - Improved handling of user tokens across insights events and corresponding queries
 - Cleaned up integration tests
+- Applied bugfix for query rule disable on facets with new admin groupings
 
 ### Breaking changes
 
-If you have customized your Algolia implementation pay attention to these latest updates:
+If you have customized your Algolia implementation, pay attention to these latest updates:
 
 - Updated timestamps to utilize UTC per [Algolia recommended guidelines](https://www.algolia.com/doc/guides/sending-and-managing-data/prepare-your-data/in-depth/what-is-in-a-record/#dates)
 - Restructured web asset files to comply with [Magento recommendations](https://developer.adobe.com/commerce/php/development/build/component-file-structure/) Thanks @sgeleon!
+- Previous replica configurations may be invalid. Be sure to run `bin/magento setup:upgrade` in a controlled staging environment prior to deploying.
 
 ## 3.14.0-beta.2
 
