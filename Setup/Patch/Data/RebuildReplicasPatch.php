@@ -5,7 +5,9 @@ namespace Algolia\AlgoliaSearch\Setup\Patch\Data;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Registry\ReplicaState;
 use Algolia\AlgoliaSearch\Service\Product\ReplicaManager;
+use Magento\Framework\App\Area;
 use Magento\Framework\App\State as AppState;
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Framework\Setup\Patch\PatchInterface;
@@ -47,7 +49,11 @@ class RebuildReplicasPatch implements DataPatchInterface
     public function apply(): PatchInterface
     {
         $this->moduleDataSetup->getConnection()->startSetup();
-        $this->appState->setAreaCode(\Magento\Framework\App\Area::AREA_ADMINHTML);
+        try {
+            $this->appState->setAreaCode(Area::AREA_ADMINHTML);
+        } catch (LocalizedException) {
+            // Area code is already set - nothing to do
+        }
 
         $storeIds = array_keys($this->storeManager->getStores());
         // Delete all replicas before resyncing in case of incorrect replica assignments
