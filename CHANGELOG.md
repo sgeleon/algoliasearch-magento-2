@@ -14,16 +14,19 @@ GA release
 - Introduced new admin groups to InstantSearch for improved UX
 - Virtual replicas can now be configured granularly by attribute or store
   - Added new sorting admin option via source model
-  - Added derived virtual replica enablement to `ConfigHelper` based on `ArraySerialized` 
-  - Intro’d simplified data structures to avoid array diff mismatches 
+  - Added derived virtual replica enablement to `ConfigHelper` based on `ArraySerialized`
+  - Intro’d simplified data structures to avoid array diff mismatches
   - Intro’d new `ReplicaManager` abstraction to map Magento sorting to Algolia replica configuration
   - Removed dependencies in backend models to handle replica config updates in Algolia addressing stale data
-  - Added `ReplicaState` registry for tracking changes to sorting configuration to minimize number of replica build operations 
+  - Added `ReplicaState` registry for tracking changes to sorting configuration to minimize number of replica build operations
   - Added logic to preserve replicas created outside of Magento such as Merchandising Studio "sorting strategies"
-  - Added handling for customer group pricing 
-  - Added error handling for replica limits 
+  - Added handling for customer group pricing
+  - Added handling for virtual / standard replica toggling
+  - Added store scoped state management
+  - Added error handling for replica limits
 - Added Looking Similar recommendations
 - Added data patches to migrate old configurations
+- Added CLI utilities for replica migration and troubleshooting
 - Introduced PHP 8 constructor property promotion on affected classes
 - Added stronger typing to affected classes and methods
 - Updated `ConfigHelper` to use new paths 
@@ -37,11 +40,13 @@ GA release
 
 ### Breaking changes
 
-If you have customized your Algolia implementation, pay attention to these latest updates:
+If you have customized your Algolia implementation or are running on an older version of Magento, pay attention to these latest updates:
 
 - Updated timestamps to utilize UTC per [Algolia recommended guidelines](https://www.algolia.com/doc/guides/sending-and-managing-data/prepare-your-data/in-depth/what-is-in-a-record/#dates)
 - Restructured web asset files to comply with [Magento recommendations](https://developer.adobe.com/commerce/php/development/build/component-file-structure/) Thanks @sgeleon!
 - Previous replica configurations may be invalid. Be sure to run `bin/magento setup:upgrade` in a controlled staging environment prior to deploying.
+- Dropped support for Magento 2.3
+- PHP 8.1+ required
 
 ## 3.14.0-beta.2
 
