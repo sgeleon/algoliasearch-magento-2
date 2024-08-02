@@ -4,6 +4,8 @@
 
 GA release
 
+### Features
+
 - New PHP API client (v4) under the hood for communicating with Algolia
 - Authenticated user tokens now utilized for backend and frontend events to track entire customer journey
 - Revenue data now sent with all events including application of Magento specific discounts such as catalog price rules and customer group pricing
@@ -11,7 +13,7 @@ GA release
 - Increased protection of PII in the event data
 - Introduced new admin groups to InstantSearch for improved UX
 - Updated `ConfigHelper` to use new paths
-- Added data patch to migrate old configurations
+- Added data patches to migrate old configurations
 - Bugfix for query rule disable on facets with new admin groupings
 - Added new sorting admin option via source model
 - Added derived virtual replica enablement to `ConfigHelper` based on `ArraySerialized`
@@ -23,10 +25,14 @@ GA release
 - Introduced PHP 8 constructor property promotion on affected classes
 - Added stronger typing to affected classes and methods
 - Added Looking Similar recommendations
+- Updated timestamps to utilize UTC per [Algolia recommended guidelines](https://www.algolia.com/doc/guides/sending-and-managing-data/prepare-your-data/in-depth/what-is-in-a-record/#dates)
+- Restructured web asset files to comply with [Magento recommendations](https://developer.adobe.com/commerce/php/development/build/component-file-structure/) Thanks @sgeleon!
 
-### Bug fixes:
+### Bug fixes
+
 - Fixed issue with how Algolia extension handles end user consent for allowing cookies
 - Improved handling of user tokens across insights events and corresponding queries
+- Cleaned up integration tests
 
 ## 3.14.0-beta.2
 
