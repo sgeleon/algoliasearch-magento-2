@@ -25,14 +25,19 @@ GA release
 - Introduced PHP 8 constructor property promotion on affected classes
 - Added stronger typing to affected classes and methods
 - Added Looking Similar recommendations
-- Updated timestamps to utilize UTC per [Algolia recommended guidelines](https://www.algolia.com/doc/guides/sending-and-managing-data/prepare-your-data/in-depth/what-is-in-a-record/#dates)
-- Restructured web asset files to comply with [Magento recommendations](https://developer.adobe.com/commerce/php/development/build/component-file-structure/) Thanks @sgeleon!
 
 ### Bug fixes
 
 - Fixed issue with how Algolia extension handles end user consent for allowing cookies
 - Improved handling of user tokens across insights events and corresponding queries
 - Cleaned up integration tests
+
+### Breaking changes
+
+If you have customized your Algolia implementation pay attention to these latest updates:
+
+- Updated timestamps to utilize UTC per [Algolia recommended guidelines](https://www.algolia.com/doc/guides/sending-and-managing-data/prepare-your-data/in-depth/what-is-in-a-record/#dates)
+- Restructured web asset files to comply with [Magento recommendations](https://developer.adobe.com/commerce/php/development/build/component-file-structure/) Thanks @sgeleon!
 
 ## 3.14.0-beta.2
 
