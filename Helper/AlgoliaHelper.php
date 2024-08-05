@@ -326,6 +326,8 @@ class AlgoliaHelper extends AbstractHelper
      */
     public function getSettings(string $indexName): array
     {
+        $this->checkClient(__FUNCTION__);
+
         try {
             return $this->client->getSettings($indexName);
         } catch (\Exception $e) {

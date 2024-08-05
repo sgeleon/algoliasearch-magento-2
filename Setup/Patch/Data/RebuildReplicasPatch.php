@@ -2,6 +2,7 @@
 
 namespace Algolia\AlgoliaSearch\Setup\Patch\Data;
 
+use Algolia\AlgoliaSearch\Helper\ConfigHelper;
 use Algolia\AlgoliaSearch\Helper\Entity\ProductHelper;
 use Algolia\AlgoliaSearch\Registry\ReplicaState;
 use Algolia\AlgoliaSearch\Service\Product\ReplicaManager;
@@ -12,6 +13,7 @@ use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
 use Magento\Framework\Setup\Patch\PatchInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Psr\Log\LoggerInterface;
 
 class RebuildReplicasPatch implements DataPatchInterface
 {
@@ -21,7 +23,9 @@ class RebuildReplicasPatch implements DataPatchInterface
         protected ReplicaManager           $replicaManager,
         protected ProductHelper            $productHelper,
         protected AppState                 $appState,
-        protected ReplicaState             $replicaState
+        protected ReplicaState             $replicaState,
+        protected ConfigHelper             $configHelper,
+        protected LoggerInterface          $logger
     )
     {}
 
@@ -48,6 +52,11 @@ class RebuildReplicasPatch implements DataPatchInterface
      */
     public function apply(): PatchInterface
     {
+        if (!$this->configHelper->credentialsAreConfigured()) {
+            $this->logger->warning("Algolia credentials are not configured. Aborting replica rebuild patch. If you need to rebuild your replicas run `bin/magento algolia:replicas:rebuild`");
+            return $this;
+        }
+
         $this->moduleDataSetup->getConnection()->startSetup();
         try {
             $this->appState->setAreaCode(Area::AREA_ADMINHTML);
